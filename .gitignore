@@ -35,3 +35,5 @@ go.work.sum
 bin/
 data/
 limelit.yaml
+# `go build ./tools/seed` run from the repo root
+/seed
