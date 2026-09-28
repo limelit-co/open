@@ -61,15 +61,19 @@ targets on one engine are two columns, never an average.
 
 ## Before you push
 
-CI on this repository is not currently running, so the local gate is the
-gate:
+Run the same checks CI runs:
 
 ```bash
 make lint   # gofmt + go vet
 make test   # go test ./... -count=1, offline
 ```
 
-Both green, then push. Say in the pull request what you ran.
+Both green, then push. Every pull request gets a `build` check (gofmt, vet,
+build, test). On a pull request from a first-time contributor it waits at
+"Waiting for a maintainer to comment /test" until a maintainer has read the
+change and comments `/test`. Push again after that and it waits for a new
+`/test`. The check's details link is for maintainers; if it fails, the
+description names the step, and `make lint && make test` reproduces it.
 
 ## Adding a provider
 
