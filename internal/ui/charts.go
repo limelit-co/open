@@ -31,7 +31,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/limelitgeo/open/internal/metrics"
+	"github.com/limelit-co/open/internal/metrics"
 )
 
 // thinN is the sample under which a day's point is drawn hollow. One

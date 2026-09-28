@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/limelitgeo/open/internal/mentions"
-	"github.com/limelitgeo/open/internal/promptpack"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/store"
-	"github.com/limelitgeo/open/internal/target"
+	"github.com/limelit-co/open/internal/mentions"
+	"github.com/limelit-co/open/internal/promptpack"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/target"
 )
 
 // wizardSteps label the progress bar. Four steps, and nothing is spent until

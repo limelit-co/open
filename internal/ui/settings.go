@@ -15,13 +15,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/limelitgeo/open/internal/config"
-	"github.com/limelitgeo/open/internal/credentials"
-	"github.com/limelitgeo/open/internal/engines"
-	"github.com/limelitgeo/open/internal/mcpserver"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/store"
-	"github.com/limelitgeo/open/internal/target"
+	"github.com/limelit-co/open/internal/config"
+	"github.com/limelit-co/open/internal/credentials"
+	"github.com/limelit-co/open/internal/engines"
+	"github.com/limelit-co/open/internal/mcpserver"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/target"
 )
 
 // Credential status strings. The environment always wins over a stored value,

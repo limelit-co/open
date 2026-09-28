@@ -13,7 +13,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/limelitgeo/open/internal/upgrade"
+	"github.com/limelit-co/open/internal/upgrade"
 )
 
 type upgradeArgs struct {

@@ -1,4 +1,4 @@
-module github.com/limelitgeo/open
+module github.com/limelit-co/open
 
 go 1.25.0
 

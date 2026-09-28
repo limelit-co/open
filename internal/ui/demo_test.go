@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // demoApp builds a configured instance and then turns demo mode on, which is

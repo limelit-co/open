@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // TestAnswerCountsSurviveMultipleOwnMentions. Property.Names() returns several

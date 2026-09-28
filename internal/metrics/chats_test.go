@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/store"
 )
 
 func TestChatsListsNewestFirstWithoutBodies(t *testing.T) {

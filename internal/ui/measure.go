@@ -18,8 +18,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/limelitgeo/open/internal/engines"
-	"github.com/limelitgeo/open/internal/metrics"
+	"github.com/limelit-co/open/internal/engines"
+	"github.com/limelit-co/open/internal/metrics"
 )
 
 // windowChoices are the periods the switch offers.

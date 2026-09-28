@@ -119,8 +119,8 @@ What does not work yet: five of eleven providers are unbuilt. Everything else
 in the table below is live.
 
 Everything marked *planned* below is tracked in
-[issues](https://github.com/limelitgeo/open/issues) under the
-[v0.1 milestone](https://github.com/limelitgeo/open/milestone/1). Watch
+[issues](https://github.com/limelit-co/open/issues) under the
+[v0.1 milestone](https://github.com/limelit-co/open/milestone/1). Watch
 releases to hear when it ships.
 
 ## Screenshots
@@ -205,7 +205,7 @@ or newer, or Docker; nothing else.
 With Go:
 
 ```bash
-go install github.com/limelitgeo/open/cmd/limelit@latest
+go install github.com/limelit-co/open/cmd/limelit@latest
 limelit serve
 ```
 
@@ -213,7 +213,7 @@ Or as a container, built from this repository (the same binary, with
 Litestream for durable storage on hosts that replace containers):
 
 ```bash
-git clone https://github.com/limelitgeo/open && cd open
+git clone https://github.com/limelit-co/open && cd open
 docker build -t limelit-open .
 docker run -p 1515:8080 -v limelit:/data limelit-open
 ```
@@ -222,7 +222,7 @@ Then open <http://localhost:1515>. The database is one SQLite file in
 `./data` (or the `limelit` volume); back it up by copying it.
 
 > Prebuilt binaries and a published image are tracked in
-> [#25](https://github.com/limelitgeo/open/issues/25) and land with v0.1.
+> [#35](https://github.com/limelit-co/open/issues/35) and land with v0.1.
 > Until then, the two commands above are the install.
 
 ### 2. Set up in the browser
@@ -343,7 +343,7 @@ never averaged together, because they measure different things.
 Adding a provider is one HTTP call, one response parse and a fixture, against
 a small Go interface. See [docs/providers.md](docs/providers.md); the open
 adapter issues are labeled
-[good first issue](https://github.com/limelitgeo/open/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+[good first issue](https://github.com/limelit-co/open/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
 ## Running a public demo
 
@@ -585,7 +585,7 @@ SQLite, pure Go, no cgo. A Postgres option is on the list, not in v0.1.
 
 v0.1 is the first usable release: the wizard, the runner, the dashboard, the
 MCP server, the API providers and the first scrapers. Tracked in the
-[v0.1 milestone](https://github.com/limelitgeo/open/milestone/1).
+[v0.1 milestone](https://github.com/limelit-co/open/milestone/1).
 
 After that: scraped ChatGPT and Gemini through LLM-scraper endpoints,
 multi-property per instance, Postgres as an alternative store.
@@ -635,7 +635,7 @@ docs/              the tool catalog, the provider contract, the methodology
 
 Issues are labeled by area, and the provider adapters are deliberately small
 and self-contained. Start with
-[good first issue](https://github.com/limelitgeo/open/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+[good first issue](https://github.com/limelit-co/open/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the rules and the walk-through for
 adding a provider. The three worth knowing before a pull request:

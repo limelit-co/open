@@ -11,7 +11,7 @@
 // working provider in a deployment.
 package providertest
 
-import "github.com/limelitgeo/open/internal/provider"
+import "github.com/limelit-co/open/internal/provider"
 
 // Registry returns a registry holding every documented provider, each backed
 // by a stub that answers with canned text.

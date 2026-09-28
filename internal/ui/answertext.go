@@ -25,7 +25,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/limelitgeo/open/internal/metrics"
+	"github.com/limelit-co/open/internal/metrics"
 )
 
 // Sentinels, from the Unicode Private Use Area.

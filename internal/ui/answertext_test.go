@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/metrics"
+	"github.com/limelit-co/open/internal/metrics"
 )
 
 // TestRenderAnswerMarksTheBrandAtTheMatcherOffset is the invariant this whole

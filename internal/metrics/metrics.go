@@ -29,7 +29,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // LowNThreshold is where a number stops being a trend and starts being an

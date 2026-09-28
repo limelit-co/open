@@ -16,8 +16,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/limelitgeo/open/internal/engines"
-	"github.com/limelitgeo/open/internal/provider"
+	"github.com/limelit-co/open/internal/engines"
+	"github.com/limelit-co/open/internal/provider"
 )
 
 // OnlineFlag is the literal final segment that turns web search on.

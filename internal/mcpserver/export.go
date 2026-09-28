@@ -15,7 +15,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/limelitgeo/open/internal/export"
+	"github.com/limelit-co/open/internal/export"
 )
 
 // exportInlineCap is the most an export may carry back through a tool call.

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/engines"
-	"github.com/limelitgeo/open/internal/provider"
+	"github.com/limelit-co/open/internal/engines"
+	"github.com/limelit-co/open/internal/provider"
 )
 
 // TestCatalogMatchesDocs reads the provider tables out of docs/providers.md

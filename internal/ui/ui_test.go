@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/limelitgeo/open/internal/config"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/provider/providertest"
-	"github.com/limelitgeo/open/internal/runner"
-	"github.com/limelitgeo/open/internal/secrets"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/config"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/provider/providertest"
+	"github.com/limelit-co/open/internal/runner"
+	"github.com/limelit-co/open/internal/secrets"
+	"github.com/limelit-co/open/internal/store"
 )
 
 func newApp(t *testing.T, reg *provider.Registry) (*App, *store.DB, http.Handler) {

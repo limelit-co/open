@@ -19,7 +19,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/limelitgeo/open/internal/config"
+	"github.com/limelit-co/open/internal/config"
 )
 
 // DemoEnv turns demo mode on. Any non-empty value.

@@ -6,10 +6,10 @@ package runner
 import (
 	"context"
 
-	"github.com/limelitgeo/open/internal/citations"
-	"github.com/limelitgeo/open/internal/mentions"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/citations"
+	"github.com/limelit-co/open/internal/mentions"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // storeAnalyzer is the open core's analyzer: a deterministic mention search

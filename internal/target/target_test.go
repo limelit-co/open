@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/engines"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/provider/providertest"
+	"github.com/limelit-co/open/internal/engines"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/provider/providertest"
 )
 
 func TestParseShape(t *testing.T) {

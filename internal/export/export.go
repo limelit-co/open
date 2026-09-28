@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // SchemaVersion is the shape of the exported document.

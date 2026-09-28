@@ -32,8 +32,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/limelitgeo/open/internal/export"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/export"
+	"github.com/limelit-co/open/internal/store"
 )
 
 const (

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/limelitgeo/open/internal/upgrade"
+	"github.com/limelit-co/open/internal/upgrade"
 )
 
 // buildUpgrade assembles the page: the hosted-only list, what would move, and

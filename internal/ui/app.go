@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/limelitgeo/open/internal/config"
-	"github.com/limelitgeo/open/internal/credentials"
-	"github.com/limelitgeo/open/internal/mentions"
-	"github.com/limelitgeo/open/internal/metrics"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/runner"
-	"github.com/limelitgeo/open/internal/secrets"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/config"
+	"github.com/limelit-co/open/internal/credentials"
+	"github.com/limelit-co/open/internal/mentions"
+	"github.com/limelit-co/open/internal/metrics"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/runner"
+	"github.com/limelit-co/open/internal/secrets"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // Settings keys the dashboard writes.
@@ -385,5 +385,5 @@ func commitLink(version string) (string, string) {
 	if strings.HasSuffix(v, "-dirty") {
 		return v, ""
 	}
-	return v, "https://github.com/limelitgeo/open/commit/" + v
+	return v, "https://github.com/limelit-co/open/commit/" + v
 }

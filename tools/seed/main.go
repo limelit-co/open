@@ -27,9 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/runner"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/runner"
+	"github.com/limelit-co/open/internal/store"
 )
 
 type seedFile struct {

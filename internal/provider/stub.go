@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/limelitgeo/open/internal/engines"
+	"github.com/limelit-co/open/internal/engines"
 )
 
 // StubName is the provider name a stub registers under.

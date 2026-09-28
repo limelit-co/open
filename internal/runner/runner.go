@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/store"
-	"github.com/limelitgeo/open/internal/target"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/target"
 )
 
 // ErrOverCeiling is returned when a pass would exceed limits.runs_per_day.

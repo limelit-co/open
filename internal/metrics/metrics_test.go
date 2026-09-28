@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // fixture builds an instance with one property, two competitors, four prompts

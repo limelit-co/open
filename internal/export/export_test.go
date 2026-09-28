@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/metrics"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/metrics"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // seeded builds an instance with one of everything an export has to carry.

@@ -27,20 +27,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/limelitgeo/open/internal/config"
-	"github.com/limelitgeo/open/internal/credentials"
+	"github.com/limelit-co/open/internal/config"
+	"github.com/limelit-co/open/internal/credentials"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/limelitgeo/open/internal/export"
-	"github.com/limelitgeo/open/internal/httpx"
-	"github.com/limelitgeo/open/internal/mcpserver"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/runner"
-	"github.com/limelitgeo/open/internal/secrets"
-	"github.com/limelitgeo/open/internal/store"
-	"github.com/limelitgeo/open/internal/target"
-	"github.com/limelitgeo/open/internal/ui"
-	"github.com/limelitgeo/open/internal/upgrade"
+	"github.com/limelit-co/open/internal/export"
+	"github.com/limelit-co/open/internal/httpx"
+	"github.com/limelit-co/open/internal/mcpserver"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/runner"
+	"github.com/limelit-co/open/internal/secrets"
+	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/target"
+	"github.com/limelit-co/open/internal/ui"
+	"github.com/limelit-co/open/internal/upgrade"
 )
 
 // version is stamped at build time with -ldflags; it falls back to the module

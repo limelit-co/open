@@ -16,11 +16,11 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/limelitgeo/open/internal/mcpserver"
-	"github.com/limelitgeo/open/internal/provider"
-	"github.com/limelitgeo/open/internal/provider/providertest"
-	"github.com/limelitgeo/open/internal/store"
-	"github.com/limelitgeo/open/internal/upgrade"
+	"github.com/limelit-co/open/internal/mcpserver"
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/provider/providertest"
+	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/upgrade"
 )
 
 // ---- targets ---------------------------------------------------------------

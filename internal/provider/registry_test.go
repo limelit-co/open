@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/limelitgeo/open/internal/engines"
+	"github.com/limelit-co/open/internal/engines"
 )
 
 func stubRegistration(name string, access Access, engineIDs map[string]string, creds ...string) Registration {

@@ -13,8 +13,8 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/limelitgeo/open/internal/metrics"
-	"github.com/limelitgeo/open/internal/store"
+	"github.com/limelit-co/open/internal/metrics"
+	"github.com/limelit-co/open/internal/store"
 )
 
 // connect builds a server over an in-memory transport pair, so every test
