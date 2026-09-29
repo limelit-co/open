@@ -1,0 +1,279 @@
+Overview
+How Acme shows up when people ask AI about your category. 7 days 30 days 90 days
+Visibility
+?
+The share of answers that name you. Branded prompts are left out, and an answer surface that did not render is left out entirely.
+54
+%
+31 of 57 answers
+▲ 5.1 pts
+3 days, 50 to 60%
+Share of voice
+?
+Your mentions divided by all tracked brands' mentions in the same answers. One answer naming you twice counts twice.
+18
+%
+of every tracked brand mention
+Average position
+?
+The mean rank of your brand in numbered or bulleted lists. Mentions in prose have no rank and are not averaged in.
+2.1
+where you appear in a ranked list
+Citation share
+?
+The share of all cited URLs that point at your own domains.
+27
+%
+of cited sources are yours
+The race
+5 of 5 brands · 3 measured days · 57 answers
+How often each brand is named, by day. Values at the right edge are the last measured day. Hollow dots rest on fewer than 20 answers. Shaded spans had no run.
+100%
+75
+50
+25
+0
+Sep 23
+Sep 25
+Sep 29
+answers per day 2026-09-23: 19 answers 2026-09-25: 18 answers 2026-09-29: 20 answers Rival, 2026-09-23: 68% of 19 answers, thin sample Rival, 2026-09-25: 72% of 18 answers, thin sample Rival, 2026-09-29: 70% of 20 answers Zenith, 2026-09-23: 68% of 19 answers, thin sample Zenith, 2026-09-25: 78% of 18 answers, thin sample Zenith, 2026-09-29: 80% of 20 answers Orbit, 2026-09-23: 74% of 19 answers, thin sample Orbit, 2026-09-25: 83% of 18 answers, thin sample Orbit, 2026-09-29: 50% of 20 answers Nimbus, 2026-09-23: 68% of 19 answers, thin sample Nimbus, 2026-09-25: 67% of 18 answers, thin sample Nimbus, 2026-09-29: 60% of 20 answers Acme, 2026-09-23: 53% of 19 answers, thin sample Acme, 2026-09-25: 50% of 18 answers, thin sample Acme, 2026-09-29: 60% of 20 answers
+70% Rival
+80% Zenith
+50% Orbit
+60% Nimbus
+60% Acme
+Rival
+70%
+Zenith
+80%
+Orbit
+50%
+Nimbus
+60%
+Acme
+you
+60%
+Share of voice
+Of every time a tracked brand was named in this window, how much was you.
+Acme: 18% of all tracked-brand mentions Rival: 23% of all tracked-brand mentions Zenith: 21% of all tracked-brand mentions Orbit: 19% of all tracked-brand mentions Nimbus: 18% of all tracked-brand mentions
+18%
+your share
+36 of 202
+Rival
+23%
+Zenith
+21%
+Orbit
+19%
+Nimbus
+18%
+Acme
+18%
+By engine
+Where each brand stands on each engine. Your dot is the large one; the number on the right is your share of that engine's answers. Grey dots are the brands outside the top seven. Rows run from your strongest engine to your weakest.
+0
+25
+50
+75
+100%
+ChatGPT
+14 answers, thin Nimbus on ChatGPT: 57% of 14 answers Orbit on ChatGPT: 50% of 14 answers Rival on ChatGPT: 79% of 14 answers Zenith on ChatGPT: 86% of 14 answers Acme on ChatGPT: 57% of 14 answers
+Zenith 86%
+57%
+3rd, Zenith 86%
+Google AI Overview
+16 answers, thin Nimbus on Google AI Overview: 69% of 16 answers Orbit on Google AI Overview: 88% of 16 answers Rival on Google AI Overview: 56% of 16 answers Zenith on Google AI Overview: 62% of 16 answers Acme on Google AI Overview: 56% of 16 answers
+Orbit 88%
+56%
+4th, Orbit 88%
+Perplexity
+13 answers, thin Nimbus on Perplexity: 77% of 13 answers Orbit on Perplexity: 62% of 13 answers Rival on Perplexity: 69% of 13 answers Zenith on Perplexity: 77% of 13 answers Acme on Perplexity: 54% of 13 answers
+Nimbus 77%
+54%
+5th, Nimbus 77%
+Claude
+14 answers, thin Nimbus on Claude: 57% of 14 answers Orbit on Claude: 71% of 14 answers Rival on Claude: 79% of 14 answers Zenith on Claude: 79% of 14 answers Acme on Claude: 50% of 14 answers
+Rival 79%
+50%
+5th, Rival 79%
+Where you stand
+5 brands
+Brand
+Seen in
+Share
+Avg position
+1
+Rival
+47 in 40 answers
+70%
+23%
+2.7
+2
+Zenith
+43 in 43 answers
+75%
+21%
+2.0
+3
+Orbit
+39 in 39 answers
+68%
+19%
+2.3
+4
+Nimbus
+37 in 37 answers
+65%
+18%
+2.6
+5
+Acme
+you
+36 in 31 answers
+54%
+18%
+2.1
+Every prompt, every engine
+7 prompts × 4 engines
+Worst first. Click any cell to read the answers behind it.
+Prompt
+ChatGPT
+Claude
+Perplexity
+Google AI Overview
+All
+top widget tools with an API
+discovery
+0/3
+1/2
+#3.0
+1/3
+#1.0
+0/3
+2/11
+how do I fix slow widget rendering
+problem
+1/2
+#3.0
+1/2
+1/2
+#4.0
+0/2
+3/8
+Rival vs Zenith for widgets
+comparison
+1/2
+#4.0
+2/3
+#4.0
+0/1
+2/3
+#1.0
+5/9
+which widget software is easiest to set up
+discovery
+3/3
+#1.8
+1/3
+#1.0
+1/2
+#1.0
+1/2
+#3.0
+6/10
+best widget platforms for startups
+discovery
+1/2
+1/3
+#3.0
+2/2
+#2.0
+3/3
+#2.0
+7/10
+alternatives to Orbit for widget analytics
+comparison
+2/2
+#2.0
+1/1
+2/3
+#1.0
+3/3
+#1.0
+8/9
+is Acme good for small teams
+discovery
+branded, not in the headline
+2/3
+#2.0
+1/3
+#2.0
+3/3
+#2.8
+0/1
+6/10
+Every prompt
+10/17
+8/17
+10/16
+9/17
+Each cell is how many of that engine's answers named you, over how many were asked.
+A dash means that prompt has not been asked of that engine.
+Who gets cited
+Each bar is one day's citations, split by what kind of site they point at. The number on top is your share; the number under the date is how many citations that day had.
+2026-09-23, own: 11 of 38 citations 2026-09-23, competitor: 11 of 38 citations 2026-09-23, informational: 3 of 38 citations 2026-09-23, social: 10 of 38 citations 2026-09-23, other: 3 of 38 citations
+29%
+38 2026-09-25, own: 6 of 33 citations 2026-09-25, competitor: 7 of 33 citations 2026-09-25, informational: 6 of 33 citations 2026-09-25, social: 10 of 33 citations 2026-09-25, other: 4 of 33 citations
+18%
+33 2026-09-29, own: 11 of 33 citations 2026-09-29, competitor: 7 of 33 citations 2026-09-29, informational: 4 of 33 citations 2026-09-29, social: 9 of 33 citations 2026-09-29, other: 2 of 33 citations
+33%
+33
+Sep 23
+Sep 25
+Sep 29
+own
+28 · 27%
+competitor
+25 · 24%
+informational
+13 · 12%
+social
+29 · 28%
+other
+9 · 8.7%
+What the engines searched for
+The words in the searches engines ran on the way to their answers. Bigger is more often. This is often not the vocabulary you used.
+None of the engines reported their searches yet.
+By question type
+A question naming a rival lists rivals by construction. Discovery is the one that measures unprompted reach.
+discovery
+48%
+15 of 31 answers
+comparison
+72%
+13 of 18 answers
+problem
+38%
+3 of 8 answers
+Top cited sites All sources →
+acme.com
+own
+28
+reddit.com
+social
+16
+g2.com
+social
+13
+rival.com
+competitor
+13
+wikipedia.org
+informational
+13
+zenith.io
+competitor
+12
+example.net
+other
+9

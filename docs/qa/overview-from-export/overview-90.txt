@@ -1,0 +1,305 @@
+Overview
+How Acme shows up when people ask AI about your category. 7 days 30 days 90 days
+Visibility
+?
+The share of answers that name you. Branded prompts are left out, and an answer surface that did not render is left out entirely.
+54
+%
+247 of 459 answers
+first window
+24 days, 24 to 67%
+Share of voice
+?
+Your mentions divided by all tracked brands' mentions in the same answers. One answer naming you twice counts twice.
+19
+%
+of every tracked brand mention
+Average position
+?
+The mean rank of your brand in numbered or bulleted lists. Mentions in prose have no rank and are not averaged in.
+2.2
+where you appear in a ranked list
+Citation share
+?
+The share of all cited URLs that point at your own domains.
+25
+%
+of cited sources are yours
+The race
+5 of 5 brands · 24 measured days · 459 answers
+How often each brand is named, by day. Values at the right edge are the last measured day. Hollow dots rest on fewer than 20 answers. Shaded spans had no run.
+No run between 2026-07-21 and 2026-07-29 No run between 2026-07-29 and 2026-08-13 No run between 2026-08-13 and 2026-08-19 No run between 2026-08-19 and 2026-08-25 No run between 2026-08-25 and 2026-09-03 No run between 2026-09-10 and 2026-09-13 No run between 2026-09-13 and 2026-09-16 No run between 2026-09-25 and 2026-09-29
+100%
+75
+50
+25
+0
+Jul 21
+Jul 29
+Aug 13
+Aug 19
+Aug 25
+Sep 3
+Sep 8
+Sep 13
+Sep 18
+Sep 23
+Sep 29
+answers per day 2026-07-21: 17 answers 2026-07-29: 17 answers 2026-08-13: 15 answers 2026-08-19: 16 answers 2026-08-25: 19 answers 2026-09-03: 24 answers 2026-09-04: 21 answers 2026-09-05: 19 answers 2026-09-06: 20 answers 2026-09-07: 21 answers 2026-09-08: 20 answers 2026-09-09: 16 answers 2026-09-10: 22 answers 2026-09-13: 21 answers 2026-09-16: 16 answers 2026-09-17: 19 answers 2026-09-18: 21 answers 2026-09-19: 21 answers 2026-09-20: 18 answers 2026-09-21: 18 answers 2026-09-22: 21 answers 2026-09-23: 19 answers 2026-09-25: 18 answers 2026-09-29: 20 answers Rival, 2026-07-21: 65% of 17 answers, thin sample Rival, 2026-07-29: 59% of 17 answers, thin sample Rival, 2026-08-13: 73% of 15 answers, thin sample Rival, 2026-08-19: 88% of 16 answers, thin sample Rival, 2026-08-25: 53% of 19 answers, thin sample Rival, 2026-09-03: 71% of 24 answers Rival, 2026-09-04: 67% of 21 answers Rival, 2026-09-05: 74% of 19 answers, thin sample Rival, 2026-09-06: 50% of 20 answers Rival, 2026-09-07: 81% of 21 answers Rival, 2026-09-08: 80% of 20 answers Rival, 2026-09-09: 50% of 16 answers, thin sample Rival, 2026-09-10: 73% of 22 answers Rival, 2026-09-13: 71% of 21 answers Rival, 2026-09-16: 88% of 16 answers, thin sample Rival, 2026-09-17: 84% of 19 answers, thin sample Rival, 2026-09-18: 67% of 21 answers Rival, 2026-09-19: 67% of 21 answers Rival, 2026-09-20: 61% of 18 answers, thin sample Rival, 2026-09-21: 56% of 18 answers, thin sample Rival, 2026-09-22: 52% of 21 answers Rival, 2026-09-23: 68% of 19 answers, thin sample Rival, 2026-09-25: 72% of 18 answers, thin sample Rival, 2026-09-29: 70% of 20 answers Nimbus, 2026-07-21: 82% of 17 answers, thin sample Nimbus, 2026-07-29: 88% of 17 answers, thin sample Nimbus, 2026-08-13: 80% of 15 answers, thin sample Nimbus, 2026-08-19: 75% of 16 answers, thin sample Nimbus, 2026-08-25: 74% of 19 answers, thin sample Nimbus, 2026-09-03: 71% of 24 answers Nimbus, 2026-09-04: 62% of 21 answers Nimbus, 2026-09-05: 89% of 19 answers, thin sample Nimbus, 2026-09-06: 65% of 20 answers Nimbus, 2026-09-07: 67% of 21 answers Nimbus, 2026-09-08: 70% of 20 answers Nimbus, 2026-09-09: 75% of 16 answers, thin sample Nimbus, 2026-09-10: 73% of 22 answers Nimbus, 2026-09-13: 62% of 21 answers Nimbus, 2026-09-16: 44% of 16 answers, thin sample Nimbus, 2026-09-17: 68% of 19 answers, thin sample Nimbus, 2026-09-18: 76% of 21 answers Nimbus, 2026-09-19: 76% of 21 answers Nimbus, 2026-09-20: 67% of 18 answers, thin sample Nimbus, 2026-09-21: 89% of 18 answers, thin sample Nimbus, 2026-09-22: 71% of 21 answers Nimbus, 2026-09-23: 68% of 19 answers, thin sample Nimbus, 2026-09-25: 67% of 18 answers, thin sample Nimbus, 2026-09-29: 60% of 20 answers Zenith, 2026-07-21: 82% of 17 answers, thin sample Zenith, 2026-07-29: 65% of 17 answers, thin sample Zenith, 2026-08-13: 67% of 15 answers, thin sample Zenith, 2026-08-19: 56% of 16 answers, thin sample Zenith, 2026-08-25: 58% of 19 answers, thin sample Zenith, 2026-09-03: 75% of 24 answers Zenith, 2026-09-04: 57% of 21 answers Zenith, 2026-09-05: 58% of 19 answers, thin sample Zenith, 2026-09-06: 60% of 20 answers Zenith, 2026-09-07: 67% of 21 answers Zenith, 2026-09-08: 70% of 20 answers Zenith, 2026-09-09: 69% of 16 answers, thin sample Zenith, 2026-09-10: 64% of 22 answers Zenith, 2026-09-13: 62% of 21 answers Zenith, 2026-09-16: 69% of 16 answers, thin sample Zenith, 2026-09-17: 68% of 19 answers, thin sample Zenith, 2026-09-18: 76% of 21 answers Zenith, 2026-09-19: 71% of 21 answers Zenith, 2026-09-20: 56% of 18 answers, thin sample Zenith, 2026-09-21: 44% of 18 answers, thin sample Zenith, 2026-09-22: 71% of 21 answers Zenith, 2026-09-23: 68% of 19 answers, thin sample Zenith, 2026-09-25: 78% of 18 answers, thin sample Zenith, 2026-09-29: 80% of 20 answers Orbit, 2026-07-21: 71% of 17 answers, thin sample Orbit, 2026-07-29: 82% of 17 answers, thin sample Orbit, 2026-08-13: 47% of 15 answers, thin sample Orbit, 2026-08-19: 81% of 16 answers, thin sample Orbit, 2026-08-25: 63% of 19 answers, thin sample Orbit, 2026-09-03: 75% of 24 answers Orbit, 2026-09-04: 57% of 21 answers Orbit, 2026-09-05: 74% of 19 answers, thin sample Orbit, 2026-09-06: 50% of 20 answers Orbit, 2026-09-07: 62% of 21 answers Orbit, 2026-09-08: 65% of 20 answers Orbit, 2026-09-09: 69% of 16 answers, thin sample Orbit, 2026-09-10: 73% of 22 answers Orbit, 2026-09-13: 67% of 21 answers Orbit, 2026-09-16: 62% of 16 answers, thin sample Orbit, 2026-09-17: 68% of 19 answers, thin sample Orbit, 2026-09-18: 62% of 21 answers Orbit, 2026-09-19: 71% of 21 answers Orbit, 2026-09-20: 61% of 18 answers, thin sample Orbit, 2026-09-21: 72% of 18 answers, thin sample Orbit, 2026-09-22: 57% of 21 answers Orbit, 2026-09-23: 74% of 19 answers, thin sample Orbit, 2026-09-25: 83% of 18 answers, thin sample Orbit, 2026-09-29: 50% of 20 answers Acme, 2026-07-21: 59% of 17 answers, thin sample Acme, 2026-07-29: 24% of 17 answers, thin sample Acme, 2026-08-13: 60% of 15 answers, thin sample Acme, 2026-08-19: 62% of 16 answers, thin sample Acme, 2026-08-25: 58% of 19 answers, thin sample Acme, 2026-09-03: 62% of 24 answers Acme, 2026-09-04: 52% of 21 answers Acme, 2026-09-05: 58% of 19 answers, thin sample Acme, 2026-09-06: 60% of 20 answers Acme, 2026-09-07: 67% of 21 answers Acme, 2026-09-08: 65% of 20 answers Acme, 2026-09-09: 50% of 16 answers, thin sample Acme, 2026-09-10: 55% of 22 answers Acme, 2026-09-13: 48% of 21 answers Acme, 2026-09-16: 50% of 16 answers, thin sample Acme, 2026-09-17: 53% of 19 answers, thin sample Acme, 2026-09-18: 52% of 21 answers Acme, 2026-09-19: 52% of 21 answers Acme, 2026-09-20: 56% of 18 answers, thin sample Acme, 2026-09-21: 50% of 18 answers, thin sample Acme, 2026-09-22: 33% of 21 answers Acme, 2026-09-23: 53% of 19 answers, thin sample Acme, 2026-09-25: 50% of 18 answers, thin sample Acme, 2026-09-29: 60% of 20 answers
+70% Rival
+60% Nimbus
+80% Zenith
+50% Orbit
+60% Acme
+Rival
+70%
+Nimbus
+60%
+Zenith
+80%
+Orbit
+50%
+Acme
+you
+60%
+Share of voice
+Of every time a tracked brand was named in this window, how much was you.
+Acme: 19% of all tracked-brand mentions Rival: 22% of all tracked-brand mentions Nimbus: 21% of all tracked-brand mentions Zenith: 19% of all tracked-brand mentions Orbit: 19% of all tracked-brand mentions
+19%
+your share
+295 of 1,589
+Rival
+22%
+Nimbus
+21%
+Zenith
+19%
+Orbit
+19%
+Acme
+19%
+By engine
+Where each brand stands on each engine. Your dot is the large one; the number on the right is your share of that engine's answers. Grey dots are the brands outside the top seven. Rows run from your strongest engine to your weakest.
+0
+25
+50
+75
+100%
+Perplexity
+110 answers Nimbus on Perplexity: 65% of 110 answers Orbit on Perplexity: 72% of 110 answers Rival on Perplexity: 68% of 110 answers Zenith on Perplexity: 71% of 110 answers Acme on Perplexity: 68% of 110 answers
+Orbit 72%
+68%
+3rd, Orbit 72%
+ChatGPT
+108 answers Nimbus on ChatGPT: 78% of 108 answers Orbit on ChatGPT: 59% of 108 answers Rival on ChatGPT: 64% of 108 answers Zenith on ChatGPT: 66% of 108 answers Acme on ChatGPT: 63% of 108 answers
+Nimbus 78%
+63%
+4th, Nimbus 78%
+Claude
+117 answers Nimbus on Claude: 74% of 117 answers Orbit on Claude: 68% of 117 answers Rival on Claude: 72% of 117 answers Zenith on Claude: 68% of 117 answers Acme on Claude: 50% of 117 answers
+Nimbus 74%
+50%
+5th, Nimbus 74%
+Google AI Overview
+124 answers Nimbus on Google AI Overview: 70% of 124 answers Orbit on Google AI Overview: 67% of 124 answers Rival on Google AI Overview: 69% of 124 answers Zenith on Google AI Overview: 62% of 124 answers Acme on Google AI Overview: 36% of 124 answers
+Nimbus 70%
+36%
+5th, Nimbus 70%
+Where you stand
+5 brands
+Brand
+Seen in
+Share
+Avg position
+1
+Rival
+356 in 313 answers
+68%
+22%
+2.6
+2
+Nimbus
+328 in 328 answers
+71%
+21%
+2.2
+3
+Zenith
+305 in 305 answers
+66%
+19%
+2.1
+4
+Orbit
+305 in 305 answers
+66%
+19%
+2.2
+5
+Acme
+you
+295 in 247 answers
+54%
+19%
+2.2
+Every prompt, every engine
+7 prompts × 4 engines
+Worst first. Click any cell to read the answers behind it.
+Prompt
+ChatGPT
+Claude
+Perplexity
+Google AI Overview
+All
+which widget software is easiest to set up
+discovery
+13/24
+#2.2
+9/20
+#2.5
+10/18
+#2.1
+8/20
+#2.4
+40/82
+Rival vs Zenith for widgets
+comparison
+13/18
+#2.8
+6/20
+#3.0
+13/18
+#1.9
+6/20
+#1.2
+38/76
+how do I fix slow widget rendering
+problem
+9/14
+#1.8
+9/19
+#2.9
+11/18
+#2.2
+7/21
+#2.4
+36/72
+top widget tools with an API
+discovery
+10/18
+#2.3
+10/20
+#1.9
+15/22
+#2.5
+7/20
+#2.1
+42/80
+alternatives to Orbit for widget analytics
+comparison
+13/19
+#2.5
+11/16
+#2.3
+11/16
+#2.2
+7/20
+#1.6
+42/71
+best widget platforms for startups
+discovery
+10/15
+#2.0
+14/22
+#2.6
+15/18
+#2.3
+10/23
+#1.4
+49/78
+is Acme good for small teams
+discovery
+branded, not in the headline
+15/20
+#2.2
+10/22
+#2.6
+14/19
+#2.7
+8/17
+#2.1
+47/78
+Every prompt
+83/128
+69/139
+89/129
+53/141
+Each cell is how many of that engine's answers named you, over how many were asked.
+A dash means that prompt has not been asked of that engine.
+Who gets cited
+Each bar is one day's citations, split by what kind of site they point at. The number on top is your share; the number under the date is how many citations that day had.
+2026-07-21, own: 6 of 34 citations 2026-07-21, competitor: 10 of 34 citations 2026-07-21, informational: 6 of 34 citations 2026-07-21, social: 8 of 34 citations 2026-07-21, other: 4 of 34 citations
+18%
+34 2026-07-29, own: 8 of 40 citations 2026-07-29, competitor: 13 of 40 citations 2026-07-29, informational: 4 of 40 citations 2026-07-29, social: 10 of 40 citations 2026-07-29, other: 5 of 40 citations 2026-08-13, own: 8 of 30 citations 2026-08-13, competitor: 8 of 30 citations 2026-08-13, informational: 2 of 30 citations 2026-08-13, social: 9 of 30 citations 2026-08-13, other: 3 of 30 citations
+27%
+30 2026-08-19, own: 9 of 39 citations 2026-08-19, competitor: 9 of 39 citations 2026-08-19, informational: 4 of 39 citations 2026-08-19, social: 11 of 39 citations 2026-08-19, other: 6 of 39 citations 2026-08-25, own: 15 of 44 citations 2026-08-25, competitor: 10 of 44 citations 2026-08-25, informational: 8 of 44 citations 2026-08-25, social: 8 of 44 citations 2026-08-25, other: 3 of 44 citations
+34%
+44 2026-09-03, own: 17 of 51 citations 2026-09-03, competitor: 8 of 51 citations 2026-09-03, informational: 7 of 51 citations 2026-09-03, social: 12 of 51 citations 2026-09-03, other: 7 of 51 citations
+33%
+51 2026-09-04, own: 10 of 45 citations 2026-09-04, competitor: 9 of 45 citations 2026-09-04, informational: 7 of 45 citations 2026-09-04, social: 12 of 45 citations 2026-09-04, other: 7 of 45 citations 2026-09-05, own: 11 of 38 citations 2026-09-05, competitor: 13 of 38 citations 2026-09-05, informational: 2 of 38 citations 2026-09-05, social: 8 of 38 citations 2026-09-05, other: 4 of 38 citations 2026-09-06, own: 10 of 41 citations 2026-09-06, competitor: 11 of 41 citations 2026-09-06, informational: 5 of 41 citations 2026-09-06, social: 9 of 41 citations 2026-09-06, other: 6 of 41 citations 2026-09-07, own: 12 of 49 citations 2026-09-07, competitor: 13 of 49 citations 2026-09-07, informational: 5 of 49 citations 2026-09-07, social: 10 of 49 citations 2026-09-07, other: 9 of 49 citations 2026-09-08, own: 10 of 47 citations 2026-09-08, competitor: 13 of 47 citations 2026-09-08, informational: 2 of 47 citations 2026-09-08, social: 15 of 47 citations 2026-09-08, other: 7 of 47 citations 2026-09-09, own: 16 of 36 citations 2026-09-09, competitor: 4 of 36 citations 2026-09-09, informational: 6 of 36 citations 2026-09-09, social: 5 of 36 citations 2026-09-09, other: 5 of 36 citations 2026-09-10, own: 9 of 43 citations 2026-09-10, competitor: 16 of 43 citations 2026-09-10, informational: 6 of 43 citations 2026-09-10, social: 9 of 43 citations 2026-09-10, other: 3 of 43 citations 2026-09-13, own: 9 of 32 citations 2026-09-13, competitor: 8 of 32 citations 2026-09-13, informational: 3 of 32 citations 2026-09-13, social: 7 of 32 citations 2026-09-13, other: 5 of 32 citations
+28%
+32 2026-09-16, own: 7 of 33 citations 2026-09-16, competitor: 8 of 33 citations 2026-09-16, informational: 5 of 33 citations 2026-09-16, social: 8 of 33 citations 2026-09-16, other: 5 of 33 citations 2026-09-17, own: 11 of 42 citations 2026-09-17, competitor: 10 of 42 citations 2026-09-17, informational: 6 of 42 citations 2026-09-17, social: 13 of 42 citations 2026-09-17, other: 2 of 42 citations 2026-09-18, own: 6 of 41 citations 2026-09-18, competitor: 10 of 41 citations 2026-09-18, informational: 5 of 41 citations 2026-09-18, social: 13 of 41 citations 2026-09-18, other: 7 of 41 citations 2026-09-19, own: 12 of 47 citations 2026-09-19, competitor: 14 of 47 citations 2026-09-19, informational: 8 of 47 citations 2026-09-19, social: 12 of 47 citations 2026-09-19, other: 1 of 47 citations 2026-09-20, own: 5 of 22 citations 2026-09-20, competitor: 4 of 22 citations 2026-09-20, informational: 3 of 22 citations 2026-09-20, social: 7 of 22 citations 2026-09-20, other: 3 of 22 citations 2026-09-21, own: 6 of 37 citations 2026-09-21, competitor: 11 of 37 citations 2026-09-21, informational: 8 of 37 citations 2026-09-21, social: 7 of 37 citations 2026-09-21, other: 5 of 37 citations 2026-09-22, own: 13 of 51 citations 2026-09-22, competitor: 15 of 51 citations 2026-09-22, informational: 6 of 51 citations 2026-09-22, social: 11 of 51 citations 2026-09-22, other: 6 of 51 citations 2026-09-23, own: 11 of 38 citations 2026-09-23, competitor: 11 of 38 citations 2026-09-23, informational: 3 of 38 citations 2026-09-23, social: 10 of 38 citations 2026-09-23, other: 3 of 38 citations 2026-09-25, own: 6 of 33 citations 2026-09-25, competitor: 7 of 33 citations 2026-09-25, informational: 6 of 33 citations 2026-09-25, social: 10 of 33 citations 2026-09-25, other: 4 of 33 citations 2026-09-29, own: 11 of 33 citations 2026-09-29, competitor: 7 of 33 citations 2026-09-29, informational: 4 of 33 citations 2026-09-29, social: 9 of 33 citations 2026-09-29, other: 2 of 33 citations
+33%
+33
+Jul 21
+Aug 13
+Aug 25
+Sep 3
+Sep 13
+Sep 29
+own
+238 · 25%
+competitor
+242 · 26%
+informational
+121 · 13%
+social
+233 · 25%
+other
+112 · 12%
+What the engines searched for
+The words in the searches engines ran on the way to their answers. Bigger is more often. This is often not the vocabulary you used.
+None of the engines reported their searches yet.
+By question type
+A question naming a rival lists rivals by construction. Discovery is the one that measures unprompted reach.
+discovery
+55%
+131 of 240 answers
+comparison
+54%
+80 of 147 answers
+problem
+50%
+36 of 72 answers
+Top cited sites All sources →
+acme.com
+own
+238
+reddit.com
+social
+131
+rival.com
+competitor
+124
+wikipedia.org
+informational
+121
+zenith.io
+competitor
+118
+example.net
+other
+112
+g2.com
+social
+102

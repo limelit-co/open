@@ -1,0 +1,101 @@
+window: 30 days ending 2026-09-29T19:39:50Z, 375 answers (branded prompts excluded)
+
+HEADLINE
+  visibility      54.13%  (203 of 375 answers)
+  vs previous     -5.87 pts  (previous window 60.00% of 50)
+  share of voice  18.89%  (244 of 1292 mentions)
+  avg position    2.27  (218 ranked mentions)
+  citation share  25.30%  (192 of 759 citations)
+  trend           19 measured days, 33.33% to 66.67%
+
+STANDINGS (by mentions)
+  #    brand        mentions  answers  visibility    share  avg pos
+  1    Rival             290      257      68.53%   22.45%     2.57
+  2    Nimbus            261      261      69.60%   20.20%     2.27
+  3    Zenith            250      250      66.67%   19.35%     2.08
+  4    Orbit             247      247      65.87%   19.12%     2.15
+  5    Acme              244      203      54.13%   18.89%     2.27
+
+RACE (visibility per brand per measured day)
+  2026-09-03  24 answers  Rival 70.83% Nimbus 70.83% Zenith 75.00% Orbit 75.00% Acme 62.50%
+  2026-09-04  21 answers  Rival 66.67% Nimbus 61.90% Zenith 57.14% Orbit 57.14% Acme 52.38%
+  2026-09-05  19 answers  Rival 73.68% Nimbus 89.47% Zenith 57.89% Orbit 73.68% Acme 57.89%
+  2026-09-06  20 answers  Rival 50.00% Nimbus 65.00% Zenith 60.00% Orbit 50.00% Acme 60.00%
+  2026-09-07  21 answers  Rival 80.95% Nimbus 66.67% Zenith 66.67% Orbit 61.90% Acme 66.67%
+  2026-09-08  20 answers  Rival 80.00% Nimbus 70.00% Zenith 70.00% Orbit 65.00% Acme 65.00%
+  2026-09-09  16 answers  Rival 50.00% Nimbus 75.00% Zenith 68.75% Orbit 68.75% Acme 50.00%
+  2026-09-10  22 answers  Rival 72.73% Nimbus 72.73% Zenith 63.64% Orbit 72.73% Acme 54.55%
+  2026-09-13  21 answers  Rival 71.43% Nimbus 61.90% Zenith 61.90% Orbit 66.67% Acme 47.62%
+  2026-09-16  16 answers  Rival 87.50% Nimbus 43.75% Zenith 68.75% Orbit 62.50% Acme 50.00%
+  2026-09-17  19 answers  Rival 84.21% Nimbus 68.42% Zenith 68.42% Orbit 68.42% Acme 52.63%
+  2026-09-18  21 answers  Rival 66.67% Nimbus 76.19% Zenith 76.19% Orbit 61.90% Acme 52.38%
+  2026-09-19  21 answers  Rival 66.67% Nimbus 76.19% Zenith 71.43% Orbit 71.43% Acme 52.38%
+  2026-09-20  18 answers  Rival 61.11% Nimbus 66.67% Zenith 55.56% Orbit 61.11% Acme 55.56%
+  2026-09-21  18 answers  Rival 55.56% Nimbus 88.89% Zenith 44.44% Orbit 72.22% Acme 50.00%
+  2026-09-22  21 answers  Rival 52.38% Nimbus 71.43% Zenith 71.43% Orbit 57.14% Acme 33.33%
+  2026-09-23  19 answers  Rival 68.42% Nimbus 68.42% Zenith 68.42% Orbit 73.68% Acme 52.63%
+  2026-09-25  18 answers  Rival 72.22% Nimbus 66.67% Zenith 77.78% Orbit 83.33% Acme 50.00%
+  2026-09-29  20 answers  Rival 70.00% Nimbus 60.00% Zenith 80.00% Orbit 50.00% Acme 60.00%
+
+BY ENGINE
+  ai_overview/scraped   100 answers  you 35.00%, place 5 of 5, leader Rival 70.00%
+                        Rival 70.00% Nimbus 68.00% Zenith 64.00% Orbit 69.00% Acme 35.00%
+  chatgpt/api            89 answers  you 64.04%, place 3 of 5, leader Nimbus 74.16%
+                        Rival 64.04% Nimbus 74.16% Zenith 66.29% Orbit 56.18% Acme 64.04%
+  claude/api             95 answers  you 49.47%, place 5 of 5, leader Nimbus 71.58%
+                        Rival 71.58% Nimbus 71.58% Zenith 66.32% Orbit 66.32% Acme 49.47%
+  perplexity/api         91 answers  you 70.33%, place 2 of 5, leader Orbit 71.43%
+                        Rival 68.13% Nimbus 64.84% Zenith 70.33% Orbit 71.43% Acme 70.33%
+
+BY QUESTION TYPE
+  comparison   55.00%  (66 of 120 answers)
+  discovery    55.21%  (106 of 192 answers)
+  problem      49.21%  (31 of 63 answers)
+
+CITATIONS BY SOURCE TYPE
+  competitor       192  25.30%
+  informational     97  12.78%
+  other             91  11.99%
+  own              192  25.30%
+  social           187  24.64%
+
+CITATIONS BY DAY
+  2026-09-03  51 citations  competitor 8 informational 7 other 7 own 17 social 12
+  2026-09-04  45 citations  competitor 9 informational 7 other 7 own 10 social 12
+  2026-09-05  38 citations  competitor 13 informational 2 other 4 own 11 social 8
+  2026-09-06  41 citations  competitor 11 informational 5 other 6 own 10 social 9
+  2026-09-07  49 citations  competitor 13 informational 5 other 9 own 12 social 10
+  2026-09-08  47 citations  competitor 13 informational 2 other 7 own 10 social 15
+  2026-09-09  36 citations  competitor 4 informational 6 other 5 own 16 social 5
+  2026-09-10  43 citations  competitor 16 informational 6 other 3 own 9 social 9
+  2026-09-13  32 citations  competitor 8 informational 3 other 5 own 9 social 7
+  2026-09-16  33 citations  competitor 8 informational 5 other 5 own 7 social 8
+  2026-09-17  42 citations  competitor 10 informational 6 other 2 own 11 social 13
+  2026-09-18  41 citations  competitor 10 informational 5 other 7 own 6 social 13
+  2026-09-19  47 citations  competitor 14 informational 8 other 1 own 12 social 12
+  2026-09-20  22 citations  competitor 4 informational 3 other 3 own 5 social 7
+  2026-09-21  37 citations  competitor 11 informational 8 other 5 own 6 social 7
+  2026-09-22  51 citations  competitor 15 informational 6 other 6 own 13 social 11
+  2026-09-23  38 citations  competitor 11 informational 3 other 3 own 11 social 10
+  2026-09-25  33 citations  competitor 7 informational 6 other 4 own 6 social 10
+  2026-09-29  33 citations  competitor 7 informational 4 other 2 own 11 social 9
+
+TOP CITED SITES
+  acme.com             own              192
+  reddit.com           social           105
+  rival.com            competitor        98
+  wikipedia.org        informational     97
+  zenith.io            competitor        94
+  example.net          other             91
+  g2.com               social            82
+
+GRID (named/asked, mean position; branded prompts included)
+  prompt                                       chatgpt/api        claude/api         perplexity/api     ai_overview/scraped all
+  best widget platforms for startups           8/11 #2.00         11/18 #2.36        13/14 #2.29        8/18 #1.20         40/61
+  top widget tools with an API                 7/15 #2.43         8/16 #2.12         11/18 #2.27        5/16 #2.40         31/65
+  which widget software is easiest to set up   12/19 #2.33        8/16 #2.44         9/15 #2.11         6/16 #2.75         35/66
+  Rival vs Zenith for widgets                  12/16 #2.64        6/16 #3.00         11/14 #1.79        5/16 #1.20         34/62
+  alternatives to Orbit for widget analytics   10/15 #2.45        7/12 #2.25         10/15 #2.20        5/16 #1.60         32/58
+  how do I fix slow widget rendering           8/13 #1.89         7/17 #3.11         10/15 #2.36        6/18 #2.50         31/63
+  is Acme good for small teams [branded]       11/16 #2.40        8/18 #2.50         11/15 #2.67        7/14 #1.88         37/63
+  every prompt                                 68/105             55/113             75/106             42/114            
