@@ -9,7 +9,9 @@
 # The binary is the same one `go install` produces. Nothing in this image is a
 # demo-only build; demo mode is one environment variable on the same binary.
 
-FROM golang:1.25-alpine AS build
+# The build stage runs on the builder's own platform and cross-compiles, so an
+# arm64 image builds in seconds on an amd64 runner instead of under emulation.
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
@@ -17,8 +19,15 @@ COPY . .
 # The commit is passed in rather than read from .git, which is excluded from
 # the build context. It is what the demo banner shows and links to, so a
 # build without it would ship a demo that cannot prove which code it runs.
+# A release passes its tag as VERSION and the commit as COMMIT; Cloud Build
+# passes the commit as VERSION alone, and the binary reads it as both.
 ARG VERSION=dev
-RUN CGO_ENABLED=0 go build -trimpath -ldflags "-X main.version=${VERSION}" -o /out/limelit ./cmd/limelit
+ARG COMMIT=
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath \
+      -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" \
+      -o /out/limelit ./cmd/limelit
 
 FROM litestream/litestream:0.3 AS litestream
 
@@ -31,5 +40,5 @@ COPY deploy/entrypoint.sh /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint && mkdir -p /data && chown limelit:limelit /data
 USER limelit
 ENV LIMELIT_DATA_DIR=/data
-EXPOSE 8080
+EXPOSE 1515
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
