@@ -47,7 +47,7 @@ func newAppWithRunner(t *testing.T, reg *provider.Registry, run *runner.Runner) 
 	if run == nil {
 		run = runner.New(db, reg, provider.StaticCredentials(nil), slog.New(slog.NewTextHandler(io.Discard, nil)))
 	}
-	app, err := New(db, reg, keys, run, slog.New(slog.NewTextHandler(io.Discard, nil)), "test", &config.Config{})
+	app, err := New(db, reg, keys, run, slog.New(slog.NewTextHandler(io.Discard, nil)), "test", "", &config.Config{})
 	if err != nil {
 		t.Fatalf("ui.New: %v", err)
 	}
