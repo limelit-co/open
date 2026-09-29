@@ -4,7 +4,10 @@
 #   gcloud builds submit --config deploy/cloudbuild.yaml \
 #     --substitutions _VERSION=$(git rev-parse --short=12 HEAD)
 steps:
+  # BuildKit fills in BUILDPLATFORM and TARGETARCH, which the Dockerfile's
+  # cross-compiling build stage reads; the legacy builder leaves them empty.
   - name: gcr.io/cloud-builders/docker
+    env: ['DOCKER_BUILDKIT=1']
     args:
       - build
       - --build-arg
