@@ -56,6 +56,7 @@ type App struct {
 	views    *Renderer
 	log      *slog.Logger
 	version  string
+	commit   string
 	cfg      *config.Config
 	// demo makes every mutating route refuse and hides the credential
 	// surface. Set from LIMELIT_DEMO at construction.
@@ -63,13 +64,14 @@ type App struct {
 }
 
 // New builds the dashboard handler set. run may be nil, which leaves the Run
-// button reporting that there is nothing to run it with.
-func New(db *store.DB, registry *provider.Registry, keys *secrets.Keyring, run *runner.Runner, log *slog.Logger, version string, cfg *config.Config) (*App, error) {
+// button reporting that there is nothing to run it with. commit is the
+// revision the binary was built from, or "" when the build does not name one.
+func New(db *store.DB, registry *provider.Registry, keys *secrets.Keyring, run *runner.Runner, log *slog.Logger, version, commit string, cfg *config.Config) (*App, error) {
 	views, err := NewRenderer()
 	if err != nil {
 		return nil, err
 	}
-	return &App{db: db, registry: registry, keys: keys, runner: run, metrics: metrics.New(db), views: views, log: log, version: version, cfg: cfg, demo: DemoMode()}, nil
+	return &App{db: db, registry: registry, keys: keys, runner: run, metrics: metrics.New(db), views: views, log: log, version: version, commit: commit, cfg: cfg, demo: DemoMode()}, nil
 }
 
 // Routes registers every dashboard route on mux.
@@ -184,7 +186,7 @@ func (a *App) base(r *http.Request, title, current string) (Base, store.Counts, 
 		b.CanRun = false
 		b.DemoLive = a.scheduled(ctx)
 	}
-	b.Commit, b.CommitURL = commitLink(a.version)
+	b.Commit, b.CommitURL = commitLink(a.commit)
 	if counts.LastChatAt != "" {
 		b.LastRun = counts.LastChatAt
 	}
@@ -372,13 +374,13 @@ func (a *App) fail(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, "Something went wrong. The server log has the detail.", http.StatusInternalServerError)
 }
 
-// commitLink turns the build version into a short revision and a GitHub URL.
+// commitLink turns the build's commit into a short revision and a GitHub URL.
 //
-// The version is either a release tag or a VCS stamp of the form
-// <12-hex>[-dirty]. Only a clean stamp or a tag gets a link: a dirty build is
-// not any commit in the repository, and linking it would claim otherwise.
-func commitLink(version string) (string, string) {
-	v := strings.TrimSpace(version)
+// The commit is a VCS stamp of the form <12-hex>[-dirty]. Only a clean stamp
+// gets a link: a dirty build is not any commit in the repository, and linking
+// it would claim otherwise.
+func commitLink(commit string) (string, string) {
+	v := strings.TrimSpace(commit)
 	if v == "" || v == "dev" {
 		return "", ""
 	}

@@ -21,7 +21,6 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -42,10 +41,6 @@ import (
 	"github.com/limelit-co/open/internal/ui"
 	"github.com/limelit-co/open/internal/upgrade"
 )
-
-// version is stamped at build time with -ldflags; it falls back to the module
-// build info so `go install` still reports something truthful.
-var version = ""
 
 const usage = `limelit - self-hosted AI visibility tracking
 
@@ -95,7 +90,7 @@ func run(args []string) error {
 	case "upgrade":
 		return cmdUpgrade(ctx, rest)
 	case "version":
-		fmt.Println(buildVersion())
+		fmt.Println(versionLine())
 		return nil
 	case "-h", "--help", "help":
 		fmt.Print(usage)
@@ -167,15 +162,16 @@ func cmdServe(ctx context.Context, args []string) error {
 
 	run := runner.New(db, registry, credentials.Source(ctx, db, keys, log), log)
 	run.NewAnalyzer = func(c context.Context) (runner.Analyzer, error) { return runner.NewStoreAnalyzer(c, db) }
-	dash, err := ui.New(db, registry, keys, run, log, buildVersion(), cfg)
+	ver, rev := buildInfo()
+	dash, err := ui.New(db, registry, keys, run, log, ver, rev, cfg)
 	if err != nil {
 		return err
 	}
 
 	startSchedule(ctx, dash, run, db, log)
 
-	srv := httpx.New(*addr, db, log, buildVersion(), dash)
-	log.Info("listening", "addr", srv.Addr(), "database", db.Path(), "version", buildVersion())
+	srv := httpx.New(*addr, db, log, ver, dash)
+	log.Info("listening", "addr", srv.Addr(), "database", db.Path(), "version", ver, "commit", rev)
 	if err := srv.Serve(ctx); err != nil {
 		return err
 	}
@@ -513,31 +509,4 @@ func newLogger() *slog.Logger {
 		level = slog.LevelDebug
 	}
 	return slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level}))
-}
-
-func buildVersion() string {
-	if version != "" {
-		return version
-	}
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return "dev"
-	}
-	revision, modified := "", false
-	for _, s := range info.Settings {
-		switch s.Key {
-		case "vcs.revision":
-			revision = s.Value
-		case "vcs.modified":
-			modified = s.Value == "true"
-		}
-	}
-	switch {
-	case revision == "":
-		return "dev"
-	case modified:
-		return revision[:min(len(revision), 12)] + "-dirty"
-	default:
-		return revision[:min(len(revision), 12)]
-	}
 }
