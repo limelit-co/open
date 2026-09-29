@@ -114,9 +114,12 @@ func (c *Config) Validate() error {
 // instance serves the wizard and nothing else.
 func (c *Config) Configured() bool { return c.Validate() == nil }
 
+// DataDirEnv overrides where the database lives.
+const DataDirEnv = "LIMELIT_DATA_DIR"
+
 // DataDir is where the database lives. LIMELIT_DATA_DIR overrides it.
 func DataDir() string {
-	if d := strings.TrimSpace(os.Getenv("LIMELIT_DATA_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv(DataDirEnv)); d != "" {
 		return d
 	}
 	return "data"

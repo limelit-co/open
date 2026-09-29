@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
 	"os/signal"
 	"strconv"
@@ -138,9 +139,10 @@ func cmdServe(ctx context.Context, args []string) error {
 		} else {
 			log.Info("targets resolved", "count", len(targets))
 		}
-	} else {
+	} else if _, err := db.Property(ctx); err != nil {
 		// Not an error. A fresh instance boots into the setup wizard; that is
-		// the whole point of the first-ten-minutes claim in the README.
+		// the whole point of the first-ten-minutes claim in the README. An
+		// instance set up through the wizard has no file but has a property.
 		log.Info("not configured yet, the setup wizard will run at the dashboard", "config", *cfgPath)
 	}
 	if len(registry.Names()) == 0 {
@@ -171,8 +173,24 @@ func cmdServe(ctx context.Context, args []string) error {
 	startSchedule(ctx, dash, run, db, log)
 
 	srv := httpx.New(*addr, db, log, ver, dash)
-	log.Info("listening", "addr", srv.Addr(), "database", db.Path(), "version", ver, "commit", rev)
-	if err := srv.Serve(ctx); err != nil {
+	err = srv.Serve(ctx, func(bound net.Addr) {
+		log.Info("listening", "addr", bound.String(), "database", db.Path(), "version", ver, "commit", rev)
+		// A public demo has no one at its terminal to read this.
+		if ui.DemoMode() {
+			return
+		}
+		_, noProperty := db.Property(ctx)
+		writeConnect(os.Stderr, connectInfo{
+			version:   ver,
+			addr:      bound,
+			exe:       executablePath(),
+			dataDir:   absPath(config.DataDir()),
+			setUp:     noProperty == nil,
+			httpToken: dash.MCPToken() != "",
+			container: containerID(),
+		})
+	})
+	if err != nil {
 		return err
 	}
 	log.Info("stopped")

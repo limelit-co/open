@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -88,10 +89,54 @@ func TestServeShutsDownOnContextCancel(t *testing.T) {
 	s := New("127.0.0.1:0", mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
-	go func() { done <- s.Serve(ctx) }()
+	go func() { done <- s.Serve(ctx, nil) }()
 	cancel()
 	if err := <-done; err != nil {
 		t.Errorf("Serve returned %v, want a clean shutdown", err)
+	}
+}
+
+// TestServeAnnouncesTheAddressItBound. The startup message is printed from
+// ready, so ready has to carry an address that already answers.
+func TestServeAnnouncesTheAddressItBound(t *testing.T) {
+	s := New("127.0.0.1:0", mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	bound := make(chan net.Addr, 1)
+	done := make(chan error, 1)
+	go func() { done <- s.Serve(ctx, func(a net.Addr) { bound <- a }) }()
+
+	addr := <-bound
+	resp, err := http.Get("http://" + addr.String() + "/healthz")
+	if err != nil {
+		t.Fatalf("the announced address %s does not answer: %v", addr, err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("GET /healthz = %d", resp.StatusCode)
+	}
+	cancel()
+	if err := <-done; err != nil {
+		t.Errorf("Serve returned %v", err)
+	}
+}
+
+// TestServeAnnouncesNothingWhenThePortIsTaken. A port already in use is an
+// error, never a message telling someone to open it.
+func TestServeAnnouncesNothingWhenThePortIsTaken(t *testing.T) {
+	taken, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer taken.Close()
+
+	s := New(taken.Addr().String(), mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
+	called := false
+	if err := s.Serve(context.Background(), func(net.Addr) { called = true }); err == nil {
+		t.Error("Serve on a taken port returned no error")
+	}
+	if called {
+		t.Error("ready was called for a port that never bound")
 	}
 }
 

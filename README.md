@@ -203,15 +203,17 @@ Linux. Nothing to install first.
 ### 1. Download and start
 
 ```bash
+mkdir -p ~/limelit && cd ~/limelit
 curl -fsSL https://github.com/limelit-co/open/releases/latest/download/limelit_$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz | tar xz limelit
 ./limelit serve
 ```
 
-Then open <http://localhost:1515>. The first line downloads the newest build
-for your system and unpacks one file, `limelit`, into the current directory.
-The database is one SQLite file in `./data`; back it up by copying it. Every
-build and its checksums are on the
-[releases page](https://github.com/limelit-co/open/releases).
+Then open <http://localhost:1515>. The download is the newest build for your
+system, one file, `limelit`, in `~/limelit`. On start it prints every way to
+connect: the browser address, and lines for Claude Code, Claude Desktop and
+any other MCP client with your paths already filled in. The database is one
+SQLite file in `~/limelit/data`; back it up by copying it. Every build and its
+checksums are on the [releases page](https://github.com/limelit-co/open/releases).
 
 The same binary two other ways:
 
@@ -240,28 +242,29 @@ Overview as each engine replies, usually inside a minute. Every number shows
 
 ### 4. Connect Claude
 
-Claude starts `limelit mcp` itself, from its own directory, so tell it where
-the binary and the data are. For Claude Code, run this in the directory
-where you ran `./limelit serve`:
+Claude Code:
 
 ```bash
-claude mcp add limelit -s user -e LIMELIT_DATA_DIR="$PWD/data" -- "$PWD/limelit" mcp
+claude mcp add limelit -s user -- sh -c 'cd ~/limelit && exec ./limelit mcp'
 ```
 
-For Claude Desktop, add this to its MCP configuration, with the full paths
-(`echo $PWD` in that directory prints them):
+Claude Desktop, in `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "limelit": {
-      "command": "/full/path/to/limelit",
-      "args": ["mcp"],
-      "env": { "LIMELIT_DATA_DIR": "/full/path/to/data" }
+      "command": "sh",
+      "args": ["-c", "cd ~/limelit && exec ./limelit mcp"]
     }
   }
 }
 ```
+
+`~/limelit` is where step 1 put `limelit`. Claude starts `limelit mcp` in that
+directory so it reads the same `data` folder as the dashboard. If you put
+`limelit` somewhere else, change `~/limelit` to that directory, or copy the
+lines `limelit serve` prints, which carry your exact paths.
 
 Then ask: "How visible is my brand across AI engines this week, and which
 prompts am I losing?" The tools are the same ones the dashboard reads, so the
@@ -289,10 +292,10 @@ Limelit Open is MCP-first. The dashboard shows you the numbers; the MCP server
 lets an assistant read them, cross-reference them and quote the evidence.
 
 Claude Desktop or Claude Code, over stdio, set up as in
-[step 4 of the quick start](#4-connect-claude). `LIMELIT_DATA_DIR` has to
-name the same data directory `limelit serve` uses; without it the server
-opens `./data` in whatever directory Claude starts it from, which is not
-your instance.
+[step 4 of the quick start](#4-connect-claude). `limelit mcp` reads `./data`
+in the directory it starts in, so it has to start where `limelit serve` runs,
+or be told the directory with `LIMELIT_DATA_DIR`. Started anywhere else it
+opens an empty database, not your instance.
 
 Remote clients point at `limelit serve` and its streamable HTTP endpoint at
 `/mcp`, sending a bearer token as `Authorization: Bearer <token>`. Generate

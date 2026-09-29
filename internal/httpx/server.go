@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
@@ -67,10 +68,21 @@ func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.A
 func (s *Server) Addr() string { return s.http.Addr }
 
 // Serve listens until ctx is cancelled, then drains in-flight requests.
-func (s *Server) Serve(ctx context.Context) error {
+// ready, when not nil, is called with the bound address once the port is
+// open and before the first request, so nothing announces an address that
+// failed to bind.
+func (s *Server) Serve(ctx context.Context, ready func(net.Addr)) error {
+	ln, err := net.Listen("tcp", s.http.Addr)
+	if err != nil {
+		return err
+	}
+	if ready != nil {
+		ready(ln.Addr())
+	}
+
 	errCh := make(chan error, 1)
 	go func() {
-		if err := s.http.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.http.Serve(ln); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 			return
 		}
