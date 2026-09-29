@@ -31,7 +31,7 @@ is right for trying it locally and wrong for anything public.
 | `LIMELIT_SCHEDULE` | `daily`, `hourly` or `off`. |
 | `LIMELIT_RUNS_PER_DAY` | The spend ceiling, checked before any work. |
 | `OPENAI_API_KEY` … `SEARCHAPI_KEY` | Provider credentials, from the platform's secret store. Never baked into the image. |
-| `PORT` | Set by Cloud Run. Defaults to 8080. |
+| `PORT` | Set by Cloud Run. Defaults to 1515, the same port `limelit serve` uses. |
 
 ## The demo, on Cloud Run
 

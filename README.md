@@ -215,7 +215,7 @@ Litestream for durable storage on hosts that replace containers):
 ```bash
 git clone https://github.com/limelit-co/open && cd open
 docker build -t limelit-open .
-docker run -p 1515:8080 -v limelit:/data limelit-open
+docker run -p 1515:1515 -v limelit:/data limelit-open
 ```
 
 Then open <http://localhost:1515>. The database is one SQLite file in

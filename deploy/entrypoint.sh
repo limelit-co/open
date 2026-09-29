@@ -10,7 +10,7 @@
 set -eu
 
 DB=/data/limelit.db
-: "${PORT:=8080}"
+: "${PORT:=1515}"
 
 # Schedule and the spend ceiling arrive as environment variables and become
 # the config file the binary reads, so one image serves any deployment and
@@ -23,7 +23,7 @@ if [ -n "${LIMELIT_SCHEDULE:-}" ]; then
 fi
 
 if [ -z "${LITESTREAM_BUCKET:-}" ]; then
-  echo "entrypoint: LITESTREAM_BUCKET is not set; running WITHOUT replication (data will not survive a restart)" >&2
+  echo "entrypoint: LITESTREAM_BUCKET is not set; running without replication, so the database lives only in /data (mount a volume there to keep it)" >&2
   exec limelit serve --addr ":${PORT}" $CFG
 fi
 
