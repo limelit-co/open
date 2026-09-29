@@ -268,62 +268,92 @@ var listLine = regexp.MustCompile(`(?m)^[ \t]*(?:(\d{1,2})[.)]|[-*\x{2022}])[ \t
 // model separates "here are five tools" from the paragraph after it. Without
 // the restart, a second list halfway down an answer would keep counting from
 // the first and report rank 9 for something the model put first.
+//
+// An item's span ends where that prose begins, so a brand named in the
+// paragraph after a list is prose and has no rank. A marker indented deeper
+// than the list's own items opens a nested list; it belongs to the item above
+// it, so "1." with two sub-bullets under it is followed by item 2, not item 4.
 func listRanks(text string) listMap {
 	matches := listLine.FindAllStringSubmatchIndex(text, -1)
 	if len(matches) == 0 {
 		return nil
 	}
 
+	type item struct{ start, indent, rank int }
 	var (
-		out      listMap
-		rank     int
-		prevEnd  = -1
-		numbered bool
+		items  []item
+		rank   int
+		indent = -1
 	)
-	for i, m := range matches {
+	for _, m := range matches {
 		start := m[0]
-		end := len(text)
-		if i+1 < len(matches) {
-			end = matches[i+1][0]
+		ind := indentWidth(text[start:m[1]])
+		// Prose between the previous item and this one means the earlier
+		// list ended, however this one is indented.
+		if n := len(items); n > 0 && itemEnd(text, items[n-1].start, start, items[n-1].indent) < start {
+			rank, indent = 0, -1
 		}
-
-		// A gap of blank-line-separated prose between two items means the
-		// earlier list ended.
-		if prevEnd >= 0 && separatedByProse(text, prevEnd, start) {
-			rank = 0
+		if indent >= 0 && ind > indent {
+			continue
 		}
-		prevEnd = start
-
-		if m[2] >= 0 {
+		if m[2] >= 0 && atoi(text[m[2]:m[3]]) == 1 {
 			// Numbered: trust the number the model wrote, so a list that
 			// starts at 1 after an aside is read as a new list.
-			n := atoi(text[m[2]:m[3]])
-			if n == 1 {
-				rank = 0
-			}
-			numbered = true
+			rank = 0
 		}
 		rank++
-		_ = numbered
-		out = append(out, listItem{start: start, end: end, rank: rank})
+		indent = ind
+		items = append(items, item{start: start, indent: ind, rank: rank})
+	}
+
+	out := make(listMap, 0, len(items))
+	for i, it := range items {
+		next := len(text)
+		if i+1 < len(items) {
+			next = items[i+1].start
+		}
+		out = append(out, listItem{start: it.start, end: itemEnd(text, it.start, next, it.indent), rank: it.rank})
 	}
 	return out
 }
 
-// separatedByProse reports whether the text between two list items contains a
-// blank line followed by something that is not itself a list item.
-func separatedByProse(text string, from, to int) bool {
-	between := text[from:to]
-	idx := strings.Index(between, "\n\n")
-	if idx < 0 {
-		return false
+// itemEnd is where the list item starting at start stops: at next, the start
+// of the following item, or earlier at a blank line whose next line is prose.
+// A line is prose when it is not indented under the item and is not itself a
+// list marker; an indented paragraph or a nested list stays in the item.
+func itemEnd(text string, start, next, indent int) int {
+	for off := start; ; {
+		i := strings.Index(text[off:next], "\n\n")
+		if i < 0 {
+			return next
+		}
+		blank := off + i
+		line := strings.TrimLeft(text[blank:next], "\n")
+		if nl := strings.IndexByte(line, '\n'); nl >= 0 {
+			line = line[:nl]
+		}
+		if strings.TrimSpace(line) != "" && indentWidth(line) <= indent && !listLine.MatchString(line) {
+			return blank
+		}
+		off = blank + 2
 	}
-	rest := strings.TrimSpace(between[idx:])
-	if rest == "" {
-		return false
+}
+
+// indentWidth is the width of a line's leading whitespace, a tab counting as
+// four spaces.
+func indentWidth(s string) int {
+	n := 0
+	for _, r := range s {
+		switch r {
+		case ' ':
+			n++
+		case '\t':
+			n += 4
+		default:
+			return n
+		}
 	}
-	// Anything after the blank line that is not the next bullet is prose.
-	return !listLine.MatchString(rest[:min(len(rest), 8)])
+	return n
 }
 
 func atoi(s string) int {
