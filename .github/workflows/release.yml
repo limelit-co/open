@@ -48,12 +48,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # 0.1.0 and 0.1 for a release, and latest; 0.1.0-rc.1 alone for a
-      # pre-release, so latest never points at a release candidate.
+      # The tag's version, and latest on every tag, so `docker run
+      # ghcr.io/limelit-co/open` with no tag is always the newest release;
+      # 0.1 as well once a release has no suffix.
       - id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/limelit-co/open
+          flavor: |
+            latest=true
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}

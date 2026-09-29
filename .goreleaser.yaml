@@ -29,12 +29,17 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
+  # No version in the name, so releases/latest/download/limelit_<os>_<arch>.tar.gz
+  # is one URL that always serves the newest build.
   - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     files: [LICENSE, NOTICE, README.md]
 
 checksum:
   name_template: checksums.txt
 
 release:
-  # A tag with a suffix, such as v0.1.0-rc.1, is published as a pre-release.
-  prerelease: auto
+  # Every tag is published as the latest release, release candidates too:
+  # GitHub never calls a pre-release "latest", and the quick start downloads
+  # from releases/latest.
+  make_latest: "true"
