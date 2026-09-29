@@ -33,6 +33,7 @@ go.work.sum
 
 # Build output and the local database
 bin/
+dist/
 data/
 limelit.yaml
 # `go build ./tools/seed` run from the repo root

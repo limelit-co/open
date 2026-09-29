@@ -1,0 +1,40 @@
+# Release builds, run by .github/workflows/release.yml on a v* tag: static
+# binaries for darwin and linux on amd64 and arm64, stamped with the tag and
+# the commit, a checksums file, and a GitHub release that carries them.
+#
+# The container image is not built here. The release workflow builds it from
+# the Dockerfile, the same file the demo ships from, so there is one image
+# recipe, not two.
+#
+# Try it without publishing anything:
+#
+#   goreleaser release --snapshot --clean
+version: 2
+
+project_name: limelit
+
+builds:
+  - id: limelit
+    main: ./cmd/limelit
+    binary: limelit
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X main.version=v{{ .Version }} -X main.commit={{ .FullCommit }}
+    # Same inputs, same bytes: the file times come from the commit, not the
+    # clock of whichever runner built it.
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - formats: [tar.gz]
+    files: [LICENSE, NOTICE, README.md]
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  # A tag with a suffix, such as v0.1.0-rc.1, is published as a pre-release.
+  prerelease: auto
