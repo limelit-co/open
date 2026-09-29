@@ -68,12 +68,11 @@ make lint   # gofmt + go vet
 make test   # go test ./... -count=1, offline
 ```
 
-Both green, then push. Every pull request gets a `build` check (gofmt, vet,
-build, test). On a pull request from a first-time contributor it waits at
-"Waiting for a maintainer to comment /test" until a maintainer has read the
-change and comments `/test`. Push again after that and it waits for a new
-`/test`. The check's details link is for maintainers; if it fails, the
-description names the step, and `make lint && make test` reproduces it.
+Both green, then push. Every pull request gets a `build` check from GitHub
+Actions (gofmt, vet, build, test). Until you have had a pull request merged
+here, GitHub holds those runs until a maintainer has read the change and
+approves them. If the check fails, its log names the step, and
+`make lint && make test` reproduces it.
 
 ## Adding a provider
 
