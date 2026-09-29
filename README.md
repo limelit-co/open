@@ -197,33 +197,32 @@ Limelit Open takes the other side of it:
 
 ## Quick start
 
-Ten minutes from nothing to a first number, in four steps. You need Go 1.25
-or newer, or Docker; nothing else.
+Ten minutes from nothing to a first number, in four steps, on macOS or
+Linux. Nothing to install first.
 
-### 1. Install and start
-
-With Go:
+### 1. Download and start
 
 ```bash
+curl -fsSL https://github.com/limelit-co/open/releases/latest/download/limelit_$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz | tar xz limelit
+./limelit serve
+```
+
+Then open <http://localhost:1515>. The first line downloads the newest build
+for your system and unpacks one file, `limelit`, into the current directory.
+The database is one SQLite file in `./data`; back it up by copying it. Every
+build and its checksums are on the
+[releases page](https://github.com/limelit-co/open/releases).
+
+The same binary two other ways:
+
+```bash
+# With Go 1.25 or newer
 go install github.com/limelit-co/open/cmd/limelit@latest
 limelit serve
+
+# With Docker; the database lives in the limelit volume
+docker run -p 1515:1515 -v limelit:/data ghcr.io/limelit-co/open
 ```
-
-Or as a container, built from this repository (the same binary, with
-Litestream for durable storage on hosts that replace containers):
-
-```bash
-git clone https://github.com/limelit-co/open && cd open
-docker build -t limelit-open .
-docker run -p 1515:1515 -v limelit:/data limelit-open
-```
-
-Then open <http://localhost:1515>. The database is one SQLite file in
-`./data` (or the `limelit` volume); back it up by copying it.
-
-> Prebuilt binaries and a published image are tracked in
-> [#35](https://github.com/limelit-co/open/issues/35) and land with v0.1.
-> Until then, the two commands above are the install.
 
 ### 2. Set up in the browser
 
@@ -241,12 +240,25 @@ Overview as each engine replies, usually inside a minute. Every number shows
 
 ### 4. Connect Claude
 
-Add this to Claude Desktop's or Claude Code's MCP configuration:
+Claude starts `limelit mcp` itself, from its own directory, so tell it where
+the binary and the data are. For Claude Code, run this in the directory
+where you ran `./limelit serve`:
+
+```bash
+claude mcp add limelit -s user -e LIMELIT_DATA_DIR="$PWD/data" -- "$PWD/limelit" mcp
+```
+
+For Claude Desktop, add this to its MCP configuration, with the full paths
+(`echo $PWD` in that directory prints them):
 
 ```json
 {
   "mcpServers": {
-    "limelit": { "command": "limelit", "args": ["mcp"] }
+    "limelit": {
+      "command": "/full/path/to/limelit",
+      "args": ["mcp"],
+      "env": { "LIMELIT_DATA_DIR": "/full/path/to/data" }
+    }
   }
 }
 ```
@@ -276,15 +288,11 @@ limelit version   version and build info
 Limelit Open is MCP-first. The dashboard shows you the numbers; the MCP server
 lets an assistant read them, cross-reference them and quote the evidence.
 
-Claude Desktop or Claude Code:
-
-```json
-{
-  "mcpServers": {
-    "limelit": { "command": "limelit", "args": ["mcp"] }
-  }
-}
-```
+Claude Desktop or Claude Code, over stdio, set up as in
+[step 4 of the quick start](#4-connect-claude). `LIMELIT_DATA_DIR` has to
+name the same data directory `limelit serve` uses; without it the server
+opens `./data` in whatever directory Claude starts it from, which is not
+your instance.
 
 Remote clients point at `limelit serve` and its streamable HTTP endpoint at
 `/mcp`, sending a bearer token as `Authorization: Bearer <token>`. Generate
