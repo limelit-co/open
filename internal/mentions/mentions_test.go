@@ -75,6 +75,74 @@ func TestProseMentionHasNoRank(t *testing.T) {
 	}
 }
 
+// ranksOf maps each brand found in text to its rank, -1 for none. A brand
+// found twice keeps its last rank.
+func ranksOf(text string) map[string]int {
+	out := map[string]int{}
+	for _, m := range acmeAndRivals().Find(text) {
+		out[m.BrandName] = -1
+		if m.ListRank != nil {
+			out[m.BrandName] = *m.ListRank
+		}
+	}
+	return out
+}
+
+// TestProseAfterAListHasNoRank. The paragraph after a list is prose. Without
+// an end to the last item, a brand named there took that item's rank and
+// entered average position as if it had been listed.
+func TestProseAfterAListHasNoRank(t *testing.T) {
+	text := "Top picks:\n\n1. Globex\n2. Initech\n\nAcme is also worth a look."
+	got := ranksOf(text)
+	want := map[string]int{"Globex": 1, "Initech": 2, "Acme": -1}
+	for brand, rank := range want {
+		if got[brand] != rank {
+			t.Errorf("%s has rank %d, want %d (-1 is none)", brand, got[brand], rank)
+		}
+	}
+}
+
+// TestAnIndentedParagraphStaysInItsItem. A paragraph indented under an item
+// is part of that item, as Markdown reads it, so a brand named there has the
+// item's rank.
+func TestAnIndentedParagraphStaysInItsItem(t *testing.T) {
+	text := "1. Globex\n\n   It connects to Acme out of the box.\n2. Initech\n"
+	got := ranksOf(text)
+	want := map[string]int{"Globex": 1, "Acme": 1, "Initech": 2}
+	for brand, rank := range want {
+		if got[brand] != rank {
+			t.Errorf("%s has rank %d, want %d (-1 is none)", brand, got[brand], rank)
+		}
+	}
+}
+
+// TestNestedBulletsAreNotItems. Models put sub-bullets under a numbered item
+// all the time. They belong to that item; counting them as items made the
+// second numbered item rank 4.
+func TestNestedBulletsAreNotItems(t *testing.T) {
+	text := "1. Acme\n   - fast\n   - integrates with Initech\n2. Globex\n"
+	got := ranksOf(text)
+	want := map[string]int{"Acme": 1, "Initech": 1, "Globex": 2}
+	for brand, rank := range want {
+		if got[brand] != rank {
+			t.Errorf("%s has rank %d, want %d (-1 is none)", brand, got[brand], rank)
+		}
+	}
+}
+
+// TestAnIndentedListAfterProseIsItsOwnList. Only a marker directly under an
+// item is nested; after a paragraph of prose, an indented list is a new list.
+func TestAnIndentedListAfterProseIsItsOwnList(t *testing.T) {
+	text := "Enterprise:\n\n- Globex\n\nFor small teams:\n\n  - Acme\n  - Initech\n"
+	got := ranksOf(text)
+	want := map[string]int{"Globex": 1, "Acme": 1, "Initech": 2}
+	for brand, rank := range want {
+		if got[brand] != rank {
+			t.Errorf("%s has rank %d, want %d (-1 is none)", brand, got[brand], rank)
+		}
+	}
+}
+
 func TestASecondListRestartsTheRanking(t *testing.T) {
 	// Without the restart, a brand the model put first in its second list
 	// would be reported as rank 4.

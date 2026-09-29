@@ -75,10 +75,14 @@ The rules of the search:
   and "run ai" are one brand.
   Test: `TestNormalizeKeyCollapsesSpellings`.
 - **Rank comes from lists.** A mention inside a numbered or bulleted list item
-  carries that item's 1-based position; a mention in prose carries none. A
-  second list in the same answer restarts the count.
+  carries that item's 1-based position; a mention in prose carries none, and
+  that includes the paragraph after a list. A paragraph or a sub-list indented
+  under an item is part of that item, so sub-bullets do not push the next item
+  down. A second list in the same answer restarts the count.
   Tests: `TestNumberedListGivesEachBrandItsRank`, `TestBulletedListAlsoRanks`,
-  `TestProseMentionHasNoRank`, `TestASecondListRestartsTheRanking`.
+  `TestProseMentionHasNoRank`, `TestProseAfterAListHasNoRank`,
+  `TestAnIndentedParagraphStaysInItsItem`, `TestNestedBulletsAreNotItems`,
+  `TestASecondListRestartsTheRanking`, `TestAnIndentedListAfterProseIsItsOwnList`.
 
 ## Classifying citations
 
