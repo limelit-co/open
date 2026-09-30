@@ -17,7 +17,7 @@ func TestTheTopBarShowsFreeCreditsAndUpgrade(t *testing.T) {
 	fakeCloudSetup(t, "kindletopdf.com")
 	_, h := kindleApp(t)
 	body := get(t, h, "/prompts").Body.String()
-	for _, want := range []string{"Free credits", "24 / 1,000", "used this month", "resets Oct 1", `href="/upgrade">Upgrade to Cloud`} {
+	for _, want := range []string{"Free credits", "24 / 1,000", "used this month", "resets Oct 1", `class="btn btn-upgrade" href="/upgrade"`, "Upgrade to Cloud"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("top bar lacks %q", want)
 		}

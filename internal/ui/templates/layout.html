@@ -55,7 +55,7 @@
           <span class="usage-meter" aria-hidden="true"><span style="width:{{.Width}}"></span></span>
         </a>
         {{end}}
-        {{if not .Demo}}<a class="btn btn-ghost btn-upgrade" href="/upgrade">Upgrade to Cloud</a>{{end}}
+        {{if not .Demo}}<a class="btn btn-upgrade" href="/upgrade"><span aria-hidden="true">✦</span> Upgrade to Cloud</a>{{end}}
         {{if .LastRun}}<span class="badge">last run {{.LastRun}}</span>{{end}}
         <form method="post" action="/run" style="display:inline">
           <button class="btn btn-primary" type="submit"{{if not .CanRun}} disabled title="{{if .Demo}}Read-only demo.{{if .DemoLive}} It runs itself on a schedule.{{end}}{{else}}Add a target and a provider key first{{end}}"{{end}}>Run now</button>
