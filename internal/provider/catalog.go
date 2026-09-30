@@ -3,7 +3,10 @@
 
 package provider
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // CatalogEntry is what the dashboard needs to offer a provider before anyone
 // has typed a key: what it reaches, what credential it wants, and where to go
@@ -129,8 +132,8 @@ var catalog = []CatalogEntry{
 		Name: "limelit", Label: "Limelit Cloud free allowance", Access: AccessScraped,
 		Engines:     LimelitScrapedEngines,
 		Credentials: []string{LimelitKeyEnv},
-		KeyURL:      "https://limelit.co/settings",
-		Note: "No vendor keys: sign up free at limelit.co, create an API key in Settings, paste it here. " +
+		KeyURL:      LimelitKeyPage,
+		Note: "No vendor keys: sign in at limelit.co with Google, press Create my key, paste it here. " +
 			"A monthly allowance covers ChatGPT, Gemini, Google AI Overviews, AI Mode and Perplexity. " +
 			"Prompts pass through Limelit Cloud; answers stay here.",
 	},
@@ -138,7 +141,7 @@ var catalog = []CatalogEntry{
 		Name: "limelitapi", Label: "Limelit Cloud free allowance (Perplexity)", Access: AccessAPI,
 		Engines:     LimelitAPIEngines,
 		Credentials: []string{LimelitKeyEnv},
-		KeyURL:      "https://limelit.co/settings",
+		KeyURL:      LimelitKeyPage,
 		Note:        "The Perplexity half of the free allowance, through Perplexity's API. Same key.",
 	},
 }
@@ -194,5 +197,19 @@ func CatalogNames() []string {
 		out = append(out, e.Name)
 	}
 	sort.Strings(out)
+	return out
+}
+
+// SharedKeyEntries is c and every other catalog entry that takes exactly the
+// same credentials. The Limelit Cloud key is two registrations, one per
+// access mode, so saving it means tracking what both reach.
+func SharedKeyEntries(c CatalogEntry) []CatalogEntry {
+	key := strings.Join(c.Credentials, ",")
+	var out []CatalogEntry
+	for _, other := range Catalog() {
+		if strings.Join(other.Credentials, ",") == key {
+			out = append(out, other)
+		}
+	}
 	return out
 }

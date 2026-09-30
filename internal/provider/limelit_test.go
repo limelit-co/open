@@ -142,6 +142,10 @@ func TestLimelitTestReadsTheAllowanceAndSpendsNothing(t *testing.T) {
 	if err := p.Test(context.Background()); err != nil {
 		t.Fatal(err)
 	}
+	a, err := FetchLimelitAllowance(context.Background(), "lmlt_test")
+	if err != nil || !a.Enabled || a.MonthlyCredits != 1000 {
+		t.Errorf("allowance = %+v, %v", a, err)
+	}
 	if _, err := NewLimelit("  "); !errors.Is(err, ErrAuth) {
 		t.Errorf("an empty key: err = %v", err)
 	}

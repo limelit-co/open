@@ -54,6 +54,7 @@ Commands:
   mcp       run the MCP server over stdio (for Claude Desktop / Claude Code)
   run       run one evaluation pass and exit
   export    write everything this instance knows to stdout
+  login     get a free Limelit Cloud key and save it here (no provider key needed)
   upgrade   move this instance to Limelit Cloud
   version   print version and build info
 
@@ -91,6 +92,8 @@ func run(args []string) error {
 		return cmdExport(ctx, rest)
 	case "upgrade":
 		return cmdUpgrade(ctx, rest)
+	case "login":
+		return cmdLogin(ctx, rest)
 	case "version":
 		fmt.Println(versionLine())
 		return nil

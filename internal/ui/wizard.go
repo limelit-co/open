@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/limelit-co/open/internal/credentials"
 	"github.com/limelit-co/open/internal/mentions"
 	"github.com/limelit-co/open/internal/promptpack"
 	"github.com/limelit-co/open/internal/provider"
 	"github.com/limelit-co/open/internal/store"
-	"github.com/limelit-co/open/internal/target"
 )
 
 // wizardSteps label the progress bar. Four steps, and nothing is spent until
@@ -262,28 +262,9 @@ func (a *App) saveProvider(w http.ResponseWriter, r *http.Request) {
 	// Run button that stays disabled, would be the obvious next complaint.
 	// The key may reach more than this entry: the Limelit Cloud key is two
 	// registrations, one per access mode. Track everything it reaches.
-	for _, e := range sharedKeyEntries(entry) {
-		if _, built := a.registry.Lookup(e.Name); !built {
-			continue
-		}
-		for engine := range e.Engines {
-			spec := engine + ":" + e.Name
-			if e.Access == provider.AccessAPI {
-				spec += ":online"
-			}
-			parsed, err := target.Parse(spec)
-			if err != nil || parsed.Validate(a.registry) != nil {
-				continue
-			}
-			access, _ := parsed.Access(a.registry)
-			if _, err := a.db.AddTarget(r.Context(), store.Target{
-				Spec: parsed.String(), Engine: parsed.Engine, Provider: parsed.Provider,
-				Model: parsed.Model, Online: parsed.Online, Access: string(access),
-			}); err != nil {
-				a.fail(w, r, err)
-				return
-			}
-		}
+	if _, err := credentials.Track(r.Context(), a.db, a.registry, entry); err != nil {
+		a.fail(w, r, err)
+		return
 	}
 	a.finish(w, r)
 }
