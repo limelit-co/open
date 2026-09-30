@@ -17,7 +17,7 @@ func TestTheTopBarShowsFreeCreditsAndUpgrade(t *testing.T) {
 	fakeCloudSetup(t, "kindletopdf.com")
 	_, h := kindleApp(t)
 	body := get(t, h, "/prompts").Body.String()
-	for _, want := range []string{"Free credits", "24 / 1,000", "used this month", "resets Oct 1", `class="btn btn-upgrade" href="/upgrade"`, "Upgrade to Cloud"} {
+	for _, want := range []string{"Free credits", "24 / 1,000", "used this month", "resets Oct 1", `class="upgrade-link" href="/upgrade"`, "Upgrade to Cloud"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("top bar lacks %q", want)
 		}
@@ -72,5 +72,21 @@ func TestUpgradeUsesTheSavedFreeKey(t *testing.T) {
 	body := get(t, h, "/upgrade").Body.String()
 	if !strings.Contains(body, "your saved Limelit Cloud key") || !strings.Contains(body, "Leave blank to use the key you saved") {
 		t.Error("the upgrade form does not offer the saved key")
+	}
+}
+
+// TestTheTopBarAsksForAStar, as a plain link: no star count is fetched,
+// because nothing leaves this machine except the calls to the engines.
+func TestTheTopBarAsksForAStar(t *testing.T) {
+	_, _, h := newApp(t, providertest.Registry())
+	seedProperty(t, h)
+	body := get(t, h, "/prompts").Body.String()
+	if !strings.Contains(body, `class="gh-star" href="https://github.com/limelit-co/open"`) || !strings.Contains(body, "<span>Star</span>") {
+		t.Error("no star link in the top bar")
+	}
+	star := strings.Index(body, `class="gh-star"`)
+	run := strings.Index(body, `action="/run"`)
+	if star < 0 || run < 0 || star > run {
+		t.Error("the star link is not right before Run now")
 	}
 }

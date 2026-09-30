@@ -8,6 +8,9 @@
  * someone switches. */
 
 :root {
+  /* Upgrade accent: darker stops keep the text legible on white. */
+  --upgrade-a: #6d28d9;
+  --upgrade-b: #be185d;
   color-scheme: light;
 
   --brand: #5a5af0;
@@ -133,6 +136,8 @@
 
     --brand-strong: #a3a3ff;
     --brand-soft: #232340;
+    --upgrade-a: #a78bfa;
+    --upgrade-b: #f472b6;
 
     --cell-empty: transparent;
     --cell-0: #1c1d26;
@@ -1015,28 +1020,44 @@ tr.row-branded { opacity: 0.72; }
   .sidebar { flex-wrap: wrap; align-content: flex-start; overflow-x: visible; -webkit-mask-image: none; mask-image: none; }
 }
 
-/* Top bar usage meter: what has been used against the limit that stops runs. */
+/* Top bar: usage and the way to more of it, one small unit. The meter says
+   what has been used against the limit that stops runs; Upgrade sits in the
+   same chip because that is the moment it is relevant. Quiet by default:
+   accent text, no fill. Near the limit the upgrade half gets a soft tint. */
+.meter-group {
+  display: inline-flex; align-items: stretch;
+  border: 1px solid var(--rule); border-radius: 999px; overflow: hidden;
+}
 .usage {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 5px 10px; border: 1px solid var(--rule); border-radius: 999px;
-  color: var(--ink-2); font-size: 12.5px; text-decoration: none; white-space: nowrap;
+  padding: 5px 10px; color: var(--ink-2); font-size: 12.5px; text-decoration: none; white-space: nowrap;
 }
 .usage:hover { background: var(--bg-2); text-decoration: none; color: var(--ink); }
+.upgrade-link {
+  display: inline-flex; align-items: center; padding: 5px 12px 5px 10px;
+  border-left: 1px solid var(--rule); font-size: 12.5px; font-weight: 600; white-space: nowrap; text-decoration: none;
+}
+.upgrade-link:hover { background: var(--brand-soft); text-decoration: none; }
+.upgrade-link:focus-visible { outline: 2px solid var(--upgrade-a); outline-offset: -2px; }
+.upgrade-text {
+  background: linear-gradient(90deg, var(--upgrade-a), var(--upgrade-b));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.upgrade-urgent { background: var(--brand-soft); }
 .usage-label { color: var(--ink-3); }
 .usage-num { font-variant-numeric: tabular-nums; font-weight: 600; }
 .usage-meter { width: 56px; height: 5px; border-radius: 3px; background: var(--rule); overflow: hidden; }
 .usage-meter > span { display: block; height: 100%; background: var(--brand); }
-.usage-warn { border-color: var(--warn-fg); }
 .usage-warn .usage-num { color: var(--warn-fg); }
 .usage-warn .usage-meter > span { background: var(--warn-fg); }
 @media (max-width: 600px) { .usage-meter { display: none; } }
 
-/* Upgrade to Cloud: its own accent, a gradient pill, so it stands apart from
-   the solid Run now (the main action) without competing with it. */
-.btn-upgrade {
-  border: 0; border-radius: 999px; padding: 7px 14px; color: #fff; font-weight: 600;
-  background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
-  box-shadow: 0 1px 2px rgba(124, 58, 237, 0.25);
+/* Star on GitHub: the size and weight of GitHub's own star button, neutral,
+   so it reads as an invitation beside Run now, not a second action. */
+.gh-star {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border: 1px solid var(--rule); border-radius: 6px;
+  color: var(--ink-2); font-size: 12.5px; font-weight: 500; white-space: nowrap; text-decoration: none;
 }
-.btn-upgrade:hover { color: #fff; filter: brightness(1.08); background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); }
-.btn-upgrade:focus-visible { outline: 2px solid #db2777; outline-offset: 2px; }
+.gh-star:hover { background: var(--bg-2); color: var(--ink); text-decoration: none; }
+@media (max-width: 600px) { .gh-star span { display: none; } }
