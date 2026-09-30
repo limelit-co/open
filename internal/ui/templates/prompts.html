@@ -15,6 +15,13 @@
     </form>
   </div>
 
+  {{if .CloudKey}}
+  <form method="post" action="/prompts/import-cloud" class="btn-row" style="margin:0 0 14px">
+    <button class="btn" type="submit">Import from Limelit Cloud</button>
+    <span class="hint">Adds the prompts and competitors your Cloud account tracks for this brand. Nothing is removed.</span>
+  </form>
+  {{end}}
+
   {{if not .Prompts}}
     <p class="lede" style="margin:0">Nothing tracked yet.</p>
   {{else}}

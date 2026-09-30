@@ -4,6 +4,8 @@
 package ui
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/limelit-co/open/internal/mentions"
 	"github.com/limelit-co/open/internal/promptpack"
 	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/siteinfo"
 	"github.com/limelit-co/open/internal/store"
 )
 
@@ -46,6 +49,20 @@ func (a *App) wizardBrand(w http.ResponseWriter, r *http.Request) {
 func (a *App) saveBrand(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimSpace(r.FormValue("name"))
 	domain := store.NormalizeDomain(r.FormValue("domain"))
+	// A brand named by its domain ("kindletopdf.com") is missed every time an
+	// answer writes the product's name ("Kindle to PDF"). Before saving one,
+	// ask the site what it calls itself, once.
+	if domain != "" && r.FormValue("confirmed") != "1" && namedByDomain(name, domain) {
+		if suggestion := a.suggestBrandName(r.Context(), domain); suggestion != "" && suggestion != name {
+			a.writeBrandSuggestion(w, r, suggestion, domain, r.FormValue("aliases"), fmt.Sprintf(
+				"Your site calls itself “%s”, and answers use that name, so that is the name we will look for; %s still counts too. Change it if it is wrong, then continue.",
+				suggestion, domain))
+			return
+		}
+	}
+	if name == "" && domain != "" {
+		name = domain
+	}
 	if name == "" || domain == "" {
 		page := WizardBrandPage{
 			WizardBase: a.wizardBase(r, "Set up", 0),
@@ -65,6 +82,61 @@ func (a *App) saveBrand(w http.ResponseWriter, r *http.Request) {
 	}
 	a.reanalyze(r.Context())
 	http.Redirect(w, r, "/setup/competitors", http.StatusSeeOther)
+}
+
+// lookupBrand handles the brand step's "Fill in from the site" button.
+func (a *App) lookupBrand(w http.ResponseWriter, r *http.Request) {
+	domain := store.NormalizeDomain(r.FormValue("domain"))
+	name := strings.TrimSpace(r.FormValue("name"))
+	if domain == "" {
+		a.writeBrandSuggestion(w, r, name, r.FormValue("domain"), r.FormValue("aliases"), "Type the website domain first.")
+		return
+	}
+	if suggestion := a.suggestBrandName(r.Context(), domain); suggestion != "" {
+		a.writeBrandSuggestion(w, r, suggestion, domain, r.FormValue("aliases"),
+			fmt.Sprintf("Filled in from %s: the site calls itself “%s”.", domain, suggestion))
+		return
+	}
+	a.writeBrandSuggestion(w, r, name, domain, r.FormValue("aliases"),
+		fmt.Sprintf("Could not read a name from %s. Type the name answers use for your product.", domain))
+}
+
+// namedByDomain reports whether name is only the domain ("kindletopdf.com")
+// or its name part typed in lower case ("kindletopdf"). A name written like
+// a name ("Acme" for acme.com) is taken as given.
+func namedByDomain(name, domain string) bool {
+	if name == "" {
+		return true
+	}
+	if strings.Contains(name, ".") && store.NormalizeDomain(name) == domain {
+		return true
+	}
+	return name == strings.ToLower(name) &&
+		mentions.NormalizeKey(name) == mentions.NormalizeKey(mentions.DomainLabel(domain))
+}
+
+// suggestBrandName is the name the site uses for itself, or "".
+func (a *App) suggestBrandName(ctx context.Context, domain string) string {
+	if a.siteLookup == nil || a.demo {
+		return ""
+	}
+	info, err := a.siteLookup(ctx, domain)
+	if err != nil {
+		return ""
+	}
+	return siteinfo.BrandName(info, domain)
+}
+
+// writeBrandSuggestion renders the brand step with a filled-in name and a
+// note, marked confirmed so Continue saves it as shown.
+func (a *App) writeBrandSuggestion(w http.ResponseWriter, r *http.Request, name, domain, aliases, note string) {
+	page := WizardBrandPage{
+		WizardBase: a.wizardBase(r, "Set up", 0),
+		Form:       BrandForm{Name: name, Domain: domain, Aliases: aliases},
+		Confirmed:  true,
+	}
+	page.Flash = &Flash{Kind: "info", Text: note}
+	a.write(w, r, "wizard_brand", page)
 }
 
 func (a *App) wizardCompetitors(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +221,11 @@ func (a *App) competitorsPageWithError(r *http.Request, category string, names, 
 	return page
 }
 
-func (a *App) wizardPrompts(w http.ResponseWriter, r *http.Request) {
+func (a *App) wizardPrompts(w http.ResponseWriter, r *http.Request) { a.wizardPromptsWith(w, r, "") }
+
+// wizardPromptsWith renders the prompts step, with why an import from
+// Limelit Cloud did not happen when cloudError is set.
+func (a *App) wizardPromptsWith(w http.ResponseWriter, r *http.Request, cloudError string) {
 	ctx := r.Context()
 	prop, err := a.db.Property(ctx)
 	if err != nil {
@@ -165,7 +241,7 @@ func (a *App) wizardPrompts(w http.ResponseWriter, r *http.Request) {
 	}
 	built := promptpack.Build(promptpack.Input{Brand: prop.Name, Category: category, Competitors: names})
 
-	page := WizardPromptsPage{WizardBase: a.wizardBase(r, "Set up", 2)}
+	page := WizardPromptsPage{WizardBase: a.wizardBase(r, "Set up", 2), CloudKey: a.hasCloudKey(ctx), CloudError: cloudError}
 	for _, p := range built {
 		page.Prompts = append(page.Prompts, WizardPromptView{Text: p.Text, Category: p.Category, Branded: p.Branded})
 	}

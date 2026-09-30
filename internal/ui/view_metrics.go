@@ -88,6 +88,9 @@ type SourceView struct {
 
 // GridCellView is one prompt against one target.
 type GridCellView struct {
+	// NoAnswer is set when the engine was asked but showed no answer at all
+	// (a Google search with no AI Overview): not a miss, and not unasked.
+	NoAnswer bool
 	// Ran is false when this pair has no answer at all, which renders as an
 	// empty cell rather than a zero. A prompt that was never asked of an
 	// engine is not a prompt that engine ignored, and the two are drawn

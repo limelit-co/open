@@ -116,3 +116,36 @@ func TestBuildWithoutBrandOrCompetitors(t *testing.T) {
 		}
 	}
 }
+
+// TestTheCategoryReadsAsASentenceWhateverItsShape. The wizard pasted
+// "Converting kindle books to pdf" into "What are the best ___ tools?" and
+// every discovery prompt read as template output.
+func TestTheCategoryReadsAsASentenceWhateverItsShape(t *testing.T) {
+	for category, want := range map[string][]string{
+		"Converting kindle books to pdf": {
+			"What are the best tools for converting kindle books to pdf?",
+			"How do I choose a tool for converting kindle books to pdf?",
+			"Is there a free or open source tool for converting kindle books to pdf?",
+		},
+		"CRM for startups": {
+			"What are the best CRM tools for startups?",
+			"How do I choose a CRM tool for startups?",
+		},
+		"PDF converter tool": {"What are the best PDF converter tools?"},
+		"AI visibility tracking software": {
+			"What are the best AI visibility tracking tools?",
+			"How do I choose an AI visibility tracking tool?",
+		},
+		"Kindle to PDF": {"Which Kindle to PDF tool should I use?"},
+	} {
+		texts := map[string]bool{}
+		for _, p := range Build(Input{Brand: "Acme", Category: category}) {
+			texts[p.Text] = true
+		}
+		for _, w := range want {
+			if !texts[w] {
+				t.Errorf("category %q: no prompt reads %q (got %v)", category, w, texts)
+			}
+		}
+	}
+}

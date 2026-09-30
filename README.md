@@ -232,8 +232,10 @@ docker run -p 1515:1515 -v limelit:/data ghcr.io/limelit-co/open
 
 ### 2. Set up in the browser
 
-The setup wizard asks for your brand name, domain, category and up to five
-competitors, fills a starter set of prompts, and takes one key. Two ways:
+The setup wizard asks for your domain and reads your brand's name from your
+own site (answers write "Kindle to PDF", not "kindletopdf.com"), then your
+category and up to five competitors, fills a starter set of prompts, and takes
+one key. Two ways:
 
 - **Free:** open <https://limelit.co/settings/open-key>, sign in with Google,
   press Create my key and paste it into the wizard. Or, in a second terminal,
@@ -245,6 +247,11 @@ competitors, fills a starter set of prompts, and takes one key. Two ways:
 - **Your own keys:** the quickest is OpenAI's, which reaches ChatGPT. Settings
   lists every other provider with a link to where its key comes from. You pay
   them directly, with no limit from us.
+
+If you already track this brand on Limelit Cloud, the prompts step offers to
+import your Cloud prompts and competitors instead of the starter set (the
+Prompts page has the same button later). After a run, the Competitors page
+suggests the sites your answers cite most.
 
 Nothing is spent before you press Run. When the free allowance runs out, the
 failed answers say so; add your own key to keep going.

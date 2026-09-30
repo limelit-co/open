@@ -68,6 +68,9 @@
   <section class="card">
     <div class="card-head"><h2>Share of voice</h2></div>
     <p class="lede">Of every time a tracked brand was named in this window, how much was you.</p>
+    {{if le (len .Standings) 1}}
+    <div class="notice notice-info">Nothing to compare with yet. <a href="/competitors">Track a competitor</a> and this fills in, for past answers too; the Competitors page suggests the sites your answers cite most.</div>
+    {{else}}
     <div class="donut-wrap">
       {{.Donut}}
       <ul class="legend-col">
@@ -84,6 +87,7 @@
         {{end}}
       </ul>
     </div>
+    {{end}}
   </section>
 
   <section class="card span-2">
@@ -98,6 +102,7 @@
     <h2>Where you stand</h2>
     <span class="badge">{{len .Standings}} brands</span>
   </div>
+  {{if le (len .Standings) 1}}<p class="hint" style="margin:0 0 10px">Only your brand is tracked. <a href="/competitors">Add competitors</a> to see who is ahead.</p>{{end}}
   <table class="standings">
     <thead><tr><th></th><th>Brand</th><th class="num">Seen in</th><th class="num">Share</th><th class="num">Avg position</th></tr></thead>
     <tbody>
@@ -153,6 +158,8 @@
                   <span class="cell-value">{{.Label}}</span>
                   {{if .Sub}}<span class="cell-sub">{{.Sub}}</span>{{end}}
                 </a>
+              {{else if .NoAnswer}}
+                <span class="cell hm-none cell-noanswer" title="{{.Title}}" aria-label="{{.Title}}">no answer</span>
               {{else}}
                 <span class="cell hm-none" title="{{.Title}}" aria-label="{{.Title}}">-</span>
               {{end}}
@@ -173,7 +180,9 @@
   </div>
   <p class="caption legend">
     Each cell is how many of that engine's answers named you, over how many were asked.
-    A dash means that prompt has not been asked of that engine.
+    A dash means that prompt has not been asked of that engine yet. "No answer" means it was asked
+    and the engine showed no AI answer at all, which Google often does for AI Overviews; it is left
+    out of every number rather than counted against you.
   </p>
 </section>
 

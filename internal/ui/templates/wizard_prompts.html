@@ -3,6 +3,16 @@
   <h1>Your starter prompts</h1>
   <p class="lede">These are the questions we will ask each engine. Untick anything that does not sound like your buyer, and edit the list any time.</p>
 
+  {{if .CloudError}}<div class="notice notice-warn">{{.CloudError}}</div>{{end}}
+  {{if .CloudKey}}
+  <div class="notice notice-info" style="margin-bottom:16px">
+    You have a Limelit Cloud key. Use the prompts and competitors your Cloud account already tracks for this brand instead of this starter set.
+    <form method="post" action="/setup/prompts/import-cloud" style="margin-top:10px">
+      <button class="btn btn-primary" type="submit">Import from Limelit Cloud</button>
+    </form>
+  </div>
+  {{end}}
+
   <form method="post" action="/setup/prompts">
     {{range $i, $p := .Prompts}}
     <div class="prompt-row">

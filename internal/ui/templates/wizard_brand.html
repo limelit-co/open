@@ -1,17 +1,22 @@
 {{define "page"}}
 <div class="card">
   <h1>Which brand are we tracking?</h1>
-  <p class="lede">This is the name the mention matcher looks for in every answer, so give it the spellings a model would actually use.</p>
+  <p class="lede">This is the name the mention matcher looks for in every answer, so give it the name answers actually use for your product, not only the domain.</p>
 
   <form method="post" action="/setup/brand">
-    <div class="field">
-      <label for="name">Brand name</label>
-      <input type="text" id="name" name="name" value="{{.Form.Name}}" placeholder="Acme" required autofocus>
-    </div>
+    {{if .Confirmed}}<input type="hidden" name="confirmed" value="1">{{end}}
     <div class="field">
       <label for="domain">Website domain</label>
-      <input type="text" id="domain" name="domain" value="{{.Form.Domain}}" placeholder="acme.com" required>
-      <div class="hint">No scheme needed. A citation to this domain counts as a mention of you.</div>
+      <div class="btn-row" style="margin:0">
+        <input type="text" id="domain" name="domain" value="{{.Form.Domain}}" placeholder="acme.com" required autofocus style="flex:1">
+        <button class="btn" type="submit" formaction="/setup/brand/lookup" formnovalidate title="Reads the name your homepage gives itself">Fill in from the site</button>
+      </div>
+      <div class="hint">No scheme needed. A citation to this domain counts as a mention of you, and so does its name written as one word.</div>
+    </div>
+    <div class="field">
+      <label for="name">Brand name</label>
+      <input type="text" id="name" name="name" value="{{.Form.Name}}" placeholder="Acme">
+      <div class="hint">How answers write your product's name. Left empty, we read it from your site.</div>
     </div>
     <div class="field">
       <label for="aliases">Other names it goes by</label>

@@ -109,12 +109,22 @@ type CountsView struct {
 type PromptsPage struct {
 	Base
 	Prompts []PromptView
+	// CloudKey offers the import from Limelit Cloud.
+	CloudKey bool
 }
 
 // CompetitorsPage lists tracked competitors.
 type CompetitorsPage struct {
 	Base
 	Competitors []CompetitorView
+	// Suggested are sites the engines cite often that are not tracked.
+	Suggested []SuggestedCompetitor
+}
+
+// SuggestedCompetitor is one often-cited site offered as a competitor.
+type SuggestedCompetitor struct {
+	Site    string
+	Answers int
 }
 
 // TrackOption is one provider a user can click to start tracking an engine.
@@ -198,6 +208,10 @@ type MCPView struct {
 // SettingsPage is targets, keys, limits, the schedule and the MCP token.
 type SettingsPage struct {
 	Base
+	// Brand is what the matcher looks for; BrandNote is the outcome of an
+	// edit or a lookup, shown inside the brand card.
+	Brand     BrandForm
+	BrandNote *Flash
 	Engines   []EngineCard
 	Providers []ProviderKeyCard
 	Targets   []TargetView
@@ -277,6 +291,9 @@ type CompetitorsForm struct {
 type WizardBrandPage struct {
 	WizardBase
 	Form BrandForm
+	// Confirmed is set once a name was suggested from the site, so the next
+	// Continue saves what the user sees instead of suggesting again.
+	Confirmed bool
 }
 
 // WizardCompetitorsPage is step two.
@@ -296,6 +313,10 @@ type WizardPromptView struct {
 type WizardPromptsPage struct {
 	WizardBase
 	Prompts []WizardPromptView
+	// CloudKey offers the import from Limelit Cloud; CloudError says why
+	// one did not happen.
+	CloudKey   bool
+	CloudError string
 }
 
 // ProviderOption is one provider a user could connect in step four.

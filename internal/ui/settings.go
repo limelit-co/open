@@ -37,6 +37,10 @@ const (
 // and where each key comes from.
 func (a *App) buildSettings(r *http.Request, base Base) (SettingsPage, error) {
 	ctx := r.Context()
+	var brand BrandForm
+	if prop, err := a.db.Property(ctx); err == nil {
+		brand = BrandForm{Name: prop.Name, Domain: prop.Domain, Aliases: strings.Join(prop.Aliases, ", ")}
+	}
 	stored, err := a.db.Targets(ctx, false)
 	if err != nil {
 		return SettingsPage{}, err
@@ -82,6 +86,7 @@ func (a *App) buildSettings(r *http.Request, base Base) (SettingsPage, error) {
 
 	mode := a.ScheduleMode(ctx)
 	page := SettingsPage{
+		Brand:         brand,
 		Base:          base,
 		Targets:       flat,
 		Tracked:       tracked,
@@ -256,6 +261,49 @@ func (a *App) settingsWith(w http.ResponseWriter, r *http.Request, adjust func(*
 	}
 	adjust(&page)
 	a.write(w, r, "settings", page)
+}
+
+// saveBrandSettings edits the brand's names after setup. Every stored answer
+// is read again, so a name answers actually use ("Kindle to PDF") counts in
+// last month's answers, not only in the next run's.
+func (a *App) saveBrandSettings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	prop, err := a.db.Property(ctx)
+	if err != nil {
+		http.Redirect(w, r, "/setup", http.StatusSeeOther)
+		return
+	}
+	name := strings.TrimSpace(r.FormValue("name"))
+	if name == "" {
+		name = prop.Name
+	}
+	if domain := store.NormalizeDomain(r.FormValue("domain")); domain != "" {
+		prop.Domain = domain
+	}
+	prop.Name, prop.Aliases = name, splitList(r.FormValue("aliases"))
+	if err := a.db.SaveProperty(ctx, prop); err != nil {
+		a.fail(w, r, err)
+		return
+	}
+	a.reanalyze(ctx)
+	a.settingsWith(w, r, func(p *SettingsPage) {
+		p.BrandNote = &Flash{Kind: "ok", Text: "Saved. Every stored answer was read again with these names."}
+	})
+}
+
+// lookupBrandSettings fills the brand name from the site, for review.
+func (a *App) lookupBrandSettings(w http.ResponseWriter, r *http.Request) {
+	domain := store.NormalizeDomain(r.FormValue("domain"))
+	suggestion := a.suggestBrandName(r.Context(), domain)
+	a.settingsWith(w, r, func(p *SettingsPage) {
+		p.Brand.Aliases = r.FormValue("aliases")
+		if suggestion == "" {
+			p.BrandNote = &Flash{Kind: "warn", Text: "Could not read a name from " + domain + ". Type the name answers use for your product."}
+			return
+		}
+		p.Brand.Name = suggestion
+		p.BrandNote = &Flash{Kind: "info", Text: "Your site calls itself “" + suggestion + "”. Save to use it; " + domain + " still counts."}
+	})
 }
 
 // trackEngine is the click-select path: an engine and a provider, rather than

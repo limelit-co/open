@@ -6,6 +6,32 @@
   </div>
 </div>
 
+{{if not .Demo}}
+<div class="card">
+  <div class="card-head"><h2>Brand</h2></div>
+  <p class="hint" style="margin:0 0 12px">What every answer is searched for. Use the name answers write for your product; the domain and its name part always count too.</p>
+  {{with .BrandNote}}<div class="notice notice-{{.Kind}} notice-inline" role="status">{{.Text}}</div>{{end}}
+  <form method="post" action="/settings/brand">
+    <div class="field">
+      <label for="brand-name">Name</label>
+      <input type="text" id="brand-name" name="name" value="{{.Brand.Name}}">
+    </div>
+    <div class="field">
+      <label for="brand-domain">Domain</label>
+      <input type="text" id="brand-domain" name="domain" value="{{.Brand.Domain}}">
+    </div>
+    <div class="field">
+      <label for="brand-aliases">Other names</label>
+      <input type="text" id="brand-aliases" name="aliases" value="{{.Brand.Aliases}}" placeholder="comma separated">
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn" type="submit">Save</button>
+      <button class="btn btn-ghost" type="submit" formaction="/settings/brand/lookup">Fill in from the site</button>
+    </div>
+  </form>
+</div>
+{{end}}
+
 <div class="card">
   <div class="card-head">
     <h2>Engines</h2>

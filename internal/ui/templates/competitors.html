@@ -40,6 +40,33 @@
     </table>
   </div>
   {{end}}
-  <p class="hint" style="margin-top:12px">Removing a competitor stops future tracking. Answers already recorded keep their mentions.</p>
+  <p class="hint" style="margin-top:12px">Adding or removing a competitor reads every stored answer again, so the numbers always match this list.</p>
 </div>
+
+{{if .Suggested}}
+<div class="card">
+  <div class="card-head"><h2>Often cited, not tracked</h2></div>
+  <p class="hint" style="margin:0 0 12px">The sites the engines cite most for your prompts. In most categories these are the rivals worth watching.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Site</th><th class="num">Answers citing it</th><th></th></tr></thead>
+      <tbody>
+      {{range .Suggested}}
+        <tr>
+          <td><code>{{.Site}}</code></td>
+          <td class="num">{{.Answers}}</td>
+          <td class="num">
+            <form method="post" action="/competitors/add" style="display:inline">
+              <input type="hidden" name="name" value="{{.Site}}">
+              <input type="hidden" name="domain" value="{{.Site}}">
+              <button class="btn" type="submit">Track</button>
+            </form>
+          </td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{end}}
 {{end}}
