@@ -137,6 +137,12 @@ func TestTheCategoryReadsAsASentenceWhateverItsShape(t *testing.T) {
 			"How do I choose an AI visibility tracking tool?",
 		},
 		"Kindle to PDF": {"Which Kindle to PDF tool should I use?"},
+		// Typed as a task, as in a real fresh install.
+		"Convert Kindle Books to PDF": {
+			"What are the best tools to convert Kindle Books to PDF?",
+			"Is there a free or open source tool to convert Kindle Books to PDF?",
+			"How do I choose a tool to convert Kindle Books to PDF?",
+		},
 	} {
 		texts := map[string]bool{}
 		for _, p := range Build(Input{Brand: "Acme", Category: category}) {

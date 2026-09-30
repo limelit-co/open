@@ -201,12 +201,13 @@ func FetchLimelitSetup(ctx context.Context, key string) (LimelitSetup, error) {
 
 // LimelitAllowance is Cloud's account of the free allowance.
 type LimelitAllowance struct {
-	Enabled        bool     `json:"enabled"`
-	Engines        []string `json:"engines"`
-	MonthlyCredits int      `json:"monthly_credits"`
-	UsedThisMonth  int      `json:"used_this_month"`
-	DailyCredits   int      `json:"daily_credits"`
-	UsedToday      int      `json:"used_today"`
+	Enabled        bool      `json:"enabled"`
+	Engines        []string  `json:"engines"`
+	MonthlyCredits int       `json:"monthly_credits"`
+	UsedThisMonth  int       `json:"used_this_month"`
+	DailyCredits   int       `json:"daily_credits"`
+	UsedToday      int       `json:"used_today"`
+	MonthResetsAt  time.Time `json:"month_resets_at"`
 }
 
 func (p *limelitProvider) do(ctx context.Context, method, path string, body []byte, into any) error {

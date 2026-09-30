@@ -8,11 +8,15 @@ package ui
 // button and the command cannot drift.
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/store"
 	"github.com/limelit-co/open/internal/upgrade"
 )
 
@@ -27,6 +31,7 @@ func (a *App) buildUpgrade(r *http.Request, base Base) (UpgradePage, error) {
 		Base:          base,
 		CloudFeatures: cloudFeatures,
 		KeyFromEnv:    strings.TrimSpace(os.Getenv(upgrade.KeyEnv)) != "",
+		KeySaved:      a.hasCloudKey(r.Context()),
 		Prompts:       counts.Prompts,
 		Competitors:   counts.Competitors,
 		Chats:         counts.Chats,
@@ -65,9 +70,27 @@ func (a *App) upgradeWith(w http.ResponseWriter, r *http.Request, adjust func(*U
 // one transaction, so a tab closed halfway leaves nothing partial and the
 // button can be pressed again.
 func (a *App) runUpgrade(w http.ResponseWriter, r *http.Request) {
-	key := strings.TrimSpace(r.FormValue("key"))
+	key := provider.CleanLimelitKey(r.FormValue("key"))
 	if key == "" {
-		key = strings.TrimSpace(os.Getenv(upgrade.KeyEnv))
+		// The environment, then the key saved for the free allowance: the
+		// same account the answers already came through.
+		key = a.credentials(r.Context())(provider.LimelitKeyEnv)
+	}
+	// Cloud imports into whichever account the key belongs to. An account
+	// that already tracks a different brand is the wrong place for this
+	// one's history, so say so and upload nothing.
+	if key != "" {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		setup, err := provider.FetchLimelitSetup(ctx, key)
+		cancel()
+		if prop, perr := a.db.Property(r.Context()); err == nil && perr == nil && setup.Brand.Domain != "" &&
+			store.NormalizeDomain(setup.Brand.Domain) != store.NormalizeDomain(prop.Domain) {
+			a.upgradeWith(w, r, func(p *UpgradePage) {
+				p.Error = fmt.Sprintf("That Limelit Cloud key belongs to %s (%s), which tracks a different brand, so nothing was uploaded. Create a key in the Cloud account for %s.",
+					setup.Brand.Name, setup.Brand.Domain, prop.Domain)
+			})
+			return
+		}
 	}
 	since := strings.TrimSpace(r.FormValue("since"))
 	if since != "" {
