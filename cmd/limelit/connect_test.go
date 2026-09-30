@@ -58,6 +58,8 @@ func TestConnectNamesEveryWayIn(t *testing.T) {
 		"claude mcp add limelit -s user -e LIMELIT_DATA_DIR=/home/ana/limelit/data -- /home/ana/limelit/limelit mcp",
 		"http://localhost:1515/mcp",
 		"generate one in Settings",
+		"https://limelit.co/settings/open-key\n",
+		"LIMELIT_DATA_DIR=/home/ana/limelit/data /home/ana/limelit/limelit login",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in:\n%s", want, out)
@@ -142,6 +144,16 @@ func TestConnectInAContainerGoesThroughDockerExec(t *testing.T) {
 	if strings.Contains(out, "/usr/local/bin/limelit") {
 		t.Errorf("a path inside the container leaked into the host commands:\n%s", out)
 	}
+
+	// A container still being set up is told to log in through docker exec,
+	// with a terminal, since login asks for the key.
+	out = connectText(connectInfo{
+		version: "v0.1.0", addr: tcpAddr(t, "[::]:1515"),
+		exe: "/usr/local/bin/limelit", dataDir: "/data", container: "3f2a9c1b7d4e", state: mcpserver.StateNotSetUp,
+	})
+	if !strings.Contains(out, "docker exec -it 3f2a9c1b7d4e limelit login") {
+		t.Errorf("no docker exec login in:\n%s", out)
+	}
 }
 
 // TestBaseURLReachesAnyInterfaceAtLocalhost. A listener on every interface
@@ -173,7 +185,7 @@ func TestConnectEndsWithWhatToAsk(t *testing.T) {
 		{mcpserver.StateSetupIncomplete, []string{"1. Finish setup", "3. Then ask your assistant"}, nil},
 		{mcpserver.StateNeverRun, []string{"1. Press Run at http://localhost:1515", "2. Then ask your assistant"}, []string{"Finish setup"}},
 		{mcpserver.StateStale, []string{"1. The last 30 days hold no answers", "2. Then ask your assistant"}, []string{"Finish setup"}},
-		{mcpserver.StateReady, []string{"1. Ask your assistant"}, []string{"Press Run", "Finish setup"}},
+		{mcpserver.StateReady, []string{"1. Ask your assistant"}, []string{"Press Run", "Finish setup", "limelit login"}},
 		{"", []string{"1. Ask your assistant"}, nil},
 	} {
 		out := connectText(connectInfo{

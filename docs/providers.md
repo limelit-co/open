@@ -145,7 +145,7 @@ Build order. The first group ships before the second is started.
 | `perplexity` | `perplexity` | Sonar models. Citations from the `citations` array. Key: <https://www.perplexity.ai/account/api/keys> |
 | `google` | `gemini` | Gemini API with Google Search grounding. Citations from `groundingChunks`. Key: <https://aistudio.google.com/apikey> |
 | `openrouter` | `chatgpt`, `claude`, `gemini`, `perplexity` | One key, four engines, so it is what Settings recommends first. Citations only where the upstream model returns them. Key: <https://openrouter.ai/keys> |
-| `limelitapi` | `perplexity` | The Perplexity half of the free allowance (below): Limelit Cloud asks Perplexity's API with Limelit's key. Key: a Limelit Cloud API key, <https://limelit.co/settings> |
+| `limelitapi` | `perplexity` | The Perplexity half of the free allowance (below): Limelit Cloud asks Perplexity's API with Limelit's key. Key: a Limelit Cloud API key, <https://limelit.co/settings/open-key> |
 
 ### Scraped, with existing Go adapters to draw from
 
@@ -167,7 +167,7 @@ Build order. The first group ships before the second is started.
 
 | Provider | Engines | Notes |
 |---|---|---|
-| `limelit` | `chatgpt`, `gemini`, `ai_overview`, `ai_mode` | Limelit Cloud collects the consumer surfaces with Limelit's scraping-service accounts. Key: a Limelit Cloud API key, <https://limelit.co/settings> |
+| `limelit` | `chatgpt`, `gemini`, `ai_overview`, `ai_mode` | Limelit Cloud collects the consumer surfaces with Limelit's scraping-service accounts. Key: a Limelit Cloud API key, <https://limelit.co/settings/open-key> |
 
 These four are about 150 lines each: an HTTP call, a response parse, a
 fixture. They are the intended first contribution for anyone who wants one,
@@ -180,9 +180,14 @@ keep the two in step.
 
 ## The free allowance
 
-A user with no vendor key can still measure. They sign up for Limelit Cloud
-(free), create an API key in its Settings, and paste it into Limelit Open,
-either at the setup wizard's provider step or in Settings. That one key
+A user with no vendor key can still measure. They open
+<https://limelit.co/settings/open-key>, sign in with Google (a first sign-in
+creates the free account), press Create my key, and give the key to Limelit
+Open one of three ways: paste it at the setup wizard's provider step or in
+Settings; run `limelit login` and paste it there; or set `LIMELIT_CLOUD_KEY`.
+`limelit login` saves it encrypted in the data directory, where a running
+`limelit serve` picks it up without a restart, and tracks every engine it
+reaches. That one key
 enables two providers: `limelit` (ChatGPT, Gemini, Google AI Overviews and AI
 Mode, the consumer surfaces) and `limelitapi` (Perplexity, through its API).
 Claude is not in the allowance; it needs the user's own Anthropic or

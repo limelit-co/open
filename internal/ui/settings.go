@@ -176,27 +176,10 @@ func (a *App) providerCards(ctx context.Context) []ProviderKeyCard {
 // sharedKeyEngines is every engine reached with c's key, across all the
 // catalog entries that take exactly the same credentials.
 func sharedKeyEngines(c provider.CatalogEntry) []string {
-	key := strings.Join(c.Credentials, ",")
 	var out []string
-	for _, other := range provider.Catalog() {
-		if strings.Join(other.Credentials, ",") != key {
-			continue
-		}
+	for _, other := range provider.SharedKeyEntries(c) {
 		for id := range other.Engines {
 			out = append(out, id)
-		}
-	}
-	return out
-}
-
-// sharedKeyEntries is c and every other catalog entry that takes exactly the
-// same credentials, so saving one key tracks everything it reaches.
-func sharedKeyEntries(c provider.CatalogEntry) []provider.CatalogEntry {
-	key := strings.Join(c.Credentials, ",")
-	var out []provider.CatalogEntry
-	for _, other := range provider.Catalog() {
-		if strings.Join(other.Credentials, ",") == key {
-			out = append(out, other)
 		}
 	}
 	return out
@@ -487,11 +470,7 @@ func (a *App) storeCredentials(r *http.Request, entry provider.CatalogEntry) (in
 		if value == "" {
 			continue
 		}
-		sealed, err := a.keys.Seal(value)
-		if err != nil {
-			return saved, err
-		}
-		if err := a.db.SetSetting(r.Context(), credentialPrefix+cred, sealed); err != nil {
+		if err := credentials.Save(r.Context(), a.db, a.keys, cred, value); err != nil {
 			return saved, err
 		}
 		saved++

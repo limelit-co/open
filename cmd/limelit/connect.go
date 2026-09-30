@@ -15,6 +15,7 @@ import (
 
 	"github.com/limelit-co/open/internal/config"
 	"github.com/limelit-co/open/internal/mcpserver"
+	"github.com/limelit-co/open/internal/provider"
 )
 
 // connectInfo is what the startup message needs to say how to reach this
@@ -77,7 +78,7 @@ func writeConnect(w io.Writer, c connectInfo) {
 	}
 
 	b.WriteString("\n  Next\n")
-	for i, step := range nextSteps(c.state, base) {
+	for i, step := range nextSteps(c.state, base, loginCommand(c)) {
 		fmt.Fprintf(&b, "    %d. %s\n", i+1, step)
 	}
 	b.WriteString("\n")
@@ -90,14 +91,28 @@ func writeConnect(w io.Writer, c connectInfo) {
 // instructions and get_active_property's description take it from there.
 const startPhrase = `"Get started with Limelit"`
 
+// loginCommand is `limelit login` as it has to be typed in a second terminal
+// to save into this instance: with this binary and this data directory, or
+// through docker exec, where the image already sets the data directory.
+func loginCommand(c connectInfo) string {
+	if c.container != "" {
+		return "docker exec -it " + c.container + " limelit login"
+	}
+	return shellQuote(config.DataDirEnv+"="+c.dataDir) + " " + shellQuote(c.exe) + " login"
+}
+
 // nextSteps is the short path from this state to a first answer, ending with
 // what to type in the assistant, so a user never has to learn a tool name.
-func nextSteps(state, dashboard string) []string {
+func nextSteps(state, dashboard, login string) []string {
 	ask := "Then ask your assistant: " + startPhrase + "\n       or: \"" + mcpserver.TryAsking[0] + "\""
 	switch state {
 	case mcpserver.StateNotSetUp, mcpserver.StateSetupIncomplete:
 		return []string{
-			"Finish setup at " + dashboard + ": your brand, competitors, prompts and one key (a provider's, or a free Limelit Cloud key).",
+			"Finish setup at " + dashboard + ": your brand, competitors, prompts and one key.\n" +
+				"       No provider key? Get a free Limelit Cloud key here:\n" +
+				"         " + provider.LimelitKeyPage + "\n" +
+				"       Sign in with Google, copy the key, and paste it in setup. Or, in a second terminal:\n" +
+				"         " + login,
 			"Press Run in the dashboard to fetch the first answers.",
 			ask,
 		}

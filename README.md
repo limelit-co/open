@@ -235,10 +235,13 @@ docker run -p 1515:1515 -v limelit:/data ghcr.io/limelit-co/open
 The setup wizard asks for your brand name, domain, category and up to five
 competitors, fills a starter set of prompts, and takes one key. Two ways:
 
-- **Free:** sign up at [limelit.co](https://limelit.co), create an API key in
-  Settings and paste it. It reaches ChatGPT, Gemini, Perplexity and Google's
-  AI Overviews and AI Mode inside a free monthly allowance. Your prompts pass
-  through Limelit Cloud to reach the engines; the answers are stored here.
+- **Free:** open <https://limelit.co/settings/open-key>, sign in with Google,
+  press Create my key and paste it into the wizard. Or, in a second terminal,
+  run `limelit login` (from the same folder as `limelit serve`), which opens
+  that page and saves the key for you. It reaches ChatGPT, Gemini, Perplexity
+  and Google's AI Overviews and AI Mode inside a free monthly allowance. Your
+  prompts pass through Limelit Cloud to reach the engines; the answers are
+  stored here.
 - **Your own keys:** the quickest is OpenAI's, which reaches ChatGPT. Settings
   lists every other provider with a link to where its key comes from. You pay
   them directly, with no limit from us.
@@ -297,6 +300,7 @@ limelit serve     dashboard, JSON API, MCP over HTTP, and the scheduler
 limelit mcp       MCP over stdio, for Claude Desktop and Claude Code
 limelit run       one evaluation pass, then exit
 limelit export    write everything this instance knows to stdout
+limelit login     get a free Limelit Cloud key and save it here
 limelit upgrade   move this instance to Limelit Cloud
 limelit version   version and build info
 ```

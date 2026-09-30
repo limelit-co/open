@@ -13,11 +13,13 @@ package credentials
 import (
 	"context"
 	"log/slog"
+	"sort"
 
 	"github.com/limelit-co/open/internal/config"
 	"github.com/limelit-co/open/internal/provider"
 	"github.com/limelit-co/open/internal/secrets"
 	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/target"
 )
 
 // Prefix is the settings-key prefix a stored credential lives under.
@@ -53,4 +55,50 @@ func Source(ctx context.Context, db *store.DB, keys *secrets.Keyring, log *slog.
 		}
 		return value
 	}
+}
+
+// Save seals value and stores it as credential name, where Source finds it.
+// The dashboard and `limelit login` both write through here, and a running
+// server reads the store on every call, so a key saved by either is in use
+// at once, with no restart.
+func Save(ctx context.Context, db *store.DB, keys *secrets.Keyring, name, value string) error {
+	sealed, err := keys.Seal(value)
+	if err != nil {
+		return err
+	}
+	return db.SetSetting(ctx, Prefix+name, sealed)
+}
+
+// Track adds a target for every engine entry's key reaches, through every
+// registration built in reg that takes the same key. Connecting a key means
+// wanting to track what it reaches; a saved key with no target leaves the
+// Run button disabled for a reason nobody can see. API targets are online,
+// the only switch a click can sensibly set. It returns the specs tracked.
+func Track(ctx context.Context, db *store.DB, reg *provider.Registry, entry provider.CatalogEntry) ([]string, error) {
+	var tracked []string
+	for _, e := range provider.SharedKeyEntries(entry) {
+		if _, built := reg.Lookup(e.Name); !built {
+			continue
+		}
+		for engine := range e.Engines {
+			spec := engine + ":" + e.Name
+			if e.Access == provider.AccessAPI {
+				spec += ":online"
+			}
+			parsed, err := target.Parse(spec)
+			if err != nil || parsed.Validate(reg) != nil {
+				continue
+			}
+			access, _ := parsed.Access(reg)
+			if _, err := db.AddTarget(ctx, store.Target{
+				Spec: parsed.String(), Engine: parsed.Engine, Provider: parsed.Provider,
+				Model: parsed.Model, Online: parsed.Online, Access: string(access),
+			}); err != nil {
+				return tracked, err
+			}
+			tracked = append(tracked, parsed.String())
+		}
+	}
+	sort.Strings(tracked)
+	return tracked, nil
 }

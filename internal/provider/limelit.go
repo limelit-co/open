@@ -36,6 +36,11 @@ const (
 	LimelitCloudAPI = "https://api.limelit.co"
 	// LimelitKeyEnv is the Cloud API key, the same one `limelit upgrade` uses.
 	LimelitKeyEnv = "LIMELIT_CLOUD_KEY"
+	// LimelitKeyPage is where a free key is made: sign in (Google works, and
+	// a first sign-in creates the account), press one button, copy the key.
+	// `limelit login`, the startup message and the setup wizard all send
+	// people here.
+	LimelitKeyPage = "https://limelit.co/settings/open-key"
 
 	limelitAnswerPath    = "/v1/relay/answer"
 	limelitAllowancePath = "/v1/relay/allowance"
@@ -138,6 +143,18 @@ func (p *limelitProvider) Run(ctx context.Context, req Request) (Response, error
 func (p *limelitProvider) Test(ctx context.Context) error {
 	var a LimelitAllowance
 	return p.do(ctx, http.MethodGet, limelitAllowancePath, nil, &a)
+}
+
+// FetchLimelitAllowance proves key against Limelit Cloud and reports how much
+// of the free allowance is left. It spends nothing. A rejected key is ErrAuth.
+func FetchLimelitAllowance(ctx context.Context, key string) (LimelitAllowance, error) {
+	var a LimelitAllowance
+	p, err := NewLimelit(key)
+	if err != nil {
+		return a, err
+	}
+	err = p.(*limelitProvider).do(ctx, http.MethodGet, limelitAllowancePath, nil, &a)
+	return a, err
 }
 
 // LimelitAllowance is Cloud's account of the free allowance.
