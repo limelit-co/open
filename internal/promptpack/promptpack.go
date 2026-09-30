@@ -24,7 +24,8 @@ type Input struct {
 	// Brand is the property name, for the head-to-head and branded prompts.
 	Brand string
 	// Category is the phrase a buyer would use, for example "AI visibility
-	// tracking" or "CRM for startups". It is used verbatim.
+	// tracking", "CRM for startups" or "converting Kindle books to PDF".
+	// phrase fits it to the templates.
 	Category string
 	// Competitors are display names, used for alternatives and head-to-head.
 	Competitors []string
@@ -75,18 +76,18 @@ func Build(in Input) []Prompt {
 	// Discovery: the question with no brand in it at all. This is where
 	// visibility is won or lost, and it is the only shape that measures
 	// whether an engine reaches for you unprompted.
-	add("What are the best "+category+" tools?", CategoryDiscovery, false)
-	add("Which "+category+" tool should I use?", CategoryDiscovery, false)
-	add("What is the best "+category+" tool for a small team?", CategoryDiscovery, false)
-	add("Which "+category+" tools are worth paying for?", CategoryDiscovery, false)
-	add("What are the top "+category+" tools right now?", CategoryDiscovery, false)
+	ph := phrase(category)
+	add("What are the best "+ph.tools+"?", CategoryDiscovery, false)
+	add("Which "+ph.tool+" should I use?", CategoryDiscovery, false)
+	add("What is the best "+ph.tool+" for a small team?", CategoryDiscovery, false)
+	add("Which "+ph.tools+" are worth paying for?", CategoryDiscovery, false)
+	add("What are the top "+ph.tools+" right now?", CategoryDiscovery, false)
 
 	// Use case: how a buyer actually phrases the problem, rather than the
 	// category label a vendor uses.
-	article := indefiniteArticle(category)
-	add("How do I choose "+article+" "+category+" tool?", CategoryUseCase, false)
-	add("What should I look for in "+article+" "+category+" tool?", CategoryUseCase, false)
-	add("Is there a free or open source "+category+" tool?", CategoryUseCase, false)
+	add("How do I choose "+ph.aTool+"?", CategoryUseCase, false)
+	add("What should I look for in "+ph.aTool+"?", CategoryUseCase, false)
+	add("Is there a free or open source "+ph.tool+"?", CategoryUseCase, false)
 
 	// Comparison: one per competitor, capped so the pack stays a starter set
 	// rather than a bill.
@@ -109,6 +110,54 @@ func Build(in Input) []Prompt {
 	}
 
 	return out
+}
+
+// toolPhrase is a category written into the templates' three slots.
+type toolPhrase struct {
+	tool, tools, aTool string
+}
+
+// phrase fits a category phrase to "the best ___ tools", whatever shape the
+// user typed it in, because a prompt like "What are the best Converting
+// kindle books to pdf tools?" tells a reader, and an engine, that a template
+// wrote it:
+//
+//   - A trailing "tool", "tools", "software", "app" or "apps" is dropped, so
+//     "PDF converter tool" does not become "PDF converter tool tools".
+//   - A phrase that starts with a verb ("Converting kindle books to pdf",
+//     "tracking AI visibility") is what the tool is for: "tools for
+//     converting kindle books to pdf", with the verb lowercased.
+//   - A phrase with "for" in it ("CRM for startups") puts "tools" after the
+//     thing, before the audience: "CRM tools for startups".
+//   - Anything else is a noun: "AI visibility tracking tools".
+func phrase(category string) toolPhrase {
+	words := strings.Fields(category)
+	for len(words) > 1 {
+		switch strings.ToLower(words[len(words)-1]) {
+		case "tool", "tools", "software", "app", "apps":
+			words = words[:len(words)-1]
+			continue
+		}
+		break
+	}
+	if len(words) == 0 {
+		return toolPhrase{tool: "tool", tools: "tools", aTool: "a tool"}
+	}
+	first := words[0]
+	if lower := strings.ToLower(first); len(lower) > 4 && strings.HasSuffix(lower, "ing") && first[1:] == lower[1:] {
+		words[0] = lower
+		rest := strings.Join(words, " ")
+		return toolPhrase{tool: "tool for " + rest, tools: "tools for " + rest, aTool: "a tool for " + rest}
+	}
+	joined := strings.Join(words, " ")
+	if i := strings.Index(joined, " for "); i > 0 {
+		head, audience := joined[:i], joined[i:]
+		return toolPhrase{
+			tool: head + " tool" + audience, tools: head + " tools" + audience,
+			aTool: indefiniteArticle(head) + " " + head + " tool" + audience,
+		}
+	}
+	return toolPhrase{tool: joined + " tool", tools: joined + " tools", aTool: indefiniteArticle(joined) + " " + joined + " tool"}
 }
 
 // indefiniteArticle picks "a" or "an" for a category phrase. A generated

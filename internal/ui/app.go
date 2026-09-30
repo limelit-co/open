@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/limelit-co/open/internal/provider"
 	"github.com/limelit-co/open/internal/runner"
 	"github.com/limelit-co/open/internal/secrets"
+	"github.com/limelit-co/open/internal/siteinfo"
 	"github.com/limelit-co/open/internal/store"
 )
 
@@ -62,6 +64,8 @@ type App struct {
 	// demo makes every mutating route refuse and hides the credential
 	// surface. Set from LIMELIT_DEMO at construction.
 	demo bool
+	// siteLookup reads what a website calls itself, for the brand step.
+	siteLookup func(ctx context.Context, domain string) (siteinfo.Info, error)
 }
 
 // New builds the dashboard handler set. run may be nil, which leaves the Run
@@ -72,7 +76,12 @@ func New(db *store.DB, registry *provider.Registry, keys *secrets.Keyring, run *
 	if err != nil {
 		return nil, err
 	}
-	return &App{db: db, registry: registry, keys: keys, runner: run, metrics: metrics.New(db), views: views, log: log, version: version, commit: commit, cfg: cfg, demo: DemoMode()}, nil
+	userAgent := "LimelitOpen/" + version + " (+https://github.com/limelit-co/open)"
+	return &App{db: db, registry: registry, keys: keys, runner: run, metrics: metrics.New(db), views: views, log: log, version: version, commit: commit, cfg: cfg, demo: DemoMode(),
+		siteLookup: func(ctx context.Context, domain string) (siteinfo.Info, error) {
+			return siteinfo.Lookup(ctx, domain, userAgent)
+		},
+	}, nil
 }
 
 // Routes registers every dashboard route on mux.
@@ -84,6 +93,7 @@ func (a *App) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /prompts", a.prompts)
 	mux.HandleFunc("POST /prompts/add", a.readOnly(a.addPrompt))
 	mux.HandleFunc("POST /prompts/delete", a.readOnly(a.deletePrompt))
+	mux.HandleFunc("POST /prompts/import-cloud", a.readOnly(a.importCloudPrompts))
 	mux.HandleFunc("GET /competitors", a.competitors)
 	mux.HandleFunc("POST /competitors/add", a.readOnly(a.addCompetitor))
 	mux.HandleFunc("POST /competitors/delete", a.readOnly(a.deleteCompetitor))
@@ -96,6 +106,8 @@ func (a *App) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /settings/targets/delete", a.readOnly(a.deleteTarget))
 	mux.HandleFunc("POST /settings/targets/pause", a.readOnly(a.setTargetEnabled(false)))
 	mux.HandleFunc("POST /settings/targets/resume", a.readOnly(a.setTargetEnabled(true)))
+	mux.HandleFunc("POST /settings/brand", a.readOnly(a.saveBrandSettings))
+	mux.HandleFunc("POST /settings/brand/lookup", a.readOnly(a.lookupBrandSettings))
 	mux.HandleFunc("POST /settings/keys", a.readOnly(a.saveKeys))
 	mux.HandleFunc("POST /settings/keys/test", a.readOnly(a.testKeys))
 	mux.HandleFunc("POST /settings/keys/forget", a.readOnly(a.forgetKeys))
@@ -109,10 +121,12 @@ func (a *App) Routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /setup", a.noSetup(a.wizardBrand))
 	mux.HandleFunc("POST /setup/brand", a.readOnly(a.saveBrand))
+	mux.HandleFunc("POST /setup/brand/lookup", a.readOnly(a.lookupBrand))
 	mux.HandleFunc("GET /setup/competitors", a.noSetup(a.wizardCompetitors))
 	mux.HandleFunc("POST /setup/competitors", a.readOnly(a.saveCompetitors))
 	mux.HandleFunc("GET /setup/prompts", a.noSetup(a.wizardPrompts))
 	mux.HandleFunc("POST /setup/prompts", a.readOnly(a.savePrompts))
+	mux.HandleFunc("POST /setup/prompts/import-cloud", a.readOnly(a.importCloudWizard))
 	mux.HandleFunc("GET /setup/provider", a.noSetup(a.wizardProvider))
 	mux.HandleFunc("POST /setup/provider", a.readOnly(a.saveProvider))
 	mux.HandleFunc("POST /setup/finish", a.readOnly(a.finishSetup))
@@ -232,7 +246,15 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/overview", http.StatusSeeOther)
 }
 
-func (a *App) prompts(w http.ResponseWriter, r *http.Request) {
+func (a *App) prompts(w http.ResponseWriter, r *http.Request) { a.promptsPage(w, r, nil) }
+
+// promptsWithFlash renders the prompts page with an outcome, for an action
+// whose message carries counts.
+func (a *App) promptsWithFlash(w http.ResponseWriter, r *http.Request, flash Flash) {
+	a.promptsPage(w, r, &flash)
+}
+
+func (a *App) promptsPage(w http.ResponseWriter, r *http.Request, flash *Flash) {
 	if !a.configured(r.Context()) {
 		http.Redirect(w, r, "/setup", http.StatusSeeOther)
 		return
@@ -242,12 +264,15 @@ func (a *App) prompts(w http.ResponseWriter, r *http.Request) {
 		a.fail(w, r, err)
 		return
 	}
+	if flash != nil {
+		base.Flash = flash
+	}
 	rows, err := a.db.Prompts(r.Context(), true)
 	if err != nil {
 		a.fail(w, r, err)
 		return
 	}
-	page := PromptsPage{Base: base}
+	page := PromptsPage{Base: base, CloudKey: !a.demo && a.hasCloudKey(r.Context())}
 	for _, p := range rows {
 		page.Prompts = append(page.Prompts, PromptView{ID: p.ID, Text: p.Text, Category: p.Category, Branded: p.Branded})
 	}
@@ -301,6 +326,7 @@ func (a *App) competitors(w http.ResponseWriter, r *http.Request) {
 	for _, c := range rows {
 		page.Competitors = append(page.Competitors, CompetitorView{ID: c.ID, Name: c.Name, Domain: c.Domain})
 	}
+	page.Suggested = a.suggestedCompetitors(r.Context(), rows)
 	a.write(w, r, "competitors", page)
 }
 
@@ -330,6 +356,35 @@ func (a *App) deleteCompetitor(w http.ResponseWriter, r *http.Request) {
 	}
 	a.reanalyze(r.Context())
 	http.Redirect(w, r, "/competitors?flash=competitor-remove", http.StatusSeeOther)
+}
+
+// suggestedCompetitors are the sites the engines cite most for your prompts
+// that you do not track: in a category, the answers' own sources are usually
+// the rivals worth watching. Only "other" sites count (not your own, social
+// or reference sites), each cited in at least two answers, top five.
+// Tracking one is a click and reads the stored answers again.
+func (a *App) suggestedCompetitors(ctx context.Context, tracked []store.Competitor) []SuggestedCompetitor {
+	sources, err := a.metrics.Sources(ctx, metrics.Window{Days: 90}, 50)
+	if err != nil {
+		return nil
+	}
+	have := map[string]bool{}
+	for _, c := range tracked {
+		have[c.Domain] = true
+	}
+	var out []SuggestedCompetitor
+	for _, s := range sources {
+		if s.SourceType != "other" || s.Answers < 2 || have[store.NormalizeDomain(s.Site)] {
+			continue
+		}
+		out = append(out, SuggestedCompetitor{Site: s.Site, Answers: s.Answers})
+	}
+	// The column shown is answers, so that is the order.
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Answers > out[j].Answers })
+	if len(out) > 5 {
+		out = out[:5]
+	}
+	return out
 }
 
 // reanalyze reads the stored answers again after the tracked brands changed,

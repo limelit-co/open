@@ -514,6 +514,14 @@ func gridViews(m metrics.Matrix) ([]GridColumnView, []GridRowView) {
 
 		for i, t := range m.Targets {
 			cell, ok := r.Cells[t.ID]
+			if ok && cell.Answers == 0 && cell.NoSurface > 0 {
+				row.Cells = append(row.Cells, GridCellView{
+					NoAnswer: true, Bin: cellBin(0, 0),
+					Title: fmt.Sprintf("%s: asked %s, and it showed no AI answer; not counted against you",
+						engineLabel(t.Engine), timesWord(cell.NoSurface)),
+				})
+				continue
+			}
 			if !ok || cell.Answers == 0 {
 				row.Cells = append(row.Cells, GridCellView{
 					Ran: false, Bin: cellBin(0, 0),
@@ -764,4 +772,15 @@ func shortTime(ts string) string {
 		return ts[:16]
 	}
 	return ts
+}
+
+// timesWord is "once", "twice", or "N times".
+func timesWord(n int) string {
+	switch n {
+	case 1:
+		return "once"
+	case 2:
+		return "twice"
+	}
+	return fmt.Sprintf("%d times", n)
 }

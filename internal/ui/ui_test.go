@@ -5,6 +5,7 @@ package ui
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
@@ -20,6 +21,7 @@ import (
 	"github.com/limelit-co/open/internal/provider/providertest"
 	"github.com/limelit-co/open/internal/runner"
 	"github.com/limelit-co/open/internal/secrets"
+	"github.com/limelit-co/open/internal/siteinfo"
 	"github.com/limelit-co/open/internal/store"
 )
 
@@ -50,6 +52,10 @@ func newAppWithRunner(t *testing.T, reg *provider.Registry, run *runner.Runner) 
 	app, err := New(db, reg, keys, run, slog.New(slog.NewTextHandler(io.Discard, nil)), "test", "", &config.Config{})
 	if err != nil {
 		t.Fatalf("ui.New: %v", err)
+	}
+	// No test reaches a real website; the brand-step tests set their own.
+	app.siteLookup = func(context.Context, string) (siteinfo.Info, error) {
+		return siteinfo.Info{}, errors.New("no network in tests")
 	}
 	mux := http.NewServeMux()
 	app.Routes(mux)

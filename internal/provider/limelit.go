@@ -44,6 +44,7 @@ const (
 
 	limelitAnswerPath    = "/v1/relay/answer"
 	limelitAllowancePath = "/v1/relay/allowance"
+	limelitSetupPath     = "/v1/relay/setup"
 )
 
 // LimelitScrapedEngines and LimelitAPIEngines are what the two registrations
@@ -155,6 +156,38 @@ func FetchLimelitAllowance(ctx context.Context, key string) (LimelitAllowance, e
 	}
 	err = p.(*limelitProvider).do(ctx, http.MethodGet, limelitAllowancePath, nil, &a)
 	return a, err
+}
+
+// LimelitSetup is what a Limelit Cloud account already tracks: its brand,
+// its active prompts and its competitors (GET /v1/relay/setup), so an owner
+// can measure the same thing here in one click.
+type LimelitSetup struct {
+	Brand struct {
+		Name   string `json:"name"`
+		Domain string `json:"domain"`
+	} `json:"brand"`
+	Prompts []struct {
+		Text     string `json:"text"`
+		Category string `json:"category"`
+		Branded  *bool  `json:"branded"`
+	} `json:"prompts"`
+	Competitors []struct {
+		Name    string   `json:"name"`
+		Domain  string   `json:"domain"`
+		Aliases []string `json:"aliases"`
+	} `json:"competitors"`
+}
+
+// FetchLimelitSetup reads the key's Limelit Cloud account setup. It spends
+// nothing. A rejected key is ErrAuth.
+func FetchLimelitSetup(ctx context.Context, key string) (LimelitSetup, error) {
+	var out LimelitSetup
+	p, err := NewLimelit(key)
+	if err != nil {
+		return out, err
+	}
+	err = p.(*limelitProvider).do(ctx, http.MethodGet, limelitSetupPath, nil, &out)
+	return out, err
 }
 
 // LimelitAllowance is Cloud's account of the free allowance.

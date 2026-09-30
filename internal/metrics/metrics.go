@@ -403,6 +403,10 @@ type Cell struct {
 	// MeanPosition is zero when the property never appeared in a ranked list
 	// here.
 	MeanPosition float64
+	// NoSurface is how many times this was asked and the engine showed no
+	// answer at all (a Google search with no AI Overview). Excluded from
+	// Answers and every rate, but it is not "never asked".
+	NoSurface int
 }
 
 // MatrixRow is one prompt's row in the grid.
@@ -469,6 +473,35 @@ func (s *Service) Matrix(ctx context.Context, w Window) (Matrix, error) {
 		cells[cell.PromptID][cell.TargetID] = cell
 	}
 	if err := rows.Err(); err != nil {
+		return Matrix{}, err
+	}
+
+	// Asked, but no answer surface rendered: counted per cell so the grid
+	// can say so rather than drawing it as never asked.
+	noSurface, err := s.db.QueryContext(ctx, `
+		SELECT c.prompt_id, c.target_id, COUNT(*)
+		FROM chat c
+		JOIN prompt p ON p.id = c.prompt_id
+		WHERE `+strings.Replace(filter, "c.status = 'ok'", "c.status = 'no_answer_surface'", 1)+`
+		GROUP BY c.prompt_id, c.target_id`, args...)
+	if err != nil {
+		return Matrix{}, err
+	}
+	defer noSurface.Close()
+	for noSurface.Next() {
+		var promptID, targetID int64
+		var n int
+		if err := noSurface.Scan(&promptID, &targetID, &n); err != nil {
+			return Matrix{}, err
+		}
+		if cells[promptID] == nil {
+			cells[promptID] = map[int64]Cell{}
+		}
+		cell := cells[promptID][targetID]
+		cell.PromptID, cell.TargetID, cell.NoSurface = promptID, targetID, n
+		cells[promptID][targetID] = cell
+	}
+	if err := noSurface.Err(); err != nil {
 		return Matrix{}, err
 	}
 
