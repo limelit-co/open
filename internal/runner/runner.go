@@ -173,6 +173,11 @@ func (r *Runner) Run(ctx context.Context, opts Options) (Result, error) {
 		return Result{}, err
 	}
 
+	// Answers stored under older rules or brands are read again before new
+	// ones join them, which also records what the new ones are read under.
+	if _, _, err := r.ensureAnalyzed(ctx); err != nil && r.log != nil {
+		r.log.Error("reading stored answers again before the pass", "error", err)
+	}
 	var analyzer Analyzer
 	if r.NewAnalyzer != nil {
 		if analyzer, err = r.NewAnalyzer(ctx); err != nil {
@@ -196,6 +201,11 @@ func (r *Runner) Run(ctx context.Context, opts Options) (Result, error) {
 	final, err := r.db.Evaluation(context.WithoutCancel(ctx), evalID)
 	if err != nil {
 		return Result{}, err
+	}
+	// A brand or competitor edited while the pass ran could not re-read the
+	// stored answers then (the lock was held), so it happens here.
+	if _, _, err := r.ensureAnalyzed(context.WithoutCancel(ctx)); err != nil && r.log != nil {
+		r.log.Error("reading stored answers again after the pass", "error", err)
 	}
 	r.publish(Event{
 		EvaluationID: evalID, Kind: "finished", Status: status,

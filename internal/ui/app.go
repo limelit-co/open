@@ -5,6 +5,7 @@ package ui
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -317,6 +318,7 @@ func (a *App) addCompetitor(w http.ResponseWriter, r *http.Request) {
 		a.fail(w, r, err)
 		return
 	}
+	a.reanalyze(r.Context())
 	http.Redirect(w, r, "/competitors?flash=competitor-added", http.StatusSeeOther)
 }
 
@@ -326,7 +328,20 @@ func (a *App) deleteCompetitor(w http.ResponseWriter, r *http.Request) {
 		a.fail(w, r, err)
 		return
 	}
+	a.reanalyze(r.Context())
 	http.Redirect(w, r, "/competitors?flash=competitor-remove", http.StatusSeeOther)
+}
+
+// reanalyze reads the stored answers again after the tracked brands changed,
+// so a competitor added today is counted in last month's answers too. A pass
+// in flight holds the lock and does it when it ends.
+func (a *App) reanalyze(ctx context.Context) {
+	if a.runner == nil {
+		return
+	}
+	if _, _, err := a.runner.EnsureAnalyzed(ctx); err != nil && !errors.Is(err, runner.ErrAlreadyRunning) {
+		a.log.Error("reading stored answers again", "error", err)
+	}
 }
 
 // run starts one evaluation and returns immediately. A pass takes as long as

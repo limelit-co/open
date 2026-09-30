@@ -63,6 +63,7 @@ func (a *App) saveBrand(w http.ResponseWriter, r *http.Request) {
 		a.fail(w, r, err)
 		return
 	}
+	a.reanalyze(r.Context())
 	http.Redirect(w, r, "/setup/competitors", http.StatusSeeOther)
 }
 
@@ -124,6 +125,7 @@ func (a *App) saveCompetitors(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	a.reanalyze(r.Context())
 	http.Redirect(w, r, "/setup/prompts", http.StatusSeeOther)
 }
 

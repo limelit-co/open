@@ -168,6 +168,11 @@ func cmdServe(ctx context.Context, args []string) error {
 
 	run := runner.New(db, registry, credentials.Source(ctx, db, keys, log), log)
 	run.NewAnalyzer = func(c context.Context) (runner.Analyzer, error) { return runner.NewStoreAnalyzer(c, db) }
+	// Answers stored under older matching rules, or before a brand was
+	// added, are read again once, here, before anyone looks at a number.
+	if _, _, err := run.EnsureAnalyzed(ctx); err != nil {
+		log.Error("reading stored answers again", "error", err)
+	}
 	ver, rev := buildInfo()
 	dash, err := ui.New(db, registry, keys, run, log, ver, rev, cfg)
 	if err != nil {
