@@ -67,6 +67,14 @@ type App struct {
 	demo bool
 	// siteLookup reads what a website calls itself, for the brand step.
 	siteLookup func(ctx context.Context, domain string) (siteinfo.Info, error)
+	// allowance caches the free Limelit Cloud allowance for the top bar.
+	allowance struct {
+		sync.Mutex
+		key string
+		at  time.Time
+		ok  bool
+		val provider.LimelitAllowance
+	}
 	// cloudOffer caches whether the saved Cloud key has anything to import.
 	cloudOffer struct {
 		sync.Mutex
@@ -210,6 +218,9 @@ func (a *App) base(r *http.Request, title, current string) (Base, store.Counts, 
 		b.DemoLive = a.scheduled(ctx)
 	}
 	b.Commit, b.CommitURL = commitLink(a.commit)
+	if !a.demo {
+		b.Usage = a.usageView(ctx)
+	}
 	if counts.LastChatAt != "" {
 		b.LastRun = counts.LastChatAt
 	}

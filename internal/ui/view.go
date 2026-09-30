@@ -56,6 +56,22 @@ type Base struct {
 	// on a dev build with no VCS stamp.
 	Commit    string
 	CommitURL string
+	// Usage is what this instance has used against its limit, in the top
+	// bar: the free Limelit Cloud credits when that key is set, otherwise
+	// today's answers against the daily limit. Nil in a demo.
+	Usage *UsageView
+}
+
+// UsageView is the top bar's usage meter.
+type UsageView struct {
+	Label       string
+	Used, Limit int
+	// Width is the meter's fill as a CSS percentage, capped at 100%.
+	Width string
+	// Detail is the tooltip: what is counted and when it resets.
+	Detail string
+	// Warn is set at 90% and above.
+	Warn bool
 }
 
 // StatView is one number on the overview.
@@ -238,6 +254,9 @@ type SettingsPage struct {
 type UpgradePage struct {
 	Base
 	CloudFeatures []string
+	// KeySaved is true when a Limelit Cloud key is saved in Settings (the
+	// free-allowance key), which the upload uses when the field is blank.
+	KeySaved bool
 	// KeyFromEnv is true when LIMELIT_CLOUD_KEY is set, so the form can say
 	// the key is already known rather than asking for it again.
 	KeyFromEnv bool

@@ -27,7 +27,8 @@ func fakeCloudSetup(t *testing.T, domain string) {
 			return
 		}
 		if r.URL.Path == "/v1/relay/allowance" {
-			json.NewEncoder(w).Encode(map[string]any{"enabled": true, "monthly_credits": 1000})
+			json.NewEncoder(w).Encode(map[string]any{"enabled": true, "monthly_credits": 1000, "used_this_month": 24,
+				"daily_credits": 150, "used_today": 24, "month_resets_at": "2026-10-01T00:00:00Z"})
 			return
 		}
 		if domain == "" {

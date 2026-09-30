@@ -144,6 +144,12 @@ func phrase(category string) toolPhrase {
 		return toolPhrase{tool: "tool", tools: "tools", aTool: "a tool"}
 	}
 	first := words[0]
+	// "Convert Kindle books to PDF": a task, so the tool is one to do it.
+	if taskVerbs[strings.ToLower(first)] && len(words) > 1 {
+		words[0] = strings.ToLower(first)
+		rest := strings.Join(words, " ")
+		return toolPhrase{tool: "tool to " + rest, tools: "tools to " + rest, aTool: "a tool to " + rest}
+	}
 	if lower := strings.ToLower(first); len(lower) > 4 && strings.HasSuffix(lower, "ing") && first[1:] == lower[1:] {
 		words[0] = lower
 		rest := strings.Join(words, " ")
@@ -158,6 +164,22 @@ func phrase(category string) toolPhrase {
 		}
 	}
 	return toolPhrase{tool: joined + " tool", tools: joined + " tools", aTool: indefiniteArticle(joined) + " " + joined + " tool"}
+}
+
+// taskVerbs start a category typed as a task ("Convert Kindle books to PDF",
+// "Track brand mentions"). A list, not a grammar: these are the verbs people
+// use to name what a tool does.
+var taskVerbs = map[string]bool{
+	"convert": true, "export": true, "import": true, "track": true, "monitor": true,
+	"manage": true, "measure": true, "analyze": true, "analyse": true, "automate": true,
+	"build": true, "create": true, "make": true, "design": true, "edit": true, "write": true,
+	"generate": true, "translate": true, "transcribe": true, "record": true, "schedule": true,
+	"send": true, "share": true, "sync": true, "backup": true, "back": true, "save": true,
+	"remove": true, "compress": true, "merge": true, "split": true, "sign": true, "scan": true,
+	"find": true, "compare": true, "download": true, "upload": true, "host": true, "deploy": true,
+	"test": true, "check": true, "optimize": true, "optimise": true, "organize": true,
+	"organise": true, "plan": true, "book": true, "learn": true, "hire": true, "sell": true,
+	"invoice": true, "collect": true, "print": true, "read": true, "store": true, "search": true,
 }
 
 // indefiniteArticle picks "a" or "an" for a category phrase. A generated

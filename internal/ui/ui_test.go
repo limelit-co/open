@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -42,6 +43,11 @@ func newAppWithRunner(t *testing.T, reg *provider.Registry, run *runner.Runner) 
 	t.Cleanup(func() { db.Close() })
 
 	t.Setenv("LIMELIT_SECRET", "test-secret")
+	// Any Limelit Cloud call a test does not fake fails at once on this
+	// machine rather than reaching the real service.
+	if os.Getenv("LIMELIT_CLOUD_API") == "" {
+		t.Setenv("LIMELIT_CLOUD_API", "http://127.0.0.1:1")
+	}
 	keys, err := secrets.Open(dir)
 	if err != nil {
 		t.Fatalf("secrets.Open: %v", err)

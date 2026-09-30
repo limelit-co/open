@@ -371,7 +371,8 @@ fieldset { border: none; margin: 0; padding: 0; }
  * Verified in a browser at 375px: a template test cannot see this. */
 
 @media (max-width: 860px) {
-  .shell { grid-template-columns: 1fr; }
+  /* The nav row takes only what it needs; a short page must not stretch it. */
+  .shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
 
   .sidebar {
     flex-direction: row;
@@ -1011,5 +1012,21 @@ tr.row-branded { opacity: 0.72; }
 /* Between a phone and the sidebar layout (a laptop's side panel, a tablet),
    every link fits on one or two lines, so wrap instead of scrolling. */
 @media (min-width: 600px) and (max-width: 860px) {
-  .sidebar { flex-wrap: wrap; overflow-x: visible; -webkit-mask-image: none; mask-image: none; }
+  .sidebar { flex-wrap: wrap; align-content: flex-start; overflow-x: visible; -webkit-mask-image: none; mask-image: none; }
 }
+
+/* Top bar usage meter: what has been used against the limit that stops runs. */
+.usage {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 10px; border: 1px solid var(--rule); border-radius: 999px;
+  color: var(--ink-2); font-size: 12.5px; text-decoration: none; white-space: nowrap;
+}
+.usage:hover { background: var(--bg-2); text-decoration: none; color: var(--ink); }
+.usage-label { color: var(--ink-3); }
+.usage-num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.usage-meter { width: 56px; height: 5px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+.usage-meter > span { display: block; height: 100%; background: var(--brand); }
+.usage-warn { border-color: var(--warn-fg); }
+.usage-warn .usage-num { color: var(--warn-fg); }
+.usage-warn .usage-meter > span { background: var(--warn-fg); }
+@media (max-width: 600px) { .usage-meter { display: none; } }

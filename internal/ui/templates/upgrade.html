@@ -38,8 +38,8 @@
       <div class="field">
         <label for="cloud-key">Limelit Cloud API key</label>
         <input type="password" id="cloud-key" name="key" autocomplete="off"
-               placeholder="{{if .KeyFromEnv}}set in the environment{{else}}paste the key{{end}}" {{if not .KeyFromEnv}}required{{end}}>
-        <div class="hint">{{if .KeyFromEnv}}Already set as LIMELIT_CLOUD_KEY; leave blank to use it.{{else}}Create one in your Cloud workspace settings. It is used for this upload and not stored.{{end}}</div>
+               placeholder="{{if .KeyFromEnv}}set in the environment{{else if .KeySaved}}your saved Limelit Cloud key{{else}}paste the key{{end}}" {{if not (or .KeyFromEnv .KeySaved)}}required{{end}}>
+        <div class="hint">{{if .KeyFromEnv}}Already set as LIMELIT_CLOUD_KEY; leave blank to use it.{{else if .KeySaved}}Leave blank to use the key you saved for the free allowance, the same Cloud account your answers came through.{{else}}Create one in your Cloud workspace settings. It is used for this upload and not stored.{{end}}</div>
       </div>
       <div class="field">
         <label for="since">Only answers from (optional)</label>
