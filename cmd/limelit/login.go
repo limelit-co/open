@@ -164,12 +164,7 @@ func readKey(in io.Reader, interactive bool) (string, error) {
 
 // cleanKey accepts the key as pasted, including the whole export line the
 // key page offers to copy, with or without quotes.
-func cleanKey(s string) string {
-	s = strings.TrimSpace(s)
-	s = strings.TrimPrefix(s, "export ")
-	s = strings.TrimPrefix(s, provider.LimelitKeyEnv+"=")
-	return strings.Trim(strings.TrimSpace(s), `"'`)
-}
+func cleanKey(s string) string { return provider.CleanLimelitKey(s) }
 
 // engineLabels names the engines behind target specs, in order, once each.
 func engineLabels(specs []string) []string {

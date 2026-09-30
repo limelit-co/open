@@ -5,9 +5,11 @@ package ui
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/limelit-co/open/internal/credentials"
 	"github.com/limelit-co/open/internal/mentions"
@@ -241,7 +243,7 @@ func (a *App) wizardPromptsWith(w http.ResponseWriter, r *http.Request, cloudErr
 	}
 	built := promptpack.Build(promptpack.Input{Brand: prop.Name, Category: category, Competitors: names})
 
-	page := WizardPromptsPage{WizardBase: a.wizardBase(r, "Set up", 2), CloudKey: a.hasCloudKey(ctx), CloudError: cloudError}
+	page := WizardPromptsPage{WizardBase: a.wizardBase(r, "Set up", 2), CloudKey: a.cloudImportOffer(ctx), CloudError: cloudError}
 	for _, p := range built {
 		page.Prompts = append(page.Prompts, WizardPromptView{Text: p.Text, Category: p.Category, Branded: p.Branded})
 	}
@@ -305,11 +307,17 @@ func (a *App) savePrompts(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/setup/provider", http.StatusSeeOther)
 }
 
-func (a *App) wizardProvider(w http.ResponseWriter, r *http.Request) {
+func (a *App) wizardProvider(w http.ResponseWriter, r *http.Request) { a.wizardProviderWith(w, r, nil) }
+
+// wizardProviderWith renders step four, with an outcome when flash is set.
+func (a *App) wizardProviderWith(w http.ResponseWriter, r *http.Request, flash *Flash) {
 	cards := a.providerCards(r.Context())
 	page := WizardProviderPage{
 		WizardBase: a.wizardBase(r, "Set up", 3),
 		Providers:  cards,
+	}
+	if flash != nil {
+		page.Flash = flash
 	}
 	for _, c := range cards {
 		if c.Available {
@@ -330,6 +338,18 @@ func (a *App) saveProvider(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		http.Redirect(w, r, "/setup/provider", http.StatusSeeOther)
 		return
+	}
+	// The free key is checked before it is saved, because proving it costs
+	// nothing and a mistyped key would otherwise surface only as a page of
+	// failed answers after the first Run.
+	if key := provider.CleanLimelitKey(r.FormValue("cred_" + provider.LimelitKeyEnv)); key != "" && containsFold(entry.Credentials, provider.LimelitKeyEnv) {
+		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+		_, err := provider.FetchLimelitAllowance(ctx, key)
+		cancel()
+		if errors.Is(err, provider.ErrAuth) {
+			a.wizardProviderWith(w, r, &Flash{Kind: "error", Text: "Limelit Cloud did not accept that key, so it was not saved. Copy it again from " + provider.LimelitKeyPage + " (Create my key makes a new one)."})
+			return
+		}
 	}
 	if _, err := a.storeCredentials(r, entry); err != nil {
 		a.fail(w, r, err)

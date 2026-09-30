@@ -242,6 +242,8 @@ func TestTheFreeCloudKeyTracksEveryEngineItReaches(t *testing.T) {
 	// One Limelit Cloud key is two registrations, because access is fixed
 	// per provider. Pasting it must track both halves, or Perplexity would
 	// silently never run.
+	fakeCloudSetup(t, "acme.com")
+	t.Setenv("LIMELIT_CLOUD_KEY", "")
 	_, db, h := newApp(t, providertest.Registry())
 	seedProperty(t, h)
 

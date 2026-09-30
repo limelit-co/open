@@ -21,8 +21,17 @@ import (
 func fakeCloudSetup(t *testing.T, domain string) {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/relay/setup" || r.Header.Get("Authorization") != "Bearer lmlt_test" {
+		if r.Header.Get("Authorization") != "Bearer lmlt_test" {
 			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]any{"error": "auth_required", "message": "invalid or revoked api key"})
+			return
+		}
+		if r.URL.Path == "/v1/relay/allowance" {
+			json.NewEncoder(w).Encode(map[string]any{"enabled": true, "monthly_credits": 1000})
+			return
+		}
+		if domain == "" {
+			json.NewEncoder(w).Encode(map[string]any{"brand": map[string]any{"name": "Vedant28t", "domain": ""}, "prompts": []any{}, "competitors": []any{}})
 			return
 		}
 		json.NewEncoder(w).Encode(map[string]any{
@@ -136,5 +145,44 @@ func TestImportSaysWhenAPassWouldPassTheCeiling(t *testing.T) {
 	over := importSentence(cloudImport{Prompts: 150, PassAnswers: 750, Ceiling: 200})
 	if !strings.Contains(over, "over your daily limit of 200") {
 		t.Errorf("over the ceiling: %q", over)
+	}
+}
+
+// TestAFreshCloudAccountOffersNoImport. A Cloud account made just to get a
+// free key has no brand, so there is nothing to import: no button, and a
+// plain sentence if the route is reached anyway.
+func TestAFreshCloudAccountOffersNoImport(t *testing.T) {
+	fakeCloudSetup(t, "")
+	_, h := kindleApp(t)
+	if strings.Contains(get(t, h, "/prompts").Body.String(), "Import from Limelit Cloud") {
+		t.Error("the import is offered for an account with nothing to import")
+	}
+	if body := post(t, h, "/prompts/import-cloud", nil).Body.String(); !strings.Contains(body, "no brand set up yet") {
+		t.Errorf("flash: %s", flashOf(body))
+	}
+}
+
+// TestTheWizardChecksTheFreeKeyBeforeSavingIt. A mistyped key is caught on
+// the step where it was pasted, not as a page of failed answers after Run,
+// and the whole export line the key page offers is accepted.
+func TestTheWizardChecksTheFreeKeyBeforeSavingIt(t *testing.T) {
+	fakeCloudSetup(t, "kindletopdf.com")
+	t.Setenv(provider.LimelitKeyEnv, "")
+	db, h := kindleApp(t)
+
+	rec := post(t, h, "/setup/provider", url.Values{"provider": {"limelit"}, "cred_LIMELIT_CLOUD_KEY": {"lmlt_typo"}})
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "did not accept that key") {
+		t.Fatalf("a wrong key: %d %s", rec.Code, flashOf(rec.Body.String()))
+	}
+	if targets, _ := db.Targets(context.Background(), false); len(targets) != 0 {
+		t.Errorf("a rejected key tracked %d targets", len(targets))
+	}
+
+	rec = post(t, h, "/setup/provider", url.Values{"provider": {"limelit"}, "cred_LIMELIT_CLOUD_KEY": {"export LIMELIT_CLOUD_KEY=lmlt_test"}})
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("the right key, pasted as the export line: %d", rec.Code)
+	}
+	if targets, _ := db.Targets(context.Background(), false); len(targets) != 5 {
+		t.Errorf("targets = %d, want the five the free key reaches", len(targets))
 	}
 }

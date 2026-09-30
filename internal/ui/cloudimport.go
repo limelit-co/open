@@ -44,6 +44,34 @@ func (a *App) hasCloudKey(ctx context.Context) bool {
 	return a.keys != nil && a.credentials(ctx)(provider.LimelitKeyEnv) != ""
 }
 
+// cloudImportOffer reports whether the Limelit Cloud account behind the key
+// tracks this brand's domain and has something to import, so the button
+// appears only where it does something: a Cloud account made just to get a
+// free key has no brand yet. The answer is kept five minutes per key, so
+// viewing a page is not a network call each time.
+func (a *App) cloudImportOffer(ctx context.Context) bool {
+	if a.demo || !a.hasCloudKey(ctx) {
+		return false
+	}
+	key := a.credentials(ctx)(provider.LimelitKeyEnv)
+	a.cloudOffer.Lock()
+	defer a.cloudOffer.Unlock()
+	if a.cloudOffer.key == key && time.Since(a.cloudOffer.at) < 5*time.Minute {
+		return a.cloudOffer.ok
+	}
+	fetchCtx, cancel := context.WithTimeout(ctx, 4*time.Second)
+	setup, err := provider.FetchLimelitSetup(fetchCtx, key)
+	cancel()
+	ok := false
+	if prop, perr := a.db.Property(ctx); err == nil && perr == nil {
+		ok = setup.Brand.Domain != "" &&
+			store.NormalizeDomain(setup.Brand.Domain) == store.NormalizeDomain(prop.Domain) &&
+			len(setup.Prompts)+len(setup.Competitors) > 0
+	}
+	a.cloudOffer.key, a.cloudOffer.at, a.cloudOffer.ok = key, time.Now(), ok
+	return ok
+}
+
 // importCloudSetup copies the Cloud account's brand name, prompts and
 // competitors into this instance.
 func (a *App) importCloudSetup(ctx context.Context) (cloudImport, error) {
@@ -64,6 +92,9 @@ func (a *App) importCloudSetup(ctx context.Context) (cloudImport, error) {
 	prop, err := a.db.Property(ctx)
 	if err != nil {
 		return res, err
+	}
+	if strings.TrimSpace(setup.Brand.Domain) == "" {
+		return res, errors.New("your Limelit Cloud account has no brand set up yet, so there is nothing to import; the starter prompts are the way to begin")
 	}
 	if store.NormalizeDomain(setup.Brand.Domain) != store.NormalizeDomain(prop.Domain) {
 		return res, fmt.Errorf("that Limelit Cloud key belongs to %s (%s), not %s, so nothing was imported",

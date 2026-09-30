@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/limelit-co/open/internal/config"
@@ -66,6 +67,13 @@ type App struct {
 	demo bool
 	// siteLookup reads what a website calls itself, for the brand step.
 	siteLookup func(ctx context.Context, domain string) (siteinfo.Info, error)
+	// cloudOffer caches whether the saved Cloud key has anything to import.
+	cloudOffer struct {
+		sync.Mutex
+		key string
+		at  time.Time
+		ok  bool
+	}
 }
 
 // New builds the dashboard handler set. run may be nil, which leaves the Run
@@ -272,7 +280,7 @@ func (a *App) promptsPage(w http.ResponseWriter, r *http.Request, flash *Flash) 
 		a.fail(w, r, err)
 		return
 	}
-	page := PromptsPage{Base: base, CloudKey: !a.demo && a.hasCloudKey(r.Context())}
+	page := PromptsPage{Base: base, CloudKey: a.cloudImportOffer(r.Context())}
 	for _, p := range rows {
 		page.Prompts = append(page.Prompts, PromptView{ID: p.ID, Text: p.Text, Category: p.Category, Branded: p.Branded})
 	}
