@@ -51,10 +51,28 @@ Tests: `TestFindIsDeterministic`, `TestAnAbsenceStatementIsStillAMention`.
 
 The rules of the search:
 
-- **What is searched for.** The brand's name, its aliases, and its domain. A
-  link to a brand's site has put that brand in front of the reader, and a
-  domain written in prose counts too.
-  Test: `TestDomainInProseCounts`.
+- **What is searched for.** The brand's name, its aliases, its domain, and,
+  for a plain `name.tld` domain, the name part on its own ("KindleToPDF" or
+  "Epubor" without the ".com"). A link to a brand's site has put that brand
+  in front of the reader, and a domain written in prose counts too. The name
+  part is not searched for a subdomain: the first label of
+  `marketplace.microsoft.com` is a word, not a brand.
+  Tests: `TestDomainInProseCounts`, `TestTheDomainNameCountsWithoutItsDotCom`.
+- **A name that is also a description counts only where it reads as a
+  name.** "Kindle to PDF" (kindletopdf.com) is a product, and it is also how
+  every answer about the category describes the task. A name of that shape,
+  two or more words with a connecting word ("to", "for", "and", ...) that run
+  together to spell the domain's name part, does not count right after a
+  task word ("convert Kindle to PDF"), right before a generic noun ("a Kindle
+  to PDF converter") or glued to another capitalized name ("BitRecover Kindle
+  to PDF Converter"). Measured on one brand's 200 answers, the plain search
+  counted 122 where 44 named the product. The domain and its name part are
+  never restricted, and names like "Athena HQ", with no connecting word, are
+  searched as before. The same rule decides whether a prompt is branded, so
+  "convert Kindle to PDF" is a category question and stays in the headline.
+  The cases are in `internal/mentions/testdata/phrase_names.json`, which
+  Limelit Cloud's matcher reads too.
+  Tests: `TestPhraseNamesFromRealAnswers`, `TestIsBrandedReadsAPhraseNameAsTheCategory`.
 - **Whole words only.** "Acme" does not match inside "Acmeify". The boundary
   test is on the neighbouring characters (neither may be a letter or digit),
   so "acme.com" matches even though a dot is not a word character.
@@ -83,6 +101,18 @@ The rules of the search:
   `TestProseMentionHasNoRank`, `TestProseAfterAListHasNoRank`,
   `TestAnIndentedParagraphStaysInItsItem`, `TestNestedBulletsAreNotItems`,
   `TestASecondListRestartsTheRanking`, `TestAnIndentedListAfterProseIsItsOwnList`.
+
+**Stored answers are read again when the rules or the brands change.** The
+mentions, classified citations and branded flags derived from an answer are
+rebuilt from the stored answer text and the citations the engine gave,
+whenever the matching rules change in a new release or you add, remove or
+rename a brand. A competitor added today is counted in last month's answers,
+and a rule fix corrects the history instead of starting a break in the trend.
+It runs when the server starts, after an edit, and at the start and end of a
+pass, never at the same time as one, and it rewrites everything in one
+transaction. The answer text itself is never changed.
+Tests: `TestStoredAnswersAreReadAgainWhenTheRulesOrBrandsChange`,
+`TestReadingAgainWaitsForAPassInFlight`.
 
 ## Classifying citations
 

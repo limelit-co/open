@@ -98,11 +98,26 @@ func (m *Matcher) Find(text string) []Mention {
 		return nil
 	}
 	ranks := listRanks(text)
+	// The phrase-name rule reads capitals around a match found in the
+	// lowercase copy, so it needs the original at the same offsets.
+	lower := strings.ToLower(text)
+	cased := len(lower) == len(text)
+	around := text
+	if !cased {
+		around = lower
+	}
 
 	var found []Mention
 	for _, brand := range m.brands {
+		label := DomainLabel(brand.Domain)
 		for _, term := range brand.searchTerms() {
+			// A name that is also a description ("Kindle to PDF") counts
+			// only where it reads as the name (phrase.go).
+			phrase := PhraseName(term, label)
 			for _, span := range findTerm(text, term) {
+				if phrase && !standsAsName(around, span[0], span[1], cased) {
+					continue
+				}
 				found = append(found, Mention{
 					CompetitorID: brand.CompetitorID,
 					BrandKey:     NormalizeKey(brand.Name),
@@ -117,15 +132,32 @@ func (m *Matcher) Find(text string) []Mention {
 	return dedupe(found)
 }
 
-// searchTerms is every string that counts as this brand: its names and its
-// domain. The domain is included because an answer that links a brand without
-// naming it has still put that brand in front of the reader.
+// searchTerms is every string that counts as this brand: its names, its
+// domain, and the domain's name part. The domain is included because an
+// answer that links a brand without naming it has still put that brand in
+// front of the reader. The name part catches the brand written as one word
+// ("KindleToPDF", "Epubor") without the ".com"; it is added only for a plain
+// name.tld domain, since the first label of marketplace.microsoft.com is a
+// word, not a brand.
 func (b Brand) searchTerms() []string {
 	terms := append([]string(nil), b.Aliases...)
 	if d := strings.TrimSpace(strings.ToLower(b.Domain)); d != "" {
 		terms = append(terms, d)
+		host := strings.TrimPrefix(d, "www.")
+		if label := DomainLabel(host); strings.Count(host, ".") == 1 && len([]rune(label)) >= 3 && !hasTerm(terms, label) {
+			terms = append(terms, label)
+		}
 	}
 	return terms
+}
+
+func hasTerm(terms []string, t string) bool {
+	for _, x := range terms {
+		if strings.EqualFold(x, t) {
+			return true
+		}
+	}
+	return false
 }
 
 // usefulTerms drops blanks and anything too short to search for safely.
