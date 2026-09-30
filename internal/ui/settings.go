@@ -515,6 +515,9 @@ func (a *App) storeCredentials(r *http.Request, entry provider.CatalogEntry) (in
 	var saved int
 	for _, cred := range entry.Credentials {
 		value := strings.TrimSpace(r.FormValue("cred_" + cred))
+		if cred == provider.LimelitKeyEnv {
+			value = provider.CleanLimelitKey(value)
+		}
 		if value == "" {
 			continue
 		}

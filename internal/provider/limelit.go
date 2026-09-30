@@ -140,6 +140,15 @@ func (p *limelitProvider) Run(ctx context.Context, req Request) (Response, error
 	return resp, nil
 }
 
+// CleanLimelitKey takes the key however it was copied: bare, or as the whole
+// "export LIMELIT_CLOUD_KEY=..." line the key page offers, quoted or not.
+func CleanLimelitKey(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.TrimPrefix(s, "export ")
+	s = strings.TrimPrefix(s, LimelitKeyEnv+"=")
+	return strings.Trim(strings.TrimSpace(s), `"'`)
+}
+
 // Test reads the allowance, which proves the key without spending any of it.
 func (p *limelitProvider) Test(ctx context.Context) error {
 	var a LimelitAllowance
