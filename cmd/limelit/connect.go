@@ -97,7 +97,7 @@ func nextSteps(state, dashboard string) []string {
 	switch state {
 	case mcpserver.StateNotSetUp, mcpserver.StateSetupIncomplete:
 		return []string{
-			"Finish setup at " + dashboard + ": your brand, competitors, prompts and one provider key.",
+			"Finish setup at " + dashboard + ": your brand, competitors, prompts and one key (a provider's, or a free Limelit Cloud key).",
 			"Press Run in the dashboard to fetch the first answers.",
 			ask,
 		}

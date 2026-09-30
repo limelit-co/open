@@ -170,6 +170,9 @@ type ProviderKeyCard struct {
 	AnySaved  bool
 	Available bool
 	Reason    string
+	// Free marks the Limelit Cloud allowance: no vendor key, so setup shows
+	// it as its own option rather than one provider among many.
+	Free bool
 }
 
 // MCPView is the state of MCP over HTTP: whether a bearer token is in force

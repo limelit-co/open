@@ -1,7 +1,7 @@
 {{define "page"}}
 <div class="card">
-  <h1>Connect one engine</h1>
-  <p class="lede">One key is enough to see a real number. Pick the provider that reaches what you care about, get a key from them, and paste it here. You pay them directly, at their rates.</p>
+  <h1>Connect your engines</h1>
+  <p class="lede">Two ways to get your first numbers: a free allowance from Limelit Cloud, or your own provider keys. You can add the other later in Settings.</p>
 
   {{if not .AnyAvailable}}
   <div class="notice notice-warn">
@@ -9,7 +9,42 @@
   </div>
   {{end}}
 
-  {{range .Providers}}
+  {{range .Providers}}{{if and .Free .Available}}
+  <h2>Free: use Limelit's allowance</h2>
+  <div class="provider">
+    <div class="provider-head">
+      <div>
+        <h3>{{.Label}}</h3>
+        <div class="hint">No vendor keys. Reaches {{.EngineList}} with a free monthly allowance; Claude needs your own key.</div>
+        <ol class="hint">
+          <li>Sign up free at limelit.co.</li>
+          <li>Create an API key in its Settings.</li>
+          <li>Paste it here.</li>
+        </ol>
+        <div class="hint">Your prompts pass through Limelit Cloud to reach the engines; the answers are stored here. When the month's allowance is used up, add your own key to keep going.</div>
+      </div>
+      <a class="btn" href="{{.KeyURL}}" target="_blank" rel="noreferrer noopener">Get a free key</a>
+    </div>
+    <form method="post" action="/setup/provider" class="provider-form">
+      <input type="hidden" name="provider" value="{{.Name}}">
+      {{range .Credentials}}
+      <div class="cred">
+        <label for="setup-{{.Name}}">{{.Name}}</label>
+        <input type="password" id="setup-{{.Name}}" name="cred_{{.Name}}" autocomplete="off"
+               placeholder="{{if .FromEnv}}set in the environment{{else if .Saved}}saved, paste to replace{{else}}paste your Limelit Cloud key{{end}}"
+               {{if .FromEnv}}disabled{{end}}>
+        <span class="hint">{{.Status}}</span>
+      </div>
+      {{end}}
+      <button class="btn btn-primary" type="submit">Connect and finish</button>
+    </form>
+  </div>
+
+  <h2>Or use your own keys</h2>
+  <p class="hint">Get a key from a provider and paste it here. You pay them directly, at their rates, with no monthly limit from us.</p>
+  {{end}}{{end}}
+
+  {{range .Providers}}{{if not .Free}}
   <div class="provider">
     <div class="provider-head">
       <div>
@@ -35,7 +70,7 @@
     </form>
     {{end}}
   </div>
-  {{end}}
+  {{end}}{{end}}
 
   <div class="notice notice-info" style="margin-top:18px">
     An answer from a model API with web search on is not the same surface a person sees in the product. Both are worth tracking, so each is its own target, and the two are never averaged.
