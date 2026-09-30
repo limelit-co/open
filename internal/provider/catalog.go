@@ -123,6 +123,24 @@ var catalog = []CatalogEntry{
 		KeyURL:      "https://www.olostep.com/",
 		Note:        "Web data infrastructure, with the chat surfaces parsed.",
 	},
+	// The free allowance: no vendor key needed. Both entries take the same
+	// Limelit Cloud key, and Settings shows them as one card.
+	{
+		Name: "limelit", Label: "Limelit Cloud free allowance", Access: AccessScraped,
+		Engines:     LimelitScrapedEngines,
+		Credentials: []string{LimelitKeyEnv},
+		KeyURL:      "https://limelit.co/settings",
+		Note: "No vendor keys: sign up free at limelit.co, create an API key in Settings, paste it here. " +
+			"A monthly allowance covers ChatGPT, Gemini, Google AI Overviews, AI Mode and Perplexity. " +
+			"Prompts pass through Limelit Cloud; answers stay here.",
+	},
+	{
+		Name: "limelitapi", Label: "Limelit Cloud free allowance (Perplexity)", Access: AccessAPI,
+		Engines:     LimelitAPIEngines,
+		Credentials: []string{LimelitKeyEnv},
+		KeyURL:      "https://limelit.co/settings",
+		Note:        "The Perplexity half of the free allowance, through Perplexity's API. Same key.",
+	},
 }
 
 // Engine ids repeated here rather than imported, because package engines

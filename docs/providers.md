@@ -14,7 +14,7 @@ engine:provider[:model][:online]
 | Part | Meaning | Examples |
 |---|---|---|
 | `engine` | The answer surface being measured. Ids are Limelit Cloud's | `chatgpt`, `claude`, `perplexity`, `gemini`, `ai_overview`, `ai_mode`, `bing_copilot` |
-| `provider` | Who reaches it | `openai`, `anthropic`, `perplexity`, `google`, `openrouter`, `dataforseo`, `searchapi`, `cloro`, `brightdata`, `oxylabs`, `olostep` |
+| `provider` | Who reaches it | `openai`, `anthropic`, `perplexity`, `google`, `openrouter`, `dataforseo`, `searchapi`, `cloro`, `brightdata`, `oxylabs`, `olostep`, `limelit`, `limelitapi` |
 | `model` | Optional pin. Omitted means the provider's default for that engine | `gpt-5.5`, `sonar`, `gemini-2.5-flash` |
 | `online` | Web search on, for providers where it is a switch. Scraped surfaces are always online | |
 
@@ -47,8 +47,8 @@ the buttons cannot express.
 
 | Mode | What it measures | Typical cost shape | Providers |
 |---|---|---|---|
-| `api` | The vendor's model with web search enabled, called directly | Per token | `openai`, `anthropic`, `perplexity`, `google`, `openrouter` |
-| `scraped` | The consumer surface a user actually sees, fetched by a third-party scraping service | Per request | `dataforseo`, `searchapi`, `cloro`, `brightdata`, `oxylabs`, `olostep` |
+| `api` | The vendor's model with web search enabled, called directly | Per token | `openai`, `anthropic`, `perplexity`, `google`, `openrouter`, `limelitapi` |
+| `scraped` | The consumer surface a user actually sees, fetched by a third-party scraping service | Per request | `dataforseo`, `searchapi`, `cloro`, `brightdata`, `oxylabs`, `olostep`, `limelit` |
 
 An API answer with web search on and the answer a person sees in the
 consumer product are different surfaces. Limelit treats them as such, and
@@ -145,6 +145,7 @@ Build order. The first group ships before the second is started.
 | `perplexity` | `perplexity` | Sonar models. Citations from the `citations` array. Key: <https://www.perplexity.ai/account/api/keys> |
 | `google` | `gemini` | Gemini API with Google Search grounding. Citations from `groundingChunks`. Key: <https://aistudio.google.com/apikey> |
 | `openrouter` | `chatgpt`, `claude`, `gemini`, `perplexity` | One key, four engines, so it is what Settings recommends first. Citations only where the upstream model returns them. Key: <https://openrouter.ai/keys> |
+| `limelitapi` | `perplexity` | The Perplexity half of the free allowance (below): Limelit Cloud asks Perplexity's API with Limelit's key. Key: a Limelit Cloud API key, <https://limelit.co/settings> |
 
 ### Scraped, with existing Go adapters to draw from
 
@@ -162,6 +163,12 @@ Build order. The first group ships before the second is started.
 | `oxylabs` | `chatgpt`, `ai_mode`, `ai_overview`, `perplexity` | Key: <https://oxylabs.io/> |
 | `olostep` | `chatgpt`, `ai_mode`, `perplexity` | Key: <https://www.olostep.com/> |
 
+### Scraped, through the free Limelit Cloud allowance
+
+| Provider | Engines | Notes |
+|---|---|---|
+| `limelit` | `chatgpt`, `gemini`, `ai_overview`, `ai_mode` | Limelit Cloud collects the consumer surfaces with Limelit's scraping-service accounts. Key: a Limelit Cloud API key, <https://limelit.co/settings> |
+
 These four are about 150 lines each: an HTTP call, a response parse, a
 fixture. They are the intended first contribution for anyone who wants one,
 and each has its own issue. Engine lists above are from public provider
@@ -170,6 +177,30 @@ documentation and will be corrected against fixtures as each adapter lands.
 `internal/provider/catalog.go` carries the same table in code, including each
 vendor's key page, which is what Settings renders. A test reads this file to
 keep the two in step.
+
+## The free allowance
+
+A user with no vendor key can still measure. They sign up for Limelit Cloud
+(free), create an API key in its Settings, and paste it into Limelit Open,
+either at the setup wizard's provider step or in Settings. That one key
+enables two providers: `limelit` (ChatGPT, Gemini, Google AI Overviews and AI
+Mode, the consumer surfaces) and `limelitapi` (Perplexity, through its API).
+Claude is not in the allowance; it needs the user's own Anthropic or
+OpenRouter key.
+
+Each prompt goes to Limelit Cloud (`POST https://api.limelit.co/v1/relay/answer`),
+which asks the engine with Limelit's keys and returns the answer, its
+citations and the searches it ran. The answer is stored here like any other.
+Limelit Cloud keeps which engine was asked and what it cost, not the prompt or
+the answer.
+
+The allowance is monthly and shared fairly: a monthly credit limit per
+account, a daily one, and a daily limit across every account. When one is
+used up the relay refuses, the answer is recorded as failed with the reason
+(`provider: no credit or quota left: This month's free Limelit allowance is
+used up...`), and the fix is to add your own key for that engine. Both kinds
+of target can run side by side; they are reported separately, each with its
+access badge.
 
 ## Configuration
 
@@ -202,7 +233,7 @@ Credentials:
 OPENAI_API_KEY, ANTHROPIC_API_KEY, PERPLEXITY_API_KEY, GOOGLE_API_KEY,
 OPENROUTER_API_KEY, DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD, SEARCHAPI_KEY,
 CLORO_API_KEY, BRIGHTDATA_API_TOKEN, OXYLABS_USERNAME, OXYLABS_PASSWORD,
-OLOSTEP_API_KEY
+OLOSTEP_API_KEY, LIMELIT_CLOUD_KEY
 ```
 
 The Settings screen writes the same values to the settings store, encrypted

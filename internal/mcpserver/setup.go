@@ -98,7 +98,8 @@ func Status(ctx context.Context, db *store.DB, m *metrics.Service, dashboard str
 			s.DataDir = dir
 		}
 		s.NextStep = fmt.Sprintf("Limelit is running but not set up yet. Open %s and finish setup: your brand, "+
-			"a few competitors, the prompts to track, and one provider key. Keys go there, never in this chat. "+
+			"a few competitors, the prompts to track, and one key: a provider's, or a free Limelit Cloud key. "+
+			"Keys go there, never in this chat. "+
 			"If setup is already done there, this connection reads %s, which may not be the folder limelit serve "+
 			"uses; add Limelit again with the exact line limelit serve printed.", dashboard, s.DataDir)
 		return s, nil
@@ -114,7 +115,7 @@ func Status(ctx context.Context, db *store.DB, m *metrics.Service, dashboard str
 			missing = append(missing, "the prompts to track")
 		}
 		if s.Targets == 0 {
-			missing = append(missing, "a provider key, which picks the engines to ask")
+			missing = append(missing, "a provider key or a free Limelit Cloud key, which picks the engines to ask")
 		}
 		s.NextStep = fmt.Sprintf("Setup is not finished: it still needs %s. Finish it at %s.",
 			strings.Join(missing, " and "), dashboard)
@@ -122,7 +123,7 @@ func Status(ctx context.Context, db *store.DB, m *metrics.Service, dashboard str
 	case s.Answers == 0:
 		s.DataState = StateNeverRun
 		s.NextStep = fmt.Sprintf("Setup is done, but nothing has run yet. Press Run in the dashboard at %s. "+
-			"One run asks each prompt of each tracked engine once, using your provider key.", dashboard)
+			"One run asks each prompt of each tracked engine once, using the key you added.", dashboard)
 		return s, nil
 	}
 

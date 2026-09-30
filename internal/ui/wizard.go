@@ -260,10 +260,15 @@ func (a *App) saveProvider(w http.ResponseWriter, r *http.Request) {
 	// Connecting a provider in the wizard means wanting to track what it
 	// reaches. Leaving the user on a finished setup with no target, and a
 	// Run button that stays disabled, would be the obvious next complaint.
-	if _, built := a.registry.Lookup(name); built {
-		for engine := range entry.Engines {
-			spec := engine + ":" + name
-			if entry.Access == provider.AccessAPI {
+	// The key may reach more than this entry: the Limelit Cloud key is two
+	// registrations, one per access mode. Track everything it reaches.
+	for _, e := range sharedKeyEntries(entry) {
+		if _, built := a.registry.Lookup(e.Name); !built {
+			continue
+		}
+		for engine := range e.Engines {
+			spec := engine + ":" + e.Name
+			if e.Access == provider.AccessAPI {
 				spec += ":online"
 			}
 			parsed, err := target.Parse(spec)

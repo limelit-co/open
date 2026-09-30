@@ -238,6 +238,85 @@ func TestConnectingInTheWizardStartsTracking(t *testing.T) {
 	}
 }
 
+func TestTheFreeCloudKeyTracksEveryEngineItReaches(t *testing.T) {
+	// One Limelit Cloud key is two registrations, because access is fixed
+	// per provider. Pasting it must track both halves, or Perplexity would
+	// silently never run.
+	_, db, h := newApp(t, providertest.Registry())
+	seedProperty(t, h)
+
+	rec := post(t, h, "/setup/provider", url.Values{
+		"provider": {"limelit"}, "cred_LIMELIT_CLOUD_KEY": {"lmlt_test"},
+	})
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("connect = %d", rec.Code)
+	}
+	targets, _ := db.Targets(context.Background(), false)
+	got := map[string]string{}
+	for _, tg := range targets {
+		got[tg.Spec] = tg.Access
+	}
+	want := map[string]string{
+		"chatgpt:limelit": "scraped", "gemini:limelit": "scraped",
+		"ai_overview:limelit": "scraped", "ai_mode:limelit": "scraped",
+		"perplexity:limelitapi:online": "api",
+	}
+	if len(got) != len(want) {
+		t.Fatalf("targets = %v, want %v", got, want)
+	}
+	for spec, access := range want {
+		if got[spec] != access {
+			t.Errorf("target %q access = %q, want %q (all: %v)", spec, got[spec], access, got)
+		}
+	}
+}
+
+func TestOneCloudKeyIsOneCard(t *testing.T) {
+	// Two cards for one key would let Forget on one disconnect the other.
+	_, _, h := newApp(t, providertest.Registry())
+	seedProperty(t, h)
+	body := get(t, h, "/settings").Body.String()
+
+	if n := strings.Count(body, `name="cred_LIMELIT_CLOUD_KEY"`); n != 1 {
+		t.Errorf("the Cloud key has %d fields on Settings, want one", n)
+	}
+	_, card, ok := strings.Cut(body, "<h3>Limelit Cloud free allowance")
+	card, _, _ = strings.Cut(card, "</form>")
+	for _, engine := range []string{"ChatGPT", "Google AI Mode", "Perplexity"} {
+		if !ok || !strings.Contains(card, engine) {
+			t.Errorf("the Cloud card does not say it reaches %s", engine)
+		}
+	}
+
+	// Each half is tracked through the registration that reaches it.
+	for engine, via := range map[string]string{"perplexity": "limelitapi", "chatgpt": "limelit"} {
+		if rec := post(t, h, "/settings/targets/track", url.Values{"engine": {engine}, "provider": {via}}); rec.Code != http.StatusSeeOther {
+			t.Errorf("tracking %s via %s = %d", engine, via, rec.Code)
+		}
+	}
+}
+
+func TestWizardOffersTheFreeAllowanceFirst(t *testing.T) {
+	// Two options, in order: the free allowance needs no vendor account, so
+	// it is the one a first visitor can finish.
+	_, _, h := newApp(t, providertest.Registry())
+	seedProperty(t, h)
+	body := get(t, h, "/setup/provider").Body.String()
+
+	free := strings.Index(body, "Free: use Limelit")
+	own := strings.Index(body, "Or use your own keys")
+	vendor := strings.Index(body, "https://openrouter.ai/keys")
+	if free < 0 || own < 0 || !(free < own && own < vendor) {
+		t.Errorf("free at %d, own keys at %d, a vendor at %d: want them in that order", free, own, vendor)
+	}
+	if n := strings.Count(body, `name="cred_LIMELIT_CLOUD_KEY"`); n != 1 {
+		t.Errorf("the Cloud key has %d fields in the wizard, want one", n)
+	}
+	if !strings.Contains(body, "pass through Limelit Cloud") {
+		t.Error("the wizard does not say where the prompts go")
+	}
+}
+
 func TestTestButtonReportsABadKey(t *testing.T) {
 	// A wrong key reported at the moment it is pasted, rather than at the
 	// next scheduled run when nobody is watching.

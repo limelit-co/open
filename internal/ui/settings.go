@@ -131,14 +131,23 @@ func (a *App) buildSettings(r *http.Request, base Base) (SettingsPage, error) {
 // where its current value is coming from.
 func (a *App) providerCards(ctx context.Context) []ProviderKeyCard {
 	var out []ProviderKeyCard
+	// Entries that take the same key are one card: the Limelit Cloud key
+	// enables two registrations, and two cards for one key would let Forget
+	// on one silently disconnect the other.
+	byKey := map[string]int{}
 	for _, c := range provider.Catalog() {
+		key := strings.Join(c.Credentials, ",")
 		labels := make([]string, 0, len(c.Engines))
-		for id := range c.Engines {
+		for _, id := range sharedKeyEngines(c) {
 			if e, ok := engines.Lookup(id); ok {
 				labels = append(labels, e.Label)
 			}
 		}
 		sort.Strings(labels)
+		if _, seen := byKey[key]; seen {
+			continue
+		}
+		byKey[key] = len(out)
 
 		card := ProviderKeyCard{
 			Name:       c.Name,
@@ -147,6 +156,7 @@ func (a *App) providerCards(ctx context.Context) []ProviderKeyCard {
 			EngineList: strings.Join(labels, ", "),
 			Note:       c.Note,
 			KeyURL:     c.KeyURL,
+			Free:       c.Name == "limelit",
 		}
 		if _, built := a.registry.Lookup(c.Name); built {
 			card.Available = true
@@ -159,6 +169,35 @@ func (a *App) providerCards(ctx context.Context) []ProviderKeyCard {
 			card.Credentials = append(card.Credentials, view)
 		}
 		out = append(out, card)
+	}
+	return out
+}
+
+// sharedKeyEngines is every engine reached with c's key, across all the
+// catalog entries that take exactly the same credentials.
+func sharedKeyEngines(c provider.CatalogEntry) []string {
+	key := strings.Join(c.Credentials, ",")
+	var out []string
+	for _, other := range provider.Catalog() {
+		if strings.Join(other.Credentials, ",") != key {
+			continue
+		}
+		for id := range other.Engines {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+// sharedKeyEntries is c and every other catalog entry that takes exactly the
+// same credentials, so saving one key tracks everything it reaches.
+func sharedKeyEntries(c provider.CatalogEntry) []provider.CatalogEntry {
+	key := strings.Join(c.Credentials, ",")
+	var out []provider.CatalogEntry
+	for _, other := range provider.Catalog() {
+		if strings.Join(other.Credentials, ",") == key {
+			out = append(out, other)
+		}
 	}
 	return out
 }

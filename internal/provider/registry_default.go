@@ -83,5 +83,27 @@ func Default() *Registry {
 		},
 	})
 
+	// The free allowance: Limelit Cloud answers with Limelit's keys, inside a
+	// monthly allowance, for a user with no vendor key. Two registrations,
+	// one key, because access is fixed per provider.
+	reg.Register(Registration{
+		Name:        "limelit",
+		Access:      AccessScraped,
+		Engines:     LimelitScrapedEngines,
+		Credentials: []string{LimelitKeyEnv},
+		New: func(src CredentialSource) (Provider, error) {
+			return NewLimelit(src(LimelitKeyEnv))
+		},
+	})
+	reg.Register(Registration{
+		Name:        "limelitapi",
+		Access:      AccessAPI,
+		Engines:     LimelitAPIEngines,
+		Credentials: []string{LimelitKeyEnv},
+		New: func(src CredentialSource) (Provider, error) {
+			return NewLimelitAPI(src(LimelitKeyEnv))
+		},
+	})
+
 	return reg
 }
