@@ -127,3 +127,14 @@ func TestNoCloudKeyNoImportButton(t *testing.T) {
 		t.Error("the import is offered without a key")
 	}
 }
+
+func TestImportSaysWhenAPassWouldPassTheCeiling(t *testing.T) {
+	ok := importSentence(cloudImport{Prompts: 6, PassAnswers: 40, Ceiling: 200})
+	if !strings.Contains(ok, "A pass now asks 40 questions.") || strings.Contains(ok, "refused") {
+		t.Errorf("under the ceiling: %q", ok)
+	}
+	over := importSentence(cloudImport{Prompts: 150, PassAnswers: 750, Ceiling: 200})
+	if !strings.Contains(over, "over your daily limit of 200") {
+		t.Errorf("over the ceiling: %q", over)
+	}
+}

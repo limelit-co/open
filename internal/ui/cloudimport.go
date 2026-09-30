@@ -27,10 +27,13 @@ import (
 // never removes, and reads the stored answers again afterwards so the new
 // competitors count in them.
 
-// cloudImport is what one import added.
+// cloudImport is what one import added, and what a pass now asks.
 type cloudImport struct {
 	Prompts, Competitors int
 	Alias                string
+	// PassAnswers is active prompts times enabled engines after the import,
+	// and Ceiling the daily limit a pass is refused above.
+	PassAnswers, Ceiling int
 }
 
 // errNoCloudKey means there is no Limelit Cloud key to import with.
@@ -122,6 +125,12 @@ func (a *App) importCloudSetup(ctx context.Context) (cloudImport, error) {
 		res.Competitors++
 	}
 	a.reanalyze(ctx)
+	if active, err := a.db.Prompts(ctx, false); err == nil {
+		if targets, err := a.db.Targets(ctx, true); err == nil {
+			res.PassAnswers = len(active) * len(targets)
+		}
+	}
+	res.Ceiling = a.runsPerDay(ctx)
 	return res, nil
 }
 
@@ -150,7 +159,16 @@ func importSentence(res cloudImport) string {
 	if res.Alias != "" {
 		s += fmt.Sprintf(", and added “%s” as another name for your brand", res.Alias)
 	}
-	return s + "."
+	s += "."
+	// A big account's prompts on every engine can pass the daily ceiling,
+	// and a pass over it is refused whole, so say so now, not at Run.
+	if res.PassAnswers > 0 {
+		s += fmt.Sprintf(" A pass now asks %d questions.", res.PassAnswers)
+		if res.Ceiling > 0 && res.PassAnswers > res.Ceiling {
+			s += fmt.Sprintf(" That is over your daily limit of %d, so a pass would be refused: remove some prompts, or raise the limit in Settings.", res.Ceiling)
+		}
+	}
+	return s
 }
 
 func plural(n int, one, many string) string {
