@@ -23,39 +23,28 @@ per target, and `n` (the number of chats the metric rests on).
 
 | Tool | Cloud | Arguments | Notes |
 |---|---|---|---|
-| `get_active_property` | same | none | Returns name, website domain, aliases, and the configured targets |
-| `update_brand_identity` | same | `name`, `website_domain`, `aliases[]` (open-core) | Drives mention matching and citation ownership. Cloud: owner only |
+| `get_active_property` | same | none | The front door: call it first. Returns name, website domain, aliases and the configured targets, plus a `setup` block (open-core): `data_state` (`not_set_up`, `setup_incomplete`, `never_run`, `stale`, `settling`, `ready`), `has_answers`, `next_step` with the dashboard link, `suggested_days` when the default 30 days are empty, `once_set_up_you_can_ask` and `try_asking`. A fresh instance gets a normal answer, not an error |
+
+Setup (brand, competitors, prompts, provider keys) and runs happen in the
+dashboard; there are no write tools here yet. `next_step` says where.
 
 ## Competitors
 
 | Tool | Cloud | Arguments | Notes |
 |---|---|---|---|
 | `list_competitors` | same | none | |
-| `track_competitor` | same | `name`, `domain` (required), `category` | Domain is the identity key, as in Cloud. Name-only tracking is not allowed |
-| `untrack_competitor` | same | `id` | Past mention history is retained |
 
 ## Prompts
 
 | Tool | Cloud | Arguments | Notes |
 |---|---|---|---|
 | `list_prompts` | same | `include_inactive` | Rows carry id, text, category, location, platform_filter, is_active, and tags. `branded` is a system tag |
-| `create_prompt` | same | `text` (required, max 500), `category`, `location_country` | A prompt containing the property name or an alias is tagged `branded` on create |
-| `update_prompt` | same | `id` (required), `text`, `category`, `location_country`, `is_active` | |
-| `delete_prompt` | same | `id` | Chat history is preserved |
-
-## Evaluation
-
-| Tool | Cloud | Arguments | Notes |
-|---|---|---|---|
-| `reevaluate_all_prompts` | same | `targets[]` (open-core, optional) | Runs every active prompt across configured targets. Refuses when `limits.runs_per_day` would be exceeded and says by how much. Cloud: owner only, budget guard instead of run guard |
-| `reevaluate_prompt` | same | `prompt_id` | One prompt across configured targets |
-| `get_run_activity` | same | none | In-flight and recently completed chats per target. Answers "is it still running" |
 
 ## Answers
 
 | Tool | Cloud | Arguments | Notes |
 |---|---|---|---|
-| `list_chats` | same | `days` (1..365, default 30), `prompt_id`, `model`, `brand`, `source`, `limit` (default 25, cap 100), `offset`, `target` (open-core) | Bodies are not returned. Each row has a preview, the engine, access mode, brands mentioned with rank, and sources cited |
+| `list_chats` | same | `days` (1..365, default 30), `prompt_id`, `show` (`all`, `mentioned`, `missed`, `failed`), `limit` (default 25, cap 100), `offset`, `target` (open-core) | Bodies are not returned. Each row has a preview, the engine, access mode, brands mentioned with rank, and sources cited |
 | `get_chat` | same | `id` | Full answer, every mention with offset and rank, every citation with position and source type. `body_truncated` is set when the body is cut |
 
 ## Metrics
@@ -66,7 +55,7 @@ test that enforces each rule.
 
 | Tool | Cloud | Arguments | Notes |
 |---|---|---|---|
-| `get_overview_kpis` | same | `days` (1..90) | Visibility %, citation share %, competitor and prompt counts, competitor ranking, top cited sources |
+| `get_overview_kpis` | same | `days` (1..365, default 30) | Visibility %, citation share %, competitor and prompt counts, competitor ranking, top cited sources |
 | `get_kpi_history` | same | `days` (1..366, default 30) | Daily series behind the headline numbers. `segment` is Cloud-only |
 | `get_matrix` | same | `metric`: `visibility`, `sov`, `position` | Prompt-by-target grid over all chats, no window, same as Cloud. `sentiment` is Cloud-only |
 | `list_top_sources` | same | `limit` (default 50, cap 200), `offset` | One row per cited domain, all time, with source type |
@@ -96,7 +85,7 @@ same, so a client that has learned one keeps it.
 
 | Id | Arguments | What it walks |
 |---|---|---|
-| `limelit_weekly_pulse` | `window_days` (1..45, default 7) | `get_overview_kpis`, `get_kpi_history`, `list_chats` to quote evidence for any movement |
+| `limelit_weekly_pulse` | none | `get_overview_kpis`, `get_kpi_history`, `list_chats` to quote evidence for any movement |
 | `limelit_competitor_radar` | `window_days`, `threshold_pp` (default 10) | `list_competitors`, `get_matrix` (sov), `list_source_urls` for the competitor that moved |
 | `limelit_why_not_cited` (open-core) | `prompt_id` | `get_matrix`, `list_chats` for the prompt, `get_chat` on the misses, `list_top_sources` for who is cited instead |
 

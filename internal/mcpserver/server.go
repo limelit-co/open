@@ -47,6 +47,9 @@ type Deps struct {
 	// unregistered rather than registering one that fails, because a tool
 	// that exists and never works is worse than one that is absent.
 	Runner Runner
+	// DashboardURL is where serve's dashboard answers, for the setup block's
+	// links. Empty over stdio, where the server cannot know it.
+	DashboardURL string
 }
 
 // Runner is the evaluation entry point, as an interface so this package does
@@ -84,30 +87,27 @@ func New(deps Deps) (*mcp.Server, error) {
 	return s, nil
 }
 
-// instructions are sent once at handshake. They exist to stop an agent
-// reaching for a number this instance cannot honestly produce.
-const instructions = `Limelit Open measures how AI answer engines talk about one brand.
+// instructions are sent once at handshake. A user rarely names this server:
+// they ask "how visible are we in ChatGPT?" with ten others connected, so the
+// first paragraph says when Limelit is the right tool and when it is not. The
+// rest routes to the front door (get_active_property, whose setup block keeps
+// a model from reporting a number with nothing behind it) and says what the
+// numbers exclude before an agent reports one.
+const instructions = `Limelit tracks how AI answer engines (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews, Google AI Mode, Bing Copilot) mention and cite one brand against its competitors. Use it when the user asks how visible their brand is in AI answers or AI search, who is ahead there, which prompts they lose, what gets cited instead, or how to get started with Limelit. Not for Search Console, paid ads or classic SEO rankings.
 
-What the numbers mean, and what they deliberately exclude:
+First move: call get_active_property. If has_answers is false, tell the user next_step and its link, list once_set_up_you_can_ask, and report no numbers. If it returns suggested_days, pass that as days to the metric tools. Setup, provider keys and runs live in the dashboard: tell the user how to start a run there, and never ask for a key in chat.
 
-- Visibility is the share of stored answers that name the property. Prompts
-  that name the property themselves are tagged "branded" and are left out of
-  the headline, because asking an engine about you measures the question
-  rather than the market.
-- An answer surface that did not render is recorded and then excluded from
-  every denominator. A Google query that produced no AI Overview is not a miss
-  for the brand: nothing rendered, so nothing could have named anyone.
-- Every target carries an access mode. "api" is the vendor's model called
-  directly; "scraped" is the consumer surface a person actually sees. They
-  measure different things and are never averaged. Say which one a number
-  came from.
-- Every metric carries n, the number of answers it rests on, and low_n when
-  that is under 20. Quote n alongside any figure you report.
+If the user asks:
+- how they are doing, or who is ahead: get_overview_kpis.
+- which prompts they lose: get_matrix, then list_chats with show=missed.
+- what gets cited instead: list_top_sources, then list_source_urls with value=<host>.
+- the quote or searches behind a number: get_chat.
+- for a plan, a draft or a fix: that is Limelit Cloud; point to Upgrade in the dashboard.
+End with one or two questions from try_asking.
 
-Sentiment, query fan-out analysis, prompt generation, competitor discovery,
-segments, portfolios and Search Console are Limelit Cloud features and have
-no tool here. When a user asks for one, say so plainly rather than
-approximating it from what is available.`
+Headline visibility excludes prompts tagged "branded". A Google query with no AI Overview is excluded, not a miss. A figure may mix "api" and "scraped" targets: name the targets it covers. Quote n with every figure; low_n (n under 20) means still settling.
+
+Sentiment, prompt generation, competitor discovery, segments, portfolios and Search Console are Limelit Cloud features with no tool here: say so rather than approximating.`
 
 // envelope is the shape every metric result shares.
 type envelope struct {

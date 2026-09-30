@@ -34,6 +34,7 @@ import (
 	"github.com/limelit-co/open/internal/export"
 	"github.com/limelit-co/open/internal/httpx"
 	"github.com/limelit-co/open/internal/mcpserver"
+	"github.com/limelit-co/open/internal/metrics"
 	"github.com/limelit-co/open/internal/provider"
 	"github.com/limelit-co/open/internal/runner"
 	"github.com/limelit-co/open/internal/secrets"
@@ -179,13 +180,16 @@ func cmdServe(ctx context.Context, args []string) error {
 		if ui.DemoMode() {
 			return
 		}
-		_, noProperty := db.Property(ctx)
+		setup, err := mcpserver.Status(ctx, db, metrics.New(db), baseURL(bound))
+		if err != nil {
+			log.Warn("could not read the setup state for the startup message", "error", err)
+		}
 		writeConnect(os.Stderr, connectInfo{
 			version:   ver,
 			addr:      bound,
 			exe:       executablePath(),
 			dataDir:   absPath(config.DataDir()),
-			setUp:     noProperty == nil,
+			state:     setup.DataState,
 			httpToken: dash.MCPToken() != "",
 			container: containerID(),
 		})

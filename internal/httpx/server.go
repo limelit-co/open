@@ -50,7 +50,7 @@ func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.A
 	if dash != nil {
 		token = dash.MCPToken
 	}
-	if srv, err := New_(db); err == nil {
+	if srv, err := New_(db, mcpserver.DashboardURL(addr)); err == nil {
 		mux.Handle("/mcp", mcpserver.Handler(srv, token, log))
 		mux.Handle("/mcp/", mcpserver.Handler(srv, token, log))
 	} else if log != nil {
@@ -135,7 +135,8 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 }
 
 // New_ builds the MCP server for the HTTP endpoint. Named apart from New so
-// the two constructors in this file cannot be confused at a glance.
-func New_(db *store.DB) (*mcp.Server, error) {
-	return mcpserver.New(mcpserver.Deps{DB: db})
+// the two constructors in this file cannot be confused at a glance. dashboard
+// is this server's own address, which the setup block links to.
+func New_(db *store.DB, dashboard string) (*mcp.Server, error) {
+	return mcpserver.New(mcpserver.Deps{DB: db, DashboardURL: dashboard})
 }
