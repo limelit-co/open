@@ -99,8 +99,10 @@ What works today, verified against a live instance:
   on the way there, the brands it named with their ranks, and every source it
   cited.
 - **MCP.** `limelit mcp` over stdio, or streamable HTTP with a bearer token.
-  Twelve tools on Limelit Cloud's names, so a conversation written against this
-  server keeps working after an upgrade.
+  Fourteen read tools on Limelit Cloud's names, so a conversation written
+  against this server keeps working after an upgrade. The first one an
+  assistant calls says where the instance stands (not set up, never run,
+  ready) and what to do next, so a new user is never handed a 0%.
 - **Scheduling.** Daily or hourly inside `limelit serve`, or `limelit run` for
   one pass on demand, with a hard `runs_per_day` ceiling checked before any
   spend.
@@ -266,9 +268,12 @@ directory so it reads the same `data` folder as the dashboard. If you put
 `limelit` somewhere else, change `~/limelit` to that directory, or copy the
 lines `limelit serve` prints, which carry your exact paths.
 
-Then ask: "How visible is my brand across AI engines this week, and which
-prompts am I losing?" The tools are the same ones the dashboard reads, so the
-assistant's number is the screen's number.
+Then ask: "Get started with Limelit". You never need a tool name: the
+assistant checks where your instance stands, tells you the next step if setup
+or a first run is missing, and otherwise answers with your numbers and
+questions to ask next. Or go straight to "How visible is my brand in AI
+answers, and which prompts am I losing?" The tools are the same ones the
+dashboard reads, so the assistant's number is the screen's number.
 
 From here, [Configuration](#configuration) covers the file and the
 environment, [Connect Claude (MCP)](#connect-claude-mcp) the remote endpoint
@@ -307,6 +312,7 @@ can reach the port every answer you have stored.
 
 Then ask things like:
 
+- "Get started with Limelit"
 - "How is Acme doing across AI engines this week?"
 - "Which prompts are we losing to Globex, and what do those answers cite instead of us?"
 - "Show me the answers behind our visibility drop, with the exact quotes."

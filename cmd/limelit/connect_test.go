@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/limelit-co/open/internal/mcpserver"
 )
 
 func tcpAddr(t *testing.T, s string) net.Addr {
@@ -48,7 +50,7 @@ func lineAfter(t *testing.T, text, heading string) string {
 func TestConnectNamesEveryWayIn(t *testing.T) {
 	out := connectText(connectInfo{
 		version: "v0.1.0", addr: tcpAddr(t, "[::]:1515"),
-		exe: "/home/ana/limelit/limelit", dataDir: "/home/ana/limelit/data",
+		exe: "/home/ana/limelit/limelit", dataDir: "/home/ana/limelit/data", state: mcpserver.StateNotSetUp,
 	})
 	for _, want := range []string{
 		"http://localhost:1515\n",
@@ -87,7 +89,7 @@ func TestConnectNamesEveryWayIn(t *testing.T) {
 func TestConnectSaysWhatIsAlreadyTrue(t *testing.T) {
 	out := connectText(connectInfo{
 		version: "v0.1.0", addr: tcpAddr(t, "127.0.0.1:1515"),
-		exe: "/x/limelit", dataDir: "/x/data", setUp: true, httpToken: true,
+		exe: "/x/limelit", dataDir: "/x/data", state: mcpserver.StateReady, httpToken: true,
 	})
 	if strings.Contains(out, "setup wizard") {
 		t.Error("a set-up instance still points at the wizard")
@@ -154,6 +156,40 @@ func TestBaseURLReachesAnyInterfaceAtLocalhost(t *testing.T) {
 	} {
 		if got := baseURL(tcpAddr(t, in)); got != want {
 			t.Errorf("baseURL(%s) = %s, want %s", in, got, want)
+		}
+	}
+}
+
+// TestConnectEndsWithWhatToAsk. Whatever the state, the message ends with the
+// phrase to type in an assistant, so no one has to learn a tool name; the
+// steps before it are only the ones this instance still needs.
+func TestConnectEndsWithWhatToAsk(t *testing.T) {
+	for _, tc := range []struct {
+		state   string
+		want    []string
+		wantNot []string
+	}{
+		{mcpserver.StateNotSetUp, []string{"1. Finish setup at http://localhost:1515", "2. Press Run", "3. Then ask your assistant"}, nil},
+		{mcpserver.StateSetupIncomplete, []string{"1. Finish setup", "3. Then ask your assistant"}, nil},
+		{mcpserver.StateNeverRun, []string{"1. Press Run at http://localhost:1515", "2. Then ask your assistant"}, []string{"Finish setup"}},
+		{mcpserver.StateStale, []string{"1. The last 30 days hold no answers", "2. Then ask your assistant"}, []string{"Finish setup"}},
+		{mcpserver.StateReady, []string{"1. Ask your assistant"}, []string{"Press Run", "Finish setup"}},
+		{"", []string{"1. Ask your assistant"}, nil},
+	} {
+		out := connectText(connectInfo{
+			version: "v0.1.0", addr: tcpAddr(t, "[::]:1515"),
+			exe: "/x/limelit", dataDir: "/x/data", state: tc.state,
+		})
+		next := out[strings.Index(out, "  Next\n"):]
+		for _, w := range append(tc.want, `"Get started with Limelit"`, mcpserver.TryAsking[0]) {
+			if !strings.Contains(next, w) {
+				t.Errorf("state %q: Next block lacks %q:\n%s", tc.state, w, next)
+			}
+		}
+		for _, w := range tc.wantNot {
+			if strings.Contains(next, w) {
+				t.Errorf("state %q: Next block should not say %q:\n%s", tc.state, w, next)
+			}
 		}
 	}
 }

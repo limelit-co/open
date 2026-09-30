@@ -8,6 +8,7 @@ package mcpserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -25,6 +26,7 @@ type propertyOut struct {
 	Domain  string       `json:"website_domain"`
 	Aliases []string     `json:"aliases"`
 	Targets []targetInfo `json:"targets"`
+	Setup   Setup        `json:"setup" jsonschema:"where this instance stands, and the one next step to tell the user"`
 }
 
 type competitorOut struct {
@@ -40,19 +42,32 @@ type competitorsOut struct {
 func registerProperty(s *mcp.Server, d Deps) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name: "get_active_property",
-		Description: "Get the brand this instance measures: its name, website domain, the aliases the " +
-			"mention matcher searches for, and every configured target with its access mode. Start here: " +
-			"the aliases explain what does and does not count as a mention.",
+		Description: "Start here. Call this first when the user asks about their brand in AI answers or AI " +
+			"search, what Limelit can do, or how to get started with Limelit, and whenever another Limelit " +
+			"result comes back empty. Returns the brand (name, website domain, the aliases the mention matcher " +
+			"searches for, the targets with their access mode) and a setup block: data_state, has_answers, one " +
+			"next_step to tell the user with the dashboard link, what Limelit answers once set up, and questions " +
+			"to try. Report Limelit figures only when has_answers is true.",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ emptyArgs) (*mcp.CallToolResult, propertyOut, error) {
-		p, err := d.DB.Property(ctx)
+		setup, err := Status(ctx, d.DB, d.Metrics, d.DashboardURL)
 		if err != nil {
+			return nil, propertyOut{}, err
+		}
+		// A fresh instance is a normal answer, not an error: the setup block
+		// is what the model should relay.
+		out := propertyOut{Aliases: []string{}, Targets: []targetInfo{}, Setup: setup}
+		p, err := d.DB.Property(ctx)
+		if errors.Is(err, store.ErrNotFound) {
+			return nil, out, nil
+		} else if err != nil {
 			return nil, propertyOut{}, err
 		}
 		targets, err := loadTargets(ctx, d.DB)
 		if err != nil {
 			return nil, propertyOut{}, err
 		}
-		return nil, propertyOut{Name: p.Name, Domain: p.Domain, Aliases: p.Aliases, Targets: targets}, nil
+		out.Name, out.Domain, out.Aliases, out.Targets = p.Name, p.Domain, p.Aliases, targets
+		return nil, out, nil
 	})
 
 	mcp.AddTool(s, &mcp.Tool{

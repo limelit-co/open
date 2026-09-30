@@ -26,8 +26,9 @@ type connectInfo struct {
 	// exe and dataDir are absolute, so the commands printed work from any
 	// directory: Claude starts `limelit mcp` from its own, not this one.
 	exe, dataDir string
-	// setUp is true once the wizard has saved a property.
-	setUp bool
+	// state is mcpserver.Status's data_state, so this message and a
+	// connected assistant's first answer describe the same instance.
+	state string
 	// httpToken is true when an MCP bearer token is in force.
 	httpToken bool
 	// container is this container's ID when running in Docker, else "".
@@ -45,7 +46,7 @@ func writeConnect(w io.Writer, c connectInfo) {
 
 	b.WriteString("  Browser\n")
 	fmt.Fprintf(&b, "    %s\n", base)
-	if !c.setUp {
+	if c.state == mcpserver.StateNotSetUp {
 		b.WriteString("    The first visit opens the setup wizard.\n")
 	}
 
@@ -74,9 +75,39 @@ func writeConnect(w io.Writer, c connectInfo) {
 	} else {
 		fmt.Fprintf(&b, "    Needs a token first: generate one in Settings, or set %s.\n", mcpserver.TokenEnv)
 	}
+
+	b.WriteString("\n  Next\n")
+	for i, step := range nextSteps(c.state, base) {
+		fmt.Fprintf(&b, "    %d. %s\n", i+1, step)
+	}
 	b.WriteString("\n")
 
 	io.WriteString(w, b.String())
+}
+
+// startPhrase is what a user types in any assistant. It names Limelit, which
+// is enough for a client to find this server among many, and the server
+// instructions and get_active_property's description take it from there.
+const startPhrase = `"Get started with Limelit"`
+
+// nextSteps is the short path from this state to a first answer, ending with
+// what to type in the assistant, so a user never has to learn a tool name.
+func nextSteps(state, dashboard string) []string {
+	ask := "Then ask your assistant: " + startPhrase + "\n       or: \"" + mcpserver.TryAsking[0] + "\""
+	switch state {
+	case mcpserver.StateNotSetUp, mcpserver.StateSetupIncomplete:
+		return []string{
+			"Finish setup at " + dashboard + ": your brand, competitors, prompts and one provider key.",
+			"Press Run in the dashboard to fetch the first answers.",
+			ask,
+		}
+	case mcpserver.StateNeverRun:
+		return []string{"Press Run at " + dashboard + " to fetch the first answers.", ask}
+	case mcpserver.StateStale:
+		return []string{"The last 30 days hold no answers: press Run at " + dashboard + " for fresh ones.", ask}
+	default:
+		return []string{"Ask your assistant: " + startPhrase + "\n       or: \"" + mcpserver.TryAsking[0] + "\""}
+	}
 }
 
 // stdioServer is one entry under mcpServers in Claude Desktop's config.
