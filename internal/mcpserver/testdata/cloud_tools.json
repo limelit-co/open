@@ -1509,7 +1509,15 @@
      "required": false
     },
     {
+     "name": "show",
+     "required": false
+    },
+    {
      "name": "source",
+     "required": false
+    },
+    {
+     "name": "target",
      "required": false
     }
    ]
@@ -1861,6 +1869,10 @@
   {
    "name": "list_top_sources",
    "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
     {
      "name": "limit",
      "required": false
