@@ -1,0 +1,2387 @@
+{
+ "about": "Cloud's MCP tool names and arguments, from clgtm/limelit web/app/mcp-docs/registry.json (go run ./tools/mcp-catalog). Refresh after Cloud ships a change to a tool this server shares: jq '{tools: [.tools[] | {name, arguments: [.arguments[] | {name, required}]}]}' registry.json",
+ "tools": [
+  {
+   "name": "add_sheet_column",
+   "arguments": [
+    {
+     "name": "kind",
+     "required": true
+    },
+    {
+     "name": "name",
+     "required": true
+    },
+    {
+     "name": "sheet_id",
+     "required": true
+    },
+    {
+     "name": "agent_id",
+     "required": false
+    },
+    {
+     "name": "before_column_id",
+     "required": false
+    },
+    {
+     "name": "config",
+     "required": false
+    },
+    {
+     "name": "input_bindings",
+     "required": false
+    },
+    {
+     "name": "output_bindings",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "add_sheet_rows",
+   "arguments": [
+    {
+     "name": "sheet_id",
+     "required": true
+    },
+    {
+     "name": "after_row_id",
+     "required": false
+    },
+    {
+     "name": "count",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "analyze_my_visibility",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "attach_property_to_portfolio",
+   "arguments": [
+    {
+     "name": "portfolio_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "cancel_block_run",
+   "arguments": [
+    {
+     "name": "run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "cancel_run",
+   "arguments": [
+    {
+     "name": "run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "cancel_sheet_cell",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "row_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "compare_prompt_chats",
+   "arguments": [
+    {
+     "name": "prompt_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "compare_source_to_brand",
+   "arguments": [
+    {
+     "name": "value",
+     "required": true
+    },
+    {
+     "name": "collector",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "create_agent",
+   "arguments": [
+    {
+     "name": "composed_block_id",
+     "required": true
+    },
+    {
+     "name": "intent",
+     "required": true
+    },
+    {
+     "name": "title",
+     "required": true
+    },
+    {
+     "name": "grounding_policy",
+     "required": false
+    },
+    {
+     "name": "is_template",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "create_brand_kit",
+   "arguments": [
+    {
+     "name": "name",
+     "required": true
+    },
+    {
+     "name": "content",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "create_cms_draft",
+   "arguments": [
+    {
+     "name": "content",
+     "required": true
+    },
+    {
+     "name": "target",
+     "required": true
+    },
+    {
+     "name": "integration_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "create_factcheck_plan_action",
+   "arguments": [
+    {
+     "name": "action_kind",
+     "required": true
+    },
+    {
+     "name": "claim_id",
+     "required": true
+    },
+    {
+     "name": "idempotency_key",
+     "required": true
+    },
+    {
+     "name": "verification_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "create_owned_page_plan_action",
+   "arguments": [
+    {
+     "name": "canonical_url",
+     "required": true
+    },
+    {
+     "name": "idempotency_key",
+     "required": true
+    },
+    {
+     "name": "action_kind",
+     "required": false
+    },
+    {
+     "name": "competing_url",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "create_perception_audit",
+   "arguments": []
+  },
+  {
+   "name": "create_portfolio",
+   "arguments": [
+    {
+     "name": "name",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "create_prompt",
+   "arguments": [
+    {
+     "name": "text",
+     "required": true
+    },
+    {
+     "name": "category",
+     "required": false
+    },
+    {
+     "name": "location_country",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "create_segment",
+   "arguments": [
+    {
+     "name": "definition",
+     "required": true
+    },
+    {
+     "name": "kind",
+     "required": true
+    },
+    {
+     "name": "name",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "create_sheet",
+   "arguments": [
+    {
+     "name": "agent_id",
+     "required": true
+    },
+    {
+     "name": "concurrency_cap",
+     "required": false
+    },
+    {
+     "name": "grid",
+     "required": false
+    },
+    {
+     "name": "name",
+     "required": false
+    },
+    {
+     "name": "row_source",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "create_skill",
+   "arguments": [
+    {
+     "name": "instruction",
+     "required": true
+    },
+    {
+     "name": "name",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "create_watchlist",
+   "arguments": [
+    {
+     "name": "name",
+     "required": true
+    },
+    {
+     "name": "definition",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "decide_approval",
+   "arguments": [
+    {
+     "name": "approval_id",
+     "required": true
+    },
+    {
+     "name": "decision",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "decide_factcheck_plan_action",
+   "arguments": [
+    {
+     "name": "action_id",
+     "required": true
+    },
+    {
+     "name": "decision",
+     "required": true
+    },
+    {
+     "name": "idempotency_key",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "decide_owned_page_plan_action",
+   "arguments": [
+    {
+     "name": "action_id",
+     "required": true
+    },
+    {
+     "name": "decision",
+     "required": true
+    },
+    {
+     "name": "idempotency_key",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "define_block",
+   "arguments": [
+    {
+     "name": "graph",
+     "required": true
+    },
+    {
+     "name": "name",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "delete_draft",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "delete_portfolio",
+   "arguments": [
+    {
+     "name": "portfolio_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "delete_prompt",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "delete_segment",
+   "arguments": [
+    {
+     "name": "segment_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "delete_sheet",
+   "arguments": [
+    {
+     "name": "sheet_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "delete_sheet_column",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "delete_sheet_row",
+   "arguments": [
+    {
+     "name": "row_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "detach_property_from_portfolio",
+   "arguments": [
+    {
+     "name": "portfolio_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "dismiss_suggested_competitor",
+   "arguments": [
+    {
+     "name": "brand_name",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "dry_run_block",
+   "arguments": [
+    {
+     "name": "block_id",
+     "required": true
+    },
+    {
+     "name": "input",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "duplicate_sheet",
+   "arguments": [
+    {
+     "name": "sheet_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "duplicate_sheet_row",
+   "arguments": [
+    {
+     "name": "row_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "estimate_sheet_chain",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "estimate_sheet_column",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "evaluate_watchlist",
+   "arguments": [
+    {
+     "name": "watchlist_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "export_sheet",
+   "arguments": [
+    {
+     "name": "sheet_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "find_easy_wins",
+   "arguments": []
+  },
+  {
+   "name": "generate_draft",
+   "arguments": [
+    {
+     "name": "source_url",
+     "required": true
+    },
+    {
+     "name": "brand_strength",
+     "required": false
+    },
+    {
+     "name": "depth",
+     "required": false
+    },
+    {
+     "name": "source_citation_id",
+     "required": false
+    },
+    {
+     "name": "target_query",
+     "required": false
+    },
+    {
+     "name": "use_search_coverage",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_active_property",
+   "arguments": []
+  },
+  {
+   "name": "get_agent",
+   "arguments": [
+    {
+     "name": "agent_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_agent_ports",
+   "arguments": [
+    {
+     "name": "agent_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_agent_visits",
+   "arguments": [
+    {
+     "name": "bot_id",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "granularity",
+     "required": false
+    },
+    {
+     "name": "intent",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    },
+    {
+     "name": "vendor",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_ai_mode_answer",
+   "arguments": [
+    {
+     "name": "query",
+     "required": true
+    },
+    {
+     "name": "country",
+     "required": false
+    },
+    {
+     "name": "language",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_ai_overview",
+   "arguments": [
+    {
+     "name": "query",
+     "required": true
+    },
+    {
+     "name": "country",
+     "required": false
+    },
+    {
+     "name": "language",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_ai_readiness",
+   "arguments": []
+  },
+  {
+   "name": "get_article",
+   "arguments": [
+    {
+     "name": "url",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_block_run",
+   "arguments": [
+    {
+     "name": "run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_brand_kit",
+   "arguments": [
+    {
+     "name": "brand_kit_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_brand_shape",
+   "arguments": [
+    {
+     "name": "engine",
+     "required": false
+    },
+    {
+     "name": "window",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_chat",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_chat_facets",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_country_coverage",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_crawl_citation_join",
+   "arguments": [
+    {
+     "name": "bot_id",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "intent",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    },
+    {
+     "name": "vendor",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_crawler_policy",
+   "arguments": [
+    {
+     "name": "domain",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_draft",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_factcheck_check",
+   "arguments": [
+    {
+     "name": "check_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_factcheck_claim",
+   "arguments": [
+    {
+     "name": "claim_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_factcheck_plan_action",
+   "arguments": [
+    {
+     "name": "action_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_factcheck_result",
+   "arguments": [
+    {
+     "name": "check_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_factcheck_verification",
+   "arguments": [
+    {
+     "name": "verification_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_fanout_phrases",
+   "arguments": [
+    {
+     "name": "engine",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "q",
+     "required": false
+    },
+    {
+     "name": "run_id",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    },
+    {
+     "name": "topic",
+     "required": false
+    },
+    {
+     "name": "type",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_fanouts",
+   "arguments": [
+    {
+     "name": "engine",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "q",
+     "required": false
+    },
+    {
+     "name": "run_id",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    },
+    {
+     "name": "topic",
+     "required": false
+    },
+    {
+     "name": "type",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_kpi_history",
+   "arguments": [
+    {
+     "name": "comparison",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_llms_txt",
+   "arguments": [
+    {
+     "name": "domain",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_matrix",
+   "arguments": [
+    {
+     "name": "metric",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_opportunity",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_overview_kpis",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_owned_page",
+   "arguments": [
+    {
+     "name": "canonical_url",
+     "required": true
+    },
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_owned_page_plan_action",
+   "arguments": [
+    {
+     "name": "action_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_perception_summary",
+   "arguments": [
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "platform",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_portfolio",
+   "arguments": [
+    {
+     "name": "portfolio_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_portfolio_auto_recharge",
+   "arguments": [
+    {
+     "name": "portfolio_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_portfolio_credits",
+   "arguments": [
+    {
+     "name": "portfolio_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_portfolio_rollup",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "order",
+     "required": false
+    },
+    {
+     "name": "portfolio_id",
+     "required": false
+    },
+    {
+     "name": "sort",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_portfolio_usage",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "portfolio_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_prompt_coverage_queries",
+   "arguments": [
+    {
+     "name": "prompt_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_ranking_matrix",
+   "arguments": [
+    {
+     "name": "metric",
+     "required": true
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_ranking_overview",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_run",
+   "arguments": [
+    {
+     "name": "run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_run_activity",
+   "arguments": []
+  },
+  {
+   "name": "get_scoreboard",
+   "arguments": []
+  },
+  {
+   "name": "get_search_volume",
+   "arguments": [
+    {
+     "name": "phrase",
+     "required": true
+    },
+    {
+     "name": "location_code",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_segment",
+   "arguments": [
+    {
+     "name": "segment_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_segment_members",
+   "arguments": [
+    {
+     "name": "segment_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_sentiment_series",
+   "arguments": [
+    {
+     "name": "competitor_id",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "granularity",
+     "required": false
+    },
+    {
+     "name": "platform",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_sheet",
+   "arguments": [
+    {
+     "name": "sheet_id",
+     "required": true
+    },
+    {
+     "name": "include_artifacts",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_skill",
+   "arguments": [
+    {
+     "name": "skill_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_source_overview",
+   "arguments": [
+    {
+     "name": "value",
+     "required": true
+    },
+    {
+     "name": "collector",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_source_relationships",
+   "arguments": [
+    {
+     "name": "source",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "get_spend_summary",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_topic_metrics",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "get_weekly_digest",
+   "arguments": []
+  },
+  {
+   "name": "gsc_findings",
+   "arguments": []
+  },
+  {
+   "name": "gsc_property_summary",
+   "arguments": []
+  },
+  {
+   "name": "gsc_search_analytics",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "url_list",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "gsc_url_status",
+   "arguments": [
+    {
+     "name": "url",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "gsc_weekly_digest",
+   "arguments": []
+  },
+  {
+   "name": "gtm_check_draft_quality",
+   "arguments": [
+    {
+     "name": "draft_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "gtm_create_draft",
+   "arguments": [
+    {
+     "name": "source_url",
+     "required": true
+    },
+    {
+     "name": "target_query",
+     "required": true
+    },
+    {
+     "name": "brand_strength",
+     "required": false
+    },
+    {
+     "name": "depth",
+     "required": false
+    },
+    {
+     "name": "target_platform",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "gtm_list_drafts",
+   "arguments": [
+    {
+     "name": "status",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "gtm_publish_draft",
+   "arguments": [
+    {
+     "name": "draft_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "gtm_queue_task",
+   "arguments": [
+    {
+     "name": "payload",
+     "required": true
+    },
+    {
+     "name": "type",
+     "required": true
+    },
+    {
+     "name": "suggested_action",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "gtm_score_post",
+   "arguments": [
+    {
+     "name": "url",
+     "required": true
+    },
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "ingest_agent_log_batch",
+   "arguments": [
+    {
+     "name": "entries",
+     "required": true
+    },
+    {
+     "name": "source_id",
+     "required": true
+    },
+    {
+     "name": "delivery_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "leave_portfolio",
+   "arguments": [
+    {
+     "name": "organization_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "list_agents",
+   "arguments": []
+  },
+  {
+   "name": "list_approvals",
+   "arguments": [
+    {
+     "name": "state",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_articles",
+   "arguments": []
+  },
+  {
+   "name": "list_block_runs",
+   "arguments": [
+    {
+     "name": "limit",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_block_schedules",
+   "arguments": []
+  },
+  {
+   "name": "list_blocks",
+   "arguments": []
+  },
+  {
+   "name": "list_bots",
+   "arguments": [
+    {
+     "name": "bot_id",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "intent",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    },
+    {
+     "name": "vendor",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_brand_attributes",
+   "arguments": [
+    {
+     "name": "brand",
+     "required": false
+    },
+    {
+     "name": "competitor_id",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_brand_kits",
+   "arguments": []
+  },
+  {
+   "name": "list_chats",
+   "arguments": [
+    {
+     "name": "brand",
+     "required": false
+    },
+    {
+     "name": "collector",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "model",
+     "required": false
+    },
+    {
+     "name": "offset",
+     "required": false
+    },
+    {
+     "name": "prompt_id",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    },
+    {
+     "name": "source",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_competitors",
+   "arguments": []
+  },
+  {
+   "name": "list_context",
+   "arguments": []
+  },
+  {
+   "name": "list_crawl_errors",
+   "arguments": [
+    {
+     "name": "bot_id",
+     "required": false
+    },
+    {
+     "name": "from",
+     "required": false
+    },
+    {
+     "name": "intent",
+     "required": false
+    },
+    {
+     "name": "to",
+     "required": false
+    },
+    {
+     "name": "vendor",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_dismissed_suggested_competitors",
+   "arguments": []
+  },
+  {
+   "name": "list_drafts",
+   "arguments": []
+  },
+  {
+   "name": "list_factcheck_checks",
+   "arguments": []
+  },
+  {
+   "name": "list_factcheck_claims",
+   "arguments": [
+    {
+     "name": "answer_run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "list_factcheck_verifications",
+   "arguments": [
+    {
+     "name": "answer_run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "list_keyword_ideas",
+   "arguments": [
+    {
+     "name": "language_code",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "location_code",
+     "required": false
+    },
+    {
+     "name": "seed",
+     "required": false
+    },
+    {
+     "name": "target",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_knowledge_source_refreshes",
+   "arguments": [
+    {
+     "name": "source_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "list_knowledge_source_versions",
+   "arguments": [
+    {
+     "name": "source_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "list_knowledge_sources",
+   "arguments": []
+  },
+  {
+   "name": "list_misinformation",
+   "arguments": []
+  },
+  {
+   "name": "list_opportunities",
+   "arguments": [
+    {
+     "name": "bucket",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_org_members",
+   "arguments": []
+  },
+  {
+   "name": "list_owned_pages",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_portfolios",
+   "arguments": []
+  },
+  {
+   "name": "list_prompts",
+   "arguments": [
+    {
+     "name": "include_inactive",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_runs",
+   "arguments": [
+    {
+     "name": "agent_id",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_schedules",
+   "arguments": []
+  },
+  {
+   "name": "list_segments",
+   "arguments": []
+  },
+  {
+   "name": "list_sheets",
+   "arguments": []
+  },
+  {
+   "name": "list_skills",
+   "arguments": []
+  },
+  {
+   "name": "list_source_engines",
+   "arguments": [
+    {
+     "name": "value",
+     "required": true
+    },
+    {
+     "name": "collector",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_source_gaps",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "dimension",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "min_gap",
+     "required": false
+    },
+    {
+     "name": "q",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    },
+    {
+     "name": "sort",
+     "required": false
+    },
+    {
+     "name": "source_type",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_source_mentions",
+   "arguments": [
+    {
+     "name": "value",
+     "required": true
+    },
+    {
+     "name": "collector",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_source_movers",
+   "arguments": [
+    {
+     "name": "dimension",
+     "required": true
+    },
+    {
+     "name": "bucket",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    },
+    {
+     "name": "source_type",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_source_prompts",
+   "arguments": [
+    {
+     "name": "value",
+     "required": true
+    },
+    {
+     "name": "collector",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_source_urls",
+   "arguments": [
+    {
+     "name": "value",
+     "required": true
+    },
+    {
+     "name": "collector",
+     "required": false
+    },
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_suggested_competitors",
+   "arguments": []
+  },
+  {
+   "name": "list_top_sources",
+   "arguments": [
+    {
+     "name": "limit",
+     "required": false
+    },
+    {
+     "name": "offset",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "list_watchlists",
+   "arguments": []
+  },
+  {
+   "name": "move_sheet_column",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "before_column_id",
+     "required": false
+    },
+    {
+     "name": "direction",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "move_sheet_row",
+   "arguments": [
+    {
+     "name": "row_id",
+     "required": true
+    },
+    {
+     "name": "before_row_id",
+     "required": false
+    },
+    {
+     "name": "direction",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "publish_draft",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "reevaluate_all_prompts",
+   "arguments": [
+    {
+     "name": "dry_run",
+     "required": false
+    },
+    {
+     "name": "target",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "reevaluate_prompt",
+   "arguments": [
+    {
+     "name": "prompt_id",
+     "required": true
+    },
+    {
+     "name": "dry_run",
+     "required": false
+    },
+    {
+     "name": "target",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "rename_portfolio",
+   "arguments": [
+    {
+     "name": "name",
+     "required": true
+    },
+    {
+     "name": "portfolio_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "rename_sheet",
+   "arguments": [
+    {
+     "name": "sheet_id",
+     "required": true
+    },
+    {
+     "name": "credit_ceiling",
+     "required": false
+    },
+    {
+     "name": "name",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "restore_dismissed_suggested_competitor",
+   "arguments": [
+    {
+     "name": "brand_name",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "retry_block_run",
+   "arguments": [
+    {
+     "name": "run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "retry_run",
+   "arguments": [
+    {
+     "name": "run_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "run_agent",
+   "arguments": [
+    {
+     "name": "agent_id",
+     "required": true
+    },
+    {
+     "name": "input",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "run_ai_readiness_scan",
+   "arguments": []
+  },
+  {
+   "name": "run_block",
+   "arguments": [
+    {
+     "name": "block_id",
+     "required": true
+    },
+    {
+     "name": "quote_ref",
+     "required": true
+    },
+    {
+     "name": "idempotency_key",
+     "required": false
+    },
+    {
+     "name": "input",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "run_factcheck",
+   "arguments": [
+    {
+     "name": "answer_run_id",
+     "required": true
+    },
+    {
+     "name": "idempotency_key",
+     "required": false
+    },
+    {
+     "name": "include_claims",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "run_sheet",
+   "arguments": [
+    {
+     "name": "sheet_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "run_sheet_cell",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "row_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "run_sheet_chain",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "run_sheet_column",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "schedule_block",
+   "arguments": [
+    {
+     "name": "block_id",
+     "required": true
+    },
+    {
+     "name": "cadence",
+     "required": true
+    },
+    {
+     "name": "input",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "score_content_quality",
+   "arguments": [
+    {
+     "name": "draft_id",
+     "required": false
+    },
+    {
+     "name": "markdown",
+     "required": false
+    },
+    {
+     "name": "title",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "search_serp",
+   "arguments": [
+    {
+     "name": "query",
+     "required": true
+    },
+    {
+     "name": "country",
+     "required": false
+    },
+    {
+     "name": "language",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "set_portfolio_auto_recharge",
+   "arguments": [
+    {
+     "name": "enabled",
+     "required": true
+    },
+    {
+     "name": "portfolio_id",
+     "required": true
+    },
+    {
+     "name": "amount_credits",
+     "required": false
+    },
+    {
+     "name": "ceiling_credits",
+     "required": false
+    },
+    {
+     "name": "threshold_credits",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "set_portfolio_funding",
+   "arguments": [
+    {
+     "name": "funded",
+     "required": true
+    },
+    {
+     "name": "portfolio_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "set_schedule",
+   "arguments": [
+    {
+     "name": "agent_id",
+     "required": false
+    },
+    {
+     "name": "cadence",
+     "required": false
+    },
+    {
+     "name": "enabled",
+     "required": false
+    },
+    {
+     "name": "sheet_id",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "set_sheet_cell",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "row_id",
+     "required": true
+    },
+    {
+     "name": "value",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "set_spending_caps",
+   "arguments": [
+    {
+     "name": "daily_budget_cents",
+     "required": true
+    },
+    {
+     "name": "monthly_budget_cents",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "show_share_of_voice",
+   "arguments": [
+    {
+     "name": "days",
+     "required": false
+    },
+    {
+     "name": "segment",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "suggest_my_next_blog_post",
+   "arguments": []
+  },
+  {
+   "name": "summarize_recent_activity",
+   "arguments": []
+  },
+  {
+   "name": "track_competitor",
+   "arguments": [
+    {
+     "name": "domain",
+     "required": true
+    },
+    {
+     "name": "name",
+     "required": true
+    },
+    {
+     "name": "category",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "untrack_competitor",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "update_brand_identity",
+   "arguments": [
+    {
+     "name": "name",
+     "required": false
+    },
+    {
+     "name": "website_domain",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "update_draft",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    },
+    {
+     "name": "current_md",
+     "required": false
+    },
+    {
+     "name": "title",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "update_prompt",
+   "arguments": [
+    {
+     "name": "id",
+     "required": true
+    },
+    {
+     "name": "category",
+     "required": false
+    },
+    {
+     "name": "is_active",
+     "required": false
+    },
+    {
+     "name": "location_country",
+     "required": false
+    },
+    {
+     "name": "text",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "update_sheet_column",
+   "arguments": [
+    {
+     "name": "column_id",
+     "required": true
+    },
+    {
+     "name": "agent_id",
+     "required": false
+    },
+    {
+     "name": "config",
+     "required": false
+    },
+    {
+     "name": "input_bindings",
+     "required": false
+    },
+    {
+     "name": "kind",
+     "required": false
+    },
+    {
+     "name": "name",
+     "required": false
+    },
+    {
+     "name": "output_bindings",
+     "required": false
+    }
+   ]
+  }
+ ]
+}
