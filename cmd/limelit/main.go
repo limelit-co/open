@@ -382,11 +382,12 @@ func cmdMCP(ctx context.Context, args []string) error {
 		return err
 	}
 
-	srv, err := mcpserver.New(mcpserver.Deps{
-		DB:         db,
-		Runner:     newRunner(ctx, db, provider.Default(), keys, log),
-		RunsPerDay: runsPerDay(db, cfg),
-	})
+	deps := mcpserver.Deps{DB: db}
+	// A read-only demo starts no runs from any surface.
+	if !ui.DemoMode() {
+		deps.Runner, deps.RunsPerDay = newRunner(ctx, db, provider.Default(), keys, log), runsPerDay(db, cfg)
+	}
+	srv, err := mcpserver.New(deps)
 	if err != nil {
 		return err
 	}

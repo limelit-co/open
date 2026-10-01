@@ -71,7 +71,7 @@ HTTP endpoint of `limelit serve` both do) and are absent otherwise.
 |---|---|---|---|
 | `reevaluate_prompt` | same | `prompt_id` (required), `target` (open-core), `dry_run` (open-core, default `true`) | One prompt against every enabled target, or the one named |
 | `reevaluate_all_prompts` | same | `target` (open-core), `dry_run` (open-core, default `true`) | Every active prompt against every enabled target: the dashboard's Run now |
-| `get_run_activity` | same | `evaluation_id` (open-core, default the latest) | `status` (`running`, `done`, `failed`, `cancelled`), `planned`, `completed`, `failed`, `no_answer_surface`, `started_at`, `finished_at` (UTC) |
+| `get_run_activity` | same | `evaluation_id` (open-core, default the latest) | `status` (`running`, `done`, `failed`, `cancelled`), `planned`, `completed`, `failed`, `no_answer_surface`, `started_at`, `finished_at` (UTC), and `error` when a run stopped before fetching anything (a provider with no key) |
 
 The order is fixed by the descriptions and the server instructions: call with
 `dry_run=true` (the default), show the user the plan, call again with

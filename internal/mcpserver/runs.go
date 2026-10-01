@@ -76,6 +76,7 @@ type runActivityOut struct {
 	NoAnswerSurface int    `json:"no_answer_surface" jsonschema:"of completed, answers where the surface did not render (for example no AI Overview); excluded from every metric"`
 	StartedAt       string `json:"started_at,omitempty" jsonschema:"UTC"`
 	FinishedAt      string `json:"finished_at,omitempty" jsonschema:"UTC, empty while running"`
+	Error           string `json:"error,omitempty" jsonschema:"why a failed run stopped before fetching anything, such as a provider with no key"`
 	Note            string `json:"note,omitempty"`
 }
 
@@ -195,9 +196,12 @@ func activityOut(e store.Evaluation) runActivityOut {
 	out := runActivityOut{
 		HasRun: true, EvaluationID: e.ID, Status: e.Status,
 		Planned: e.Planned, Completed: e.Completed, Failed: e.Failed, NoAnswerSurface: e.NoAnswerSurface,
-		StartedAt: e.StartedAt, FinishedAt: e.FinishedAt,
+		StartedAt: e.StartedAt, FinishedAt: e.FinishedAt, Error: e.Error,
 	}
 	switch {
+	case e.Error != "":
+		out.Note = "The run stopped before fetching anything; error says why. Keys and targets are fixed in the " +
+			"dashboard's Settings (never ask for a key in chat), then start the run again."
 	case e.Stale:
 		out.Status = store.EvaluationFailed
 		out.Note = "The process running this stopped before it finished, for example because the desktop app that " +

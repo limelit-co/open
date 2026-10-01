@@ -358,3 +358,20 @@ func TestRunActivityBeforeAnyRun(t *testing.T) {
 		t.Errorf("unknown id: %s", text)
 	}
 }
+
+// TestAFailedRunSaysWhy: a run that cannot reach its provider reports the
+// reason, so the agent can tell the user what to fix in the dashboard.
+func TestAFailedRunSaysWhy(t *testing.T) {
+	f := runSession(t, 100, false)
+	if _, err := f.db.AddTarget(context.Background(), store.Target{
+		Spec: "gemini:nowhere", Engine: "gemini", Provider: "nowhere", Access: "api",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	id := num(out(t, f.s, "reevaluate_all_prompts", map[string]any{"target": "gemini:nowhere", "dry_run": false}), "evaluation_id")
+	a := waitDone(t, f.s, id)
+	if a["status"] != store.EvaluationFailed || !strings.Contains(fmt.Sprint(a["error"]), "nowhere") ||
+		!strings.Contains(fmt.Sprint(a["note"]), "Settings") {
+		t.Errorf("a run with no provider = %v", a)
+	}
+}

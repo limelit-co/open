@@ -14,7 +14,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/runner"
 	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/ui"
 )
 
 func newTestServer(t *testing.T) *Server {
@@ -148,4 +153,46 @@ func mustDB(t *testing.T) *store.DB {
 	}
 	t.Cleanup(func() { db.Close() })
 	return db
+}
+
+// TestADemoGetsNoRunTools: a read-only demo refuses Run now, so its MCP
+// endpoint must not offer a way around that with the operator's keys.
+func TestADemoGetsNoRunTools(t *testing.T) {
+	db, err := store.Open(context.Background(), filepath.Join(t.TempDir(), "limelit.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { db.Close() })
+	run := runner.New(db, provider.NewRegistry(), provider.StaticCredentials(nil), slog.New(slog.NewTextHandler(io.Discard, nil)))
+	ceiling := func(context.Context) int { return 10 }
+
+	for _, demo := range []bool{false, true} {
+		if demo {
+			t.Setenv(ui.DemoEnv, "1")
+		}
+		srv, err := New_(db, "", run, ceiling)
+		if err != nil {
+			t.Fatal(err)
+		}
+		clientT, serverT := mcp.NewInMemoryTransports()
+		go srv.Run(context.Background(), serverT)
+		s, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "1"}, nil).Connect(context.Background(), clientT, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res, err := s.ListTools(context.Background(), nil)
+		s.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		has := false
+		for _, tool := range res.Tools {
+			if tool.Name == "reevaluate_all_prompts" {
+				has = true
+			}
+		}
+		if has == demo {
+			t.Errorf("demo=%v: run tools registered = %v", demo, has)
+		}
+	}
 }

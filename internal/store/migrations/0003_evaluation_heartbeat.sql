@@ -10,3 +10,8 @@
 -- NULL, which is every row written before this column and every row not
 -- written by the runner) belongs to a process that is gone.
 ALTER TABLE evaluation ADD COLUMN heartbeat_at TEXT;
+
+-- error says why a pass stopped before it fetched anything (a provider with
+-- no key, an analyzer that could not load), so a status read from another
+-- process, or by an agent, can say what to fix rather than only "failed".
+ALTER TABLE evaluation ADD COLUMN error TEXT;

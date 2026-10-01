@@ -63,9 +63,12 @@ func (e *AlreadyRunningError) Error() string {
 // Is makes errors.Is(err, ErrAlreadyRunning) hold.
 func (e *AlreadyRunningError) Is(target error) bool { return target == ErrAlreadyRunning }
 
-// RunTimeout bounds one pass started with Start. A pass is minutes; this only
-// stops one whose provider never answers from holding the lock for good.
-const RunTimeout = 30 * time.Minute
+// RunTimeout bounds one pass started with Start. It only stops a pass whose
+// provider never answers from holding the lock for good, so it is generous:
+// at the default ceiling of 200 answers, two in flight per provider, a slow
+// engine can take most of an hour, and a cap that cut that pass short would
+// leave it cancelled halfway.
+const RunTimeout = 2 * time.Hour
 
 // HeartbeatEvery is how often a pass marks its evaluation row as live.
 // store.StaleAfter is several of these, so one slow write is not a death.
@@ -345,7 +348,7 @@ func (p *pass) finish(ctx context.Context) (Result, error) {
 
 	providers, err := r.providersFor(units)
 	if err != nil {
-		r.db.FinishEvaluation(context.WithoutCancel(ctx), evalID, store.EvaluationFailed)
+		r.db.FailEvaluation(context.WithoutCancel(ctx), evalID, err.Error())
 		return Result{}, err
 	}
 
@@ -357,7 +360,7 @@ func (p *pass) finish(ctx context.Context) (Result, error) {
 	var analyzer Analyzer
 	if r.NewAnalyzer != nil {
 		if analyzer, err = r.NewAnalyzer(ctx); err != nil {
-			r.db.FinishEvaluation(context.WithoutCancel(ctx), evalID, store.EvaluationFailed)
+			r.db.FailEvaluation(context.WithoutCancel(ctx), evalID, err.Error())
 			return Result{}, err
 		}
 	}

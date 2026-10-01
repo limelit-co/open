@@ -62,6 +62,8 @@ type Evaluation struct {
 	// Stale is true for a running pass whose heartbeat has stopped: the
 	// process that ran it is gone, and the next claim or sweep closes it.
 	Stale bool
+	// Error is why a failed pass stopped before fetching anything, or "".
+	Error string
 }
 
 // Done reports whether this evaluation has stopped, whatever the outcome.
@@ -175,6 +177,14 @@ func (db *DB) ClaimEvaluation(ctx context.Context, planned int) (int64, error) {
 	return id, tx.Commit()
 }
 
+// FailEvaluation closes a pass that could not run, with the reason.
+func (db *DB) FailEvaluation(ctx context.Context, id int64, reason string) error {
+	_, err := db.ExecContext(ctx,
+		`UPDATE evaluation SET status = ?, finished_at = datetime('now'), error = ? WHERE id = ?`,
+		EvaluationFailed, reason, id)
+	return err
+}
+
 // Heartbeat marks a running pass as still live.
 func (db *DB) Heartbeat(ctx context.Context, id int64) error {
 	_, err := db.ExecContext(ctx,
@@ -204,7 +214,8 @@ func (db *DB) FinishEvaluation(ctx context.Context, id int64, status string) err
 const evaluationSelect = `
 	SELECT e.id, e.status, e.planned, e.completed, e.failed, e.started_at, COALESCE(e.finished_at, ''),
 		(SELECT COUNT(*) FROM chat c WHERE c.evaluation_id = e.id AND c.status = '` + ChatNoAnswerSurface + `'),
-		e.status = '` + EvaluationRunning + `' AND (e.heartbeat_at IS NULL OR e.heartbeat_at < datetime('now', ?))
+		e.status = '` + EvaluationRunning + `' AND (e.heartbeat_at IS NULL OR e.heartbeat_at < datetime('now', ?)),
+		COALESCE(e.error, '')
 	FROM evaluation e`
 
 // Evaluation reads one pass.
@@ -220,7 +231,7 @@ func (db *DB) LatestEvaluation(ctx context.Context) (Evaluation, error) {
 func (db *DB) scanEvaluation(row *sql.Row) (Evaluation, error) {
 	var e Evaluation
 	err := row.Scan(&e.ID, &e.Status, &e.Planned, &e.Completed, &e.Failed, &e.StartedAt, &e.FinishedAt,
-		&e.NoAnswerSurface, &e.Stale)
+		&e.NoAnswerSurface, &e.Stale, &e.Error)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Evaluation{}, ErrNotFound
 	}
