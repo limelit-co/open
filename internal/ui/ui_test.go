@@ -43,10 +43,13 @@ func newAppWithRunner(t *testing.T, reg *provider.Registry, run *runner.Runner) 
 	t.Cleanup(func() { db.Close() })
 
 	t.Setenv("LIMELIT_SECRET", "test-secret")
-	// Any Limelit Cloud call a test does not fake fails at once on this
-	// machine rather than reaching the real service.
+	// Any Limelit Cloud or GitHub call a test does not fake fails at once on
+	// this machine rather than reaching the real service.
 	if os.Getenv("LIMELIT_CLOUD_API") == "" {
 		t.Setenv("LIMELIT_CLOUD_API", "http://127.0.0.1:1")
+	}
+	if os.Getenv("LIMELIT_GITHUB_API") == "" {
+		t.Setenv("LIMELIT_GITHUB_API", "http://127.0.0.1:1")
 	}
 	keys, err := secrets.Open(dir)
 	if err != nil {

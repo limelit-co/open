@@ -84,7 +84,7 @@ func TestTheTopBarAsksForAStar(t *testing.T) {
 	_, _, h := newApp(t, providertest.Registry())
 	seedProperty(t, h)
 	body := get(t, h, "/prompts").Body.String()
-	if !strings.Contains(body, `class="gh-star" href="https://github.com/limelit-co/open"`) || !strings.Contains(body, "<span>Star</span>") {
+	if !strings.Contains(body, `class="gh-star" href="https://github.com/limelit-co/open"`) || !strings.Contains(body, `<span class="gh-star-label">Star</span>`) {
 		t.Error("no star link in the top bar")
 	}
 	star := strings.Index(body, `class="gh-star"`)

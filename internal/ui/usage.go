@@ -57,10 +57,24 @@ func (a *App) usageView(ctx context.Context) *UsageView {
 // repoURL is where the plain star link goes.
 const repoURL = "https://github.com/limelit-co/open"
 
-// starView is the top bar's star link. On the free credits, while the
-// thank-you is open and unclaimed, it says what a star brings and goes to the
-// Cloud page that checks it; otherwise it is the plain repository link.
+// starView is the top bar's star link, with the repository's star count once
+// it has been read. On the free credits, while the thank-you is open and
+// unclaimed, it says what a star brings and goes to the Cloud page that
+// checks it; otherwise it is the plain repository link.
 func (a *App) starView(ctx context.Context) StarView {
+	v := a.starOffer(ctx)
+	if n, ok := a.starCount(); ok {
+		v.Count = starsLabel(n)
+		stars := "stars"
+		if n == 1 {
+			stars = "star"
+		}
+		v.Title += fmt.Sprintf(" (%d %s)", n, stars)
+	}
+	return v
+}
+
+func (a *App) starOffer(ctx context.Context) StarView {
 	plain := StarView{Label: "Star", Href: repoURL, Title: "Star Limelit Open on GitHub"}
 	if a.demo || !a.hasCloudKey(ctx) {
 		return plain

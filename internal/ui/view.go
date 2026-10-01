@@ -65,8 +65,10 @@ type Base struct {
 }
 
 // StarView is the top bar's star link: plain, or the thank-you offer.
+// Count is the repository's star count as GitHub writes it, or "" before
+// it has been read.
 type StarView struct {
-	Label, Href, Title string
+	Label, Href, Title, Count string
 }
 
 // UsageView is the top bar's usage meter.
