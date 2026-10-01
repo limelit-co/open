@@ -208,6 +208,19 @@ type LimelitAllowance struct {
 	DailyCredits   int       `json:"daily_credits"`
 	UsedToday      int       `json:"used_today"`
 	MonthResetsAt  time.Time `json:"month_resets_at"`
+	// BonusLeft and BonusUsedThisMonth are the GitHub star thank-you's
+	// credits: spent after the month's, never expiring. A Cloud that predates
+	// them sends neither, which reads as no bonus.
+	BonusLeft          int    `json:"bonus_left"`
+	BonusUsedThisMonth int    `json:"bonus_used_this_month"`
+	Account            string `json:"account"`
+	Star               struct {
+		Enabled  bool   `json:"enabled"`
+		Credits  int    `json:"credits"`
+		Claimed  bool   `json:"claimed"`
+		Repo     string `json:"repo"`
+		ClaimURL string `json:"claim_url"`
+	} `json:"star"`
 }
 
 func (p *limelitProvider) do(ctx context.Context, method, path string, body []byte, into any) error {

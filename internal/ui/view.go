@@ -60,6 +60,13 @@ type Base struct {
 	// bar: the free Limelit Cloud credits when that key is set, otherwise
 	// today's answers against the daily limit. Nil in a demo.
 	Usage *UsageView
+	// Star is the top bar's GitHub star link.
+	Star StarView
+}
+
+// StarView is the top bar's star link: plain, or the thank-you offer.
+type StarView struct {
+	Label, Href, Title string
 }
 
 // UsageView is the top bar's usage meter.

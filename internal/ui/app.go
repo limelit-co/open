@@ -221,6 +221,7 @@ func (a *App) base(r *http.Request, title, current string) (Base, store.Counts, 
 	if !a.demo {
 		b.Usage = a.usageView(ctx)
 	}
+	b.Star = a.starView(ctx)
 	if counts.LastChatAt != "" {
 		b.LastRun = counts.LastChatAt
 	}
