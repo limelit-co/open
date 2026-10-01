@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Evaluation statuses.
@@ -27,6 +28,25 @@ const (
 	ChatNoAnswerSurface = "no_answer_surface"
 )
 
+// StaleAfter is how long a running pass may go without a heartbeat before
+// it is taken to belong to a process that is gone. The runner beats far more
+// often than this, so only a dead (or suspended) process misses it.
+const StaleAfter = 2 * time.Minute
+
+// ErrEvaluationRunning is returned by ClaimEvaluation while another pass is
+// live. The concrete error is an *EvaluationRunningError carrying its id.
+var ErrEvaluationRunning = errors.New("store: an evaluation is already running")
+
+// EvaluationRunningError names the live pass that refused a claim.
+type EvaluationRunningError struct{ ID int64 }
+
+func (e *EvaluationRunningError) Error() string {
+	return fmt.Sprintf("evaluation %d is already running", e.ID)
+}
+
+// Is makes errors.Is(err, ErrEvaluationRunning) hold.
+func (e *EvaluationRunningError) Is(target error) bool { return target == ErrEvaluationRunning }
+
 // Evaluation is one pass over prompts and targets.
 type Evaluation struct {
 	ID         int64
@@ -36,6 +56,12 @@ type Evaluation struct {
 	Failed     int
 	StartedAt  string
 	FinishedAt string
+	// NoAnswerSurface is how many of Completed found no answer surface at
+	// all; they are kept out of every metric.
+	NoAnswerSurface int
+	// Stale is true for a running pass whose heartbeat has stopped: the
+	// process that ran it is gone, and the next claim or sweep closes it.
+	Stale bool
 }
 
 // Done reports whether this evaluation has stopped, whatever the outcome.
@@ -90,7 +116,9 @@ type ChatRecord struct {
 	CreatedAt string
 }
 
-// CreateEvaluation opens a pass.
+// CreateEvaluation opens a pass with no heartbeat: an import or a seed that
+// writes its answers at once. The runner claims its passes with
+// ClaimEvaluation instead, so that only one is live at a time.
 func (db *DB) CreateEvaluation(ctx context.Context, planned int) (int64, error) {
 	res, err := db.ExecContext(ctx,
 		`INSERT INTO evaluation (status, planned) VALUES (?, ?)`, EvaluationRunning, planned)
@@ -100,6 +128,70 @@ func (db *DB) CreateEvaluation(ctx context.Context, planned int) (int64, error) 
 	return res.LastInsertId()
 }
 
+// ClaimEvaluation opens a pass unless another one is live, in this process
+// or any other on the same file.
+//
+// Running passes whose heartbeat is stale are closed first, as failed: their
+// process is gone and they would otherwise block every claim. The insert
+// itself is one statement that checks for a live pass, so two processes
+// claiming at once cannot both succeed. A refusal is an
+// *EvaluationRunningError naming the live pass.
+func (db *DB) ClaimEvaluation(ctx context.Context, planned int) (int64, error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	// A write first, so the transaction holds the write lock before it reads.
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE evaluation SET status = ?, finished_at = datetime('now')
+		WHERE status = ? AND (heartbeat_at IS NULL OR heartbeat_at < datetime('now', ?))`,
+		EvaluationFailed, EvaluationRunning, staleCutoff()); err != nil {
+		return 0, err
+	}
+	res, err := tx.ExecContext(ctx, `
+		INSERT INTO evaluation (status, planned, heartbeat_at)
+		SELECT ?, ?, datetime('now')
+		WHERE NOT EXISTS (SELECT 1 FROM evaluation WHERE status = ?)`,
+		EvaluationRunning, planned, EvaluationRunning)
+	if err != nil {
+		return 0, err
+	}
+	if n, err := res.RowsAffected(); err != nil {
+		return 0, err
+	} else if n == 0 {
+		var live int64
+		if err := tx.QueryRowContext(ctx,
+			`SELECT id FROM evaluation WHERE status = ? ORDER BY id DESC LIMIT 1`, EvaluationRunning).Scan(&live); err != nil {
+			return 0, err
+		}
+		return 0, &EvaluationRunningError{ID: live}
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return id, tx.Commit()
+}
+
+// Heartbeat marks a running pass as still live.
+func (db *DB) Heartbeat(ctx context.Context, id int64) error {
+	_, err := db.ExecContext(ctx,
+		`UPDATE evaluation SET heartbeat_at = datetime('now') WHERE id = ? AND status = ?`, id, EvaluationRunning)
+	return err
+}
+
+// RunningEvaluation reads the live pass, or ErrNotFound when none is.
+func (db *DB) RunningEvaluation(ctx context.Context) (Evaluation, error) {
+	return db.scanEvaluation(db.QueryRowContext(ctx, evaluationSelect+`
+		WHERE e.status = ? AND e.heartbeat_at >= datetime('now', ?)
+		ORDER BY e.id DESC LIMIT 1`, staleCutoff(), EvaluationRunning, staleCutoff()))
+}
+
+// staleCutoff is StaleAfter as a SQLite datetime modifier.
+func staleCutoff() string { return fmt.Sprintf("-%d seconds", int(StaleAfter/time.Second)) }
+
 // FinishEvaluation closes a pass.
 func (db *DB) FinishEvaluation(ctx context.Context, id int64, status string) error {
 	_, err := db.ExecContext(ctx,
@@ -107,23 +199,28 @@ func (db *DB) FinishEvaluation(ctx context.Context, id int64, status string) err
 	return err
 }
 
+// evaluationSelect reads a pass with its no-answer-surface count and whether
+// its heartbeat has stopped. Its first placeholder is the stale cutoff.
+const evaluationSelect = `
+	SELECT e.id, e.status, e.planned, e.completed, e.failed, e.started_at, COALESCE(e.finished_at, ''),
+		(SELECT COUNT(*) FROM chat c WHERE c.evaluation_id = e.id AND c.status = '` + ChatNoAnswerSurface + `'),
+		e.status = '` + EvaluationRunning + `' AND (e.heartbeat_at IS NULL OR e.heartbeat_at < datetime('now', ?))
+	FROM evaluation e`
+
 // Evaluation reads one pass.
 func (db *DB) Evaluation(ctx context.Context, id int64) (Evaluation, error) {
-	return db.scanEvaluation(db.QueryRowContext(ctx, `
-		SELECT id, status, planned, completed, failed, started_at, COALESCE(finished_at, '')
-		FROM evaluation WHERE id = ?`, id))
+	return db.scanEvaluation(db.QueryRowContext(ctx, evaluationSelect+` WHERE e.id = ?`, staleCutoff(), id))
 }
 
 // LatestEvaluation reads the most recent pass, or ErrNotFound before any.
 func (db *DB) LatestEvaluation(ctx context.Context) (Evaluation, error) {
-	return db.scanEvaluation(db.QueryRowContext(ctx, `
-		SELECT id, status, planned, completed, failed, started_at, COALESCE(finished_at, '')
-		FROM evaluation ORDER BY id DESC LIMIT 1`))
+	return db.scanEvaluation(db.QueryRowContext(ctx, evaluationSelect+` ORDER BY e.id DESC LIMIT 1`, staleCutoff()))
 }
 
 func (db *DB) scanEvaluation(row *sql.Row) (Evaluation, error) {
 	var e Evaluation
-	err := row.Scan(&e.ID, &e.Status, &e.Planned, &e.Completed, &e.Failed, &e.StartedAt, &e.FinishedAt)
+	err := row.Scan(&e.ID, &e.Status, &e.Planned, &e.Completed, &e.Failed, &e.StartedAt, &e.FinishedAt,
+		&e.NoAnswerSurface, &e.Stale)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Evaluation{}, ErrNotFound
 	}
@@ -133,13 +230,15 @@ func (db *DB) scanEvaluation(row *sql.Row) (Evaluation, error) {
 // SweepOrphanedEvaluations closes passes left running by a process that died.
 //
 // A running evaluation can only be advanced by the process that started it,
-// so one that survives a restart will never finish. Left alone it would show
-// as in flight forever, and the dashboard would keep saying a run was
-// happening. Its chat rows are real and are kept.
+// so one whose process is gone will never finish. Left alone it would show
+// as in flight forever. Only passes whose heartbeat is stale are closed: a
+// fresh one belongs to another process on this file (`limelit mcp` beside
+// `limelit serve`) that is still working on it. Chat rows are real and kept.
 func (db *DB) SweepOrphanedEvaluations(ctx context.Context) (int, error) {
 	res, err := db.ExecContext(ctx, `
 		UPDATE evaluation SET status = ?, finished_at = datetime('now')
-		WHERE status = ?`, EvaluationFailed, EvaluationRunning)
+		WHERE status = ? AND (heartbeat_at IS NULL OR heartbeat_at < datetime('now', ?))`,
+		EvaluationFailed, EvaluationRunning, staleCutoff())
 	if err != nil {
 		return 0, err
 	}

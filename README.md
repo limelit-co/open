@@ -315,7 +315,9 @@ limelit version   version and build info
 ## Connect Claude (MCP)
 
 Limelit Open is MCP-first. The dashboard shows you the numbers; the MCP server
-lets an assistant read them, cross-reference them and quote the evidence.
+lets an assistant read them, cross-reference them and quote the evidence. It
+can also start a run: it shows you the plan first, and runs only after you say
+yes.
 
 Claude Desktop or Claude Code, over stdio, set up as in
 [step 4 of the quick start](#4-connect-claude). `limelit mcp` reads `./data`

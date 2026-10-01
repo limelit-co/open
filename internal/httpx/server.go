@@ -19,6 +19,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/limelit-co/open/internal/mcpserver"
+	"github.com/limelit-co/open/internal/runner"
 	"github.com/limelit-co/open/internal/store"
 	"github.com/limelit-co/open/internal/ui"
 )
@@ -33,7 +34,9 @@ type Server struct {
 
 // New builds a Server bound to addr. dash may be nil, which serves the health
 // endpoint alone; that is the shape the tests use.
-func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.App) *Server {
+// run starts passes for the MCP endpoint's evaluation tools; nil leaves
+// those tools unregistered, as in a test that has no runner.
+func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.App, run *runner.Runner) *Server {
 	s := &Server{db: db, log: log, version: version}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.handleHealthz)
@@ -50,7 +53,7 @@ func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.A
 	if dash != nil {
 		token = dash.MCPToken
 	}
-	if srv, err := New_(db, mcpserver.DashboardURL(addr)); err == nil {
+	if srv, err := New_(db, mcpserver.DashboardURL(addr), run, dash); err == nil {
 		mux.Handle("/mcp", mcpserver.Handler(srv, token, log))
 		mux.Handle("/mcp/", mcpserver.Handler(srv, token, log))
 	} else if log != nil {
@@ -137,6 +140,13 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 // New_ builds the MCP server for the HTTP endpoint. Named apart from New so
 // the two constructors in this file cannot be confused at a glance. dashboard
 // is this server's own address, which the setup block links to.
-func New_(db *store.DB, dashboard string) (*mcp.Server, error) {
-	return mcpserver.New(mcpserver.Deps{DB: db, DashboardURL: dashboard})
+//
+// The run tools get the same runner and the same ceiling as the dashboard's
+// Run now, so a pass started from an agent is held to the limit in Settings.
+func New_(db *store.DB, dashboard string, run *runner.Runner, dash *ui.App) (*mcp.Server, error) {
+	deps := mcpserver.Deps{DB: db, DashboardURL: dashboard}
+	if run != nil && dash != nil {
+		deps.Runner, deps.RunsPerDay = run, dash.RunsPerDay
+	}
+	return mcpserver.New(deps)
 }

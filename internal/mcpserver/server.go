@@ -32,6 +32,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/limelit-co/open/internal/metrics"
+	"github.com/limelit-co/open/internal/runner"
 	"github.com/limelit-co/open/internal/store"
 )
 
@@ -39,23 +40,29 @@ import (
 const Version = "0.1"
 
 // Deps is what the tools need. Nothing here holds a credential: the tools
-// read stored answers, they do not call providers.
+// read stored answers, and the run tools hand a pass to the Runner, which
+// reads provider keys itself. No key ever passes through a tool.
 type Deps struct {
 	DB      *store.DB
 	Metrics *metrics.Service
-	// Runner triggers an evaluation. Nil leaves the evaluation tools
+	// Runner plans and starts an evaluation. Nil leaves the evaluation tools
 	// unregistered rather than registering one that fails, because a tool
 	// that exists and never works is worse than one that is absent.
 	Runner Runner
+	// RunsPerDay resolves the daily ceiling at the moment of each call.
+	// Required with a Runner: a pass started from a tool is held to the same
+	// limit as one started from the dashboard.
+	RunsPerDay func(context.Context) int
 	// DashboardURL is where serve's dashboard answers, for the setup block's
 	// links. Empty over stdio, where the server cannot know it.
 	DashboardURL string
 }
 
 // Runner is the evaluation entry point, as an interface so this package does
-// not depend on the runner's concrete type.
+// not depend on the runner's concrete type. *runner.Runner implements it.
 type Runner interface {
-	Start(ctx context.Context, promptID int64) (int, error)
+	Plan(ctx context.Context, opts runner.Options) (runner.Plan, error)
+	Start(ctx context.Context, opts runner.Options) (*runner.Started, error)
 }
 
 // New builds the server with every tool registered.
@@ -66,13 +73,16 @@ func New(deps Deps) (*mcp.Server, error) {
 	if deps.Metrics == nil {
 		deps.Metrics = metrics.New(deps.DB)
 	}
+	if deps.Runner != nil && deps.RunsPerDay == nil {
+		return nil, errors.New("mcpserver: a Runner needs RunsPerDay, so tool runs keep the daily ceiling")
+	}
 
 	s := mcp.NewServer(&mcp.Implementation{
 		Name:    "limelit-open",
 		Title:   "Limelit Open",
 		Version: Version,
 	}, &mcp.ServerOptions{
-		Instructions: instructions,
+		Instructions: instructionsFor(deps.Runner != nil),
 	})
 
 	registerProperty(s, deps)
@@ -83,6 +93,9 @@ func New(deps Deps) (*mcp.Server, error) {
 	registerExport(s, deps)
 	registerUpgrade(s, deps)
 	registerPrompts2(s, deps)
+	if deps.Runner != nil {
+		registerRuns(s, deps)
+	}
 
 	return s, nil
 }
@@ -93,16 +106,41 @@ func New(deps Deps) (*mcp.Server, error) {
 // rest routes to the front door (get_active_property, whose setup block keeps
 // a model from reporting a number with nothing behind it) and says what the
 // numbers exclude before an agent reports one.
-const instructions = `Limelit tracks how AI answer engines (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews, Google AI Mode, Bing Copilot) mention and cite one brand against its competitors. Use it when the user asks how visible their brand is in AI answers or AI search, who is ahead there, which prompts they lose, what gets cited instead, or how to get started with Limelit. Not for Search Console, paid ads or classic SEO rankings.
+//
+// How to run depends on whether this server has a runner: with one, the run
+// tools and the dry-run-then-confirm order; without, the dashboard. The
+// instructions never name a tool the server does not register.
+func instructionsFor(runs bool) string {
+	run, status := runInDashboard, ""
+	if runs {
+		run, status = runWithTools, runStatusLine
+	}
+	return instructionsIntro + run + instructionsRouting + status + instructionsRules
+}
 
-First move: call get_active_property. If has_answers is false, tell the user next_step and its link, list once_set_up_you_can_ask, and report no numbers. If it returns suggested_days, pass that as days to the metric tools. Setup, provider keys and runs live in the dashboard: tell the user how to start a run there, and never ask for a key in chat.
+const instructionsIntro = `Limelit tracks how AI answer engines (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews, Google AI Mode, Bing Copilot) mention and cite one brand against its competitors. Use it when the user asks how visible their brand is in AI answers or AI search, who is ahead there, which prompts they lose, what gets cited instead, or how to get started with Limelit. Not for Search Console, paid ads or classic SEO rankings.
+
+First move: call get_active_property. If has_answers is false, tell the user next_step and its link, list once_set_up_you_can_ask, and report no numbers. If it returns suggested_days, pass that as days to the metric tools. Setup and provider keys live in the dashboard; never ask for a key in chat.`
+
+const runInDashboard = ` Runs start in the dashboard: tell the user how to start one there.`
+
+const runWithTools = `
+
+To run: call reevaluate_all_prompts (or reevaluate_prompt) with dry_run=true, show the user the plan, and call again with dry_run=false only after they confirm. Then poll get_run_activity until status is done.`
+
+const instructionsRouting = `
 
 If the user asks:
 - how they are doing, or who is ahead: get_overview_kpis.
 - which prompts they lose: get_matrix, then list_chats with show=missed.
 - what gets cited instead: list_top_sources, then list_source_urls with value=<host>.
 - the quote or searches behind a number: get_chat.
-- for a plan, a draft or a fix: that is Limelit Cloud; point to Upgrade in the dashboard.
+- for a plan, a draft or a fix: that is Limelit Cloud; point to Upgrade in the dashboard.`
+
+const runStatusLine = `
+- whether a run is done or the numbers are current: get_run_activity.`
+
+const instructionsRules = `
 End with one or two questions from try_asking.
 
 Headline visibility excludes prompts tagged "branded". A Google query with no AI Overview is excluded, not a miss. A figure may mix "api" and "scraped" targets: name the targets it covers. Quote n with every figure; low_n (n under 20) means still settling.

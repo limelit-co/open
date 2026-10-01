@@ -22,7 +22,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -159,15 +158,15 @@ func cmdServe(ctx context.Context, args []string) error {
 	}
 
 	// A pass can only be advanced by the process that started it, so one left
-	// running by a crash would show as in flight forever.
+	// running by a crash would show as in flight forever. Only passes whose
+	// heartbeat has stopped are closed: `limelit mcp` may be running one.
 	if n, err := db.SweepOrphanedEvaluations(ctx); err != nil {
 		return err
 	} else if n > 0 {
 		log.Warn("closed evaluations left running by an earlier process", "count", n)
 	}
 
-	run := runner.New(db, registry, credentials.Source(ctx, db, keys, log), log)
-	run.NewAnalyzer = func(c context.Context) (runner.Analyzer, error) { return runner.NewStoreAnalyzer(c, db) }
+	run := newRunner(ctx, db, registry, keys, log)
 	// Answers stored under older matching rules, or before a brand was
 	// added, are read again once, here, before anyone looks at a number.
 	if _, _, err := run.EnsureAnalyzed(ctx); err != nil {
@@ -181,7 +180,7 @@ func cmdServe(ctx context.Context, args []string) error {
 
 	startSchedule(ctx, dash, run, db, log)
 
-	srv := httpx.New(*addr, db, log, ver, dash)
+	srv := httpx.New(*addr, db, log, ver, dash, run)
 	err = srv.Serve(ctx, func(bound net.Addr) {
 		log.Info("listening", "addr", bound.String(), "database", db.Path(), "version", ver, "commit", rev)
 		// A public demo has no one at its terminal to read this.
@@ -269,12 +268,17 @@ func startSchedule(ctx context.Context, settings scheduleSettings, run *runner.R
 			}
 			lastAttempt = time.Now()
 
-			res, err := run.Run(ctx, runner.Options{RunsPerDay: settings.RunsPerDay(ctx)})
+			// The same entry point as Run now and the MCP tools, so a pass
+			// another process is running refuses this one rather than doubling it.
+			st, err := run.Start(ctx, runner.Options{RunsPerDay: settings.RunsPerDay(ctx)})
 			if err != nil {
-				log.Error("scheduled run failed", "error", err)
-			} else {
-				log.Info("scheduled run finished", "evaluation", res.EvaluationID,
-					"completed", res.Completed, "failed", res.Failed)
+				log.Error("scheduled run did not start", "error", err)
+				continue
+			}
+			select {
+			case <-st.Done():
+			case <-ctx.Done():
+				return
 			}
 		}
 	}()
@@ -353,9 +357,19 @@ func firstDue(lastChatAt string, lookup error, every, grace time.Duration, now t
 //
 // Nothing is written to stdout except protocol frames: stdout IS the
 // transport, so a stray Println would corrupt the session. Logs go to stderr.
+//
+// It can start a pass (reevaluate_prompt, reevaluate_all_prompts), so it
+// builds the same runner `limelit run` does. The tools never see a key: the
+// runner reads them through the credential source, as it does in serve.
 func cmdMCP(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("mcp", flag.ContinueOnError)
+	cfgPath := fs.String("config", "limelit.yaml", "path to limelit.yaml")
 	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	log := newLogger()
+	cfg, err := config.Load(*cfgPath)
+	if err != nil {
 		return err
 	}
 	db, err := store.Open(ctx, config.DatabasePath())
@@ -363,12 +377,38 @@ func cmdMCP(ctx context.Context, args []string) error {
 		return err
 	}
 	defer db.Close()
+	keys, err := secrets.Open(config.DataDir())
+	if err != nil {
+		return err
+	}
 
-	srv, err := mcpserver.New(mcpserver.Deps{DB: db})
+	srv, err := mcpserver.New(mcpserver.Deps{
+		DB:         db,
+		Runner:     newRunner(ctx, db, provider.Default(), keys, log),
+		RunsPerDay: runsPerDay(db, cfg),
+	})
 	if err != nil {
 		return err
 	}
 	return srv.Run(ctx, &mcp.StdioTransport{})
+}
+
+// newRunner builds the runner every command uses: the compiled-in providers,
+// keys from the environment then this machine's store, and the analyzer read
+// fresh at the start of each pass.
+func newRunner(ctx context.Context, db *store.DB, registry *provider.Registry, keys *secrets.Keyring, log *slog.Logger) *runner.Runner {
+	run := runner.New(db, registry, credentials.Source(ctx, db, keys, log), log)
+	run.NewAnalyzer = func(c context.Context) (runner.Analyzer, error) { return runner.NewStoreAnalyzer(c, db) }
+	return run
+}
+
+// runsPerDay resolves the daily ceiling at the moment of each pass, so a
+// change saved in Settings applies without a restart.
+func runsPerDay(db *store.DB, cfg *config.Config) func(context.Context) int {
+	return func(ctx context.Context) int {
+		stored, _ := db.Setting(ctx, config.RunsPerDaySetting)
+		return config.ResolveRunsPerDay(stored, cfg)
+	}
 }
 
 // cmdRun executes one evaluation pass and exits: a manual check, or one
@@ -400,16 +440,8 @@ func cmdRun(ctx context.Context, args []string) error {
 		return err
 	}
 
-	ceiling := cfg.Limits.RunsPerDay
-	if stored, err := db.Setting(ctx, "runs_per_day"); err == nil && stored != "" {
-		if n, err := strconv.Atoi(stored); err == nil && n > 0 {
-			ceiling = n
-		}
-	}
-
-	run := runner.New(db, provider.Default(), credentials.Source(ctx, db, keys, log), log)
-	run.NewAnalyzer = func(c context.Context) (runner.Analyzer, error) { return runner.NewStoreAnalyzer(c, db) }
-	res, err := run.Run(ctx, runner.Options{TargetSpec: *targetSpec, RunsPerDay: ceiling})
+	run := newRunner(ctx, db, provider.Default(), keys, log)
+	res, err := run.Run(ctx, runner.Options{TargetSpec: *targetSpec, RunsPerDay: runsPerDay(db, cfg)(ctx)})
 	if err != nil {
 		return err
 	}

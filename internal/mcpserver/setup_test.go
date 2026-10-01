@@ -217,33 +217,45 @@ func TestFrontDoorWhenTheWindowIsEmpty(t *testing.T) {
 // in plain words, so the handshake must say when Limelit applies, send the
 // model to the front door first, and name no tool that does not exist.
 func TestInstructionsRouteToTheFrontDoor(t *testing.T) {
-	for _, want := range []string{
-		"get_active_property", "has_answers", "next_step", "Not for", "never ask for a key",
-		"ChatGPT", "Claude", "Perplexity", "Gemini", "Google AI Overviews", "Google AI Mode", "Bing Copilot",
+	// Two servers: one without a runner (runs happen in the dashboard) and one
+	// with (the run tools). Each one's instructions name only its own tools.
+	for _, tc := range []struct {
+		runs bool
+		s    *mcp.ClientSession
+		want string
+	}{
+		{false, session(t, emptyDB(t), ""), "Runs start in the dashboard"},
+		{true, runSession(t, 100, false).s, "dry_run=true"},
 	} {
-		if !strings.Contains(instructions, want) {
-			t.Errorf("the server instructions do not mention %q", want)
+		instructions := instructionsFor(tc.runs)
+		for _, want := range []string{
+			"get_active_property", "has_answers", "next_step", "Not for", "never ask for a key", tc.want,
+			"ChatGPT", "Claude", "Perplexity", "Gemini", "Google AI Overviews", "Google AI Mode", "Bing Copilot",
+		} {
+			if !strings.Contains(instructions, want) {
+				t.Errorf("runs=%v: the server instructions do not mention %q", tc.runs, want)
+			}
 		}
-	}
-	// Claude Code keeps the first 2 KB of a server's instructions.
-	if len(instructions) > 2048 {
-		t.Errorf("instructions are %d bytes; clients may cut them past 2048", len(instructions))
-	}
-	if strings.ContainsAny(instructions, "—–") {
-		t.Error("the instructions carry an em or en dash")
-	}
+		// Claude Code keeps the first 2 KB of a server's instructions.
+		if len(instructions) > 2048 {
+			t.Errorf("runs=%v: instructions are %d bytes; clients may cut them past 2048", tc.runs, len(instructions))
+		}
+		if strings.ContainsAny(instructions, "—–") {
+			t.Errorf("runs=%v: the instructions carry an em or en dash", tc.runs)
+		}
 
-	res, err := session(t, emptyDB(t), "").ListTools(context.Background(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	registered := map[string]bool{}
-	for _, tool := range res.Tools {
-		registered[tool.Name] = true
-	}
-	for _, name := range regexp.MustCompile(`\b(?:get|list)_[a-z_]+\b`).FindAllString(instructions, -1) {
-		if !registered[name] {
-			t.Errorf("the instructions name %q, which is not a registered tool", name)
+		res, err := tc.s.ListTools(context.Background(), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		registered := map[string]bool{}
+		for _, tool := range res.Tools {
+			registered[tool.Name] = true
+		}
+		for _, name := range regexp.MustCompile(`\b(?:get|list|reevaluate)_[a-z_]+\b`).FindAllString(instructions, -1) {
+			if !registered[name] {
+				t.Errorf("runs=%v: the instructions name %q, which is not a registered tool", tc.runs, name)
+			}
 		}
 	}
 }

@@ -504,6 +504,59 @@ func TestRunStartsAPassAndReturnsImmediately(t *testing.T) {
 	t.Error("pressing Run produced no answer")
 }
 
+// TestRunNowRefusesWhileAnotherProcessRuns: a pass `limelit mcp` started is
+// live in the database, not in this process, and Run now must still say busy
+// rather than start a second one.
+func TestRunNowRefusesWhileAnotherProcessRuns(t *testing.T) {
+	reg := provider.NewRegistry()
+	provider.RegisterStub(reg, provider.StubConfig{Answer: "Acme leads."})
+	_, db, h := newApp(t, reg)
+	seedProperty(t, h)
+	ctx := context.Background()
+	if _, err := db.AddPrompt(ctx, store.Prompt{Text: "best crm", Active: true}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.AddTarget(ctx, store.Target{
+		Spec: "chatgpt:stub", Engine: "chatgpt", Provider: provider.StubName, Access: "api",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.ClaimEvaluation(ctx, 1); err != nil {
+		t.Fatal(err)
+	}
+	if loc := post(t, h, "/run", nil).Header().Get("Location"); !strings.Contains(loc, "run-busy") {
+		t.Errorf("Run beside another process's pass redirected to %q, want run-busy", loc)
+	}
+	if c, _ := db.Counts(ctx); c.Chats != 0 {
+		t.Error("a second pass ran")
+	}
+}
+
+// TestRunNowSaysWhenTheCeilingRefuses, instead of claiming it started.
+func TestRunNowSaysWhenTheCeilingRefuses(t *testing.T) {
+	reg := provider.NewRegistry()
+	provider.RegisterStub(reg, provider.StubConfig{Answer: "Acme leads."})
+	_, db, h := newApp(t, reg)
+	seedProperty(t, h)
+	ctx := context.Background()
+	for _, text := range []string{"best crm", "crm for teams"} {
+		if _, err := db.AddPrompt(ctx, store.Prompt{Text: text, Active: true}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := db.AddTarget(ctx, store.Target{
+		Spec: "chatgpt:stub", Engine: "chatgpt", Provider: provider.StubName, Access: "api",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.SetSetting(ctx, settingRunsPerDay, "1"); err != nil {
+		t.Fatal(err)
+	}
+	if loc := post(t, h, "/run", nil).Header().Get("Location"); !strings.Contains(loc, "run-over-ceiling") {
+		t.Errorf("Run over the limit redirected to %q, want run-over-ceiling", loc)
+	}
+}
+
 func TestStaticStylesheetIsServed(t *testing.T) {
 	_, _, h := newApp(t, provider.NewRegistry())
 	rec := get(t, h, "/static/app.css")

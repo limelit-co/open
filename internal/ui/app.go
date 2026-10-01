@@ -28,7 +28,7 @@ import (
 // Settings keys the dashboard writes.
 const (
 	settingCategory   = "category"
-	settingRunsPerDay = "runs_per_day"
+	settingRunsPerDay = config.RunsPerDaySetting
 	settingSchedule   = "schedule"
 	// settingMCPToken holds the HTTP bearer token, sealed with the same
 	// keyring as a provider credential. It is a credential.
@@ -186,6 +186,8 @@ var flashes = map[string]Flash{
 	"run-started":       {Kind: "ok", Text: "Running. Answers appear as each engine replies; refresh to see them."},
 	"demo-readonly":     {Kind: "info", Text: "This is a read-only demo. Run your own copy to change anything."},
 	"run-busy":          {Kind: "warn", Text: "A run is already in progress."},
+	"run-over-ceiling":  {Kind: "warn", Text: "Not run: today's answers plus this pass would go over the daily limit in Settings. Nothing was spent."},
+	"run-not-started":   {Kind: "warn", Text: "The run could not start. The server log has the detail."},
 }
 
 func (a *App) flash(r *http.Request) *Flash {
@@ -441,27 +443,21 @@ func (a *App) run(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/overview?flash=run-busy", http.StatusSeeOther)
 		return
 	}
-	if a.runner.Running() {
+	// Start returns once the pass is claimed and runs the rest in the
+	// background, so the user closing the tab does not abandon answers that
+	// are already being paid for. A refusal is known before the redirect.
+	_, err := a.runner.Start(r.Context(), runner.Options{RunsPerDay: a.runsPerDay(r.Context())})
+	switch {
+	case err == nil:
+		http.Redirect(w, r, "/overview?flash=run-started", http.StatusSeeOther)
+	case errors.Is(err, runner.ErrAlreadyRunning):
 		http.Redirect(w, r, "/overview?flash=run-busy", http.StatusSeeOther)
-		return
+	case errors.Is(err, runner.ErrOverCeiling):
+		http.Redirect(w, r, "/overview?flash=run-over-ceiling", http.StatusSeeOther)
+	default:
+		a.log.Error("run could not start", "error", err)
+		http.Redirect(w, r, "/overview?flash=run-not-started", http.StatusSeeOther)
 	}
-
-	opts := runner.Options{RunsPerDay: a.runsPerDay(r.Context())}
-	// The run outlives this request: the user closing the tab must not
-	// abandon answers that are already being paid for.
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-		defer cancel()
-		res, err := a.runner.Run(ctx, opts)
-		if err != nil {
-			a.log.Error("run failed", "error", err)
-			return
-		}
-		a.log.Info("run finished", "evaluation", res.EvaluationID,
-			"completed", res.Completed, "failed", res.Failed, "took", res.Duration.Round(time.Second))
-	}()
-
-	http.Redirect(w, r, "/overview?flash=run-started", http.StatusSeeOther)
 }
 
 func (a *App) write(w http.ResponseWriter, r *http.Request, page string, data any) {

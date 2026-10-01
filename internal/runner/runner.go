@@ -36,9 +36,40 @@ var ErrOverCeiling = errors.New("runner: over the daily ceiling")
 // ErrNothingToRun is returned when there is no prompt or no target.
 var ErrNothingToRun = errors.New("runner: nothing to run")
 
-// ErrAlreadyRunning is returned when a pass is already in flight. Two
-// concurrent passes would double every count they contribute to.
+// ErrAlreadyRunning is returned when a pass is already in flight, in this
+// process or another on the same database. Two concurrent passes would
+// double every count they contribute to. The concrete error is an
+// *AlreadyRunningError naming the pass in flight when it is known.
 var ErrAlreadyRunning = errors.New("runner: an evaluation is already running")
+
+// ErrUnknownPrompt is returned when Options.PromptID is not an active prompt.
+var ErrUnknownPrompt = errors.New("runner: no such active prompt")
+
+// ErrUnknownTarget is returned when Options.TargetSpec is not an enabled
+// target.
+var ErrUnknownTarget = errors.New("runner: no such enabled target")
+
+// AlreadyRunningError names the pass that is in flight. EvaluationID is zero
+// when another pass in this process has not written its row yet.
+type AlreadyRunningError struct{ EvaluationID int64 }
+
+func (e *AlreadyRunningError) Error() string {
+	if e.EvaluationID == 0 {
+		return ErrAlreadyRunning.Error()
+	}
+	return fmt.Sprintf("%s: evaluation %d", ErrAlreadyRunning, e.EvaluationID)
+}
+
+// Is makes errors.Is(err, ErrAlreadyRunning) hold.
+func (e *AlreadyRunningError) Is(target error) bool { return target == ErrAlreadyRunning }
+
+// RunTimeout bounds one pass started with Start. A pass is minutes; this only
+// stops one whose provider never answers from holding the lock for good.
+const RunTimeout = 30 * time.Minute
+
+// HeartbeatEvery is how often a pass marks its evaluation row as live.
+// store.StaleAfter is several of these, so one slow write is not a death.
+const HeartbeatEvery = 15 * time.Second
 
 // Analyzer turns one answer into the rows derived from it.
 //
@@ -129,22 +160,133 @@ type unit struct {
 
 // Run executes one pass and returns when it is done.
 func (r *Runner) Run(ctx context.Context, opts Options) (Result, error) {
+	p, err := r.begin(ctx, opts)
+	if err != nil {
+		return Result{}, err
+	}
+	return p.finish(ctx)
+}
+
+// Started is a pass that Start has begun. Its evaluation row exists, so its
+// id can be handed out at once; Wait returns when the pass is done.
+type Started struct {
+	EvaluationID int64
+	Planned      int
+	done         chan struct{}
+	res          Result
+	err          error
+}
+
+// Done is closed when the pass has finished.
+func (s *Started) Done() <-chan struct{} { return s.done }
+
+// Wait blocks until the pass has finished and returns what it did.
+func (s *Started) Wait() (Result, error) {
+	<-s.done
+	return s.res, s.err
+}
+
+// Start begins a pass and returns as soon as its evaluation row is written.
+//
+// Everything that can refuse a pass happens before it returns: the plan, the
+// ceiling, and the claim on the database that keeps a second process from
+// running at the same time. What follows runs in the background, detached
+// from ctx's cancellation (a closed tab or a finished tool call must not
+// abandon answers already being paid for) and bounded by RunTimeout. The
+// dashboard, the scheduler and the MCP tools all start passes here.
+func (r *Runner) Start(ctx context.Context, opts Options) (*Started, error) {
+	p, err := r.begin(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	st := &Started{EvaluationID: p.evalID, Planned: len(p.units), done: make(chan struct{})}
+	go func() {
+		defer close(st.done)
+		runCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), RunTimeout)
+		defer cancel()
+		st.res, st.err = p.finish(runCtx)
+		if r.log == nil {
+			return
+		}
+		if st.err != nil {
+			r.log.Error("run failed", "evaluation", st.EvaluationID, "error", st.err)
+			return
+		}
+		r.log.Info("run finished", "evaluation", st.res.EvaluationID,
+			"completed", st.res.Completed, "failed", st.res.Failed, "took", st.res.Duration.Round(time.Second))
+	}()
+	return st, nil
+}
+
+// Plan is what a pass would do, worked out without running anything.
+type Plan struct {
+	Prompts int
+	Targets int
+	// Planned is the answers the pass would fetch: Prompts times Targets.
+	Planned int
+	// RunsToday is the answers already fetched today, against RunsPerDay.
+	RunsToday  int
+	RunsPerDay int
+	// WithinCeiling is whether the pass would run rather than be refused.
+	WithinCeiling bool
+	// RunningEvaluationID is the pass already in flight, or zero.
+	RunningEvaluationID int64
+}
+
+// Plan reports what Run would do with opts, without claiming or spending
+// anything. An unknown prompt or target is an error, as it would be for Run.
+func (r *Runner) Plan(ctx context.Context, opts Options) (Plan, error) {
+	units, err := r.plan(ctx, opts)
+	if err != nil {
+		return Plan{}, err
+	}
+	prompts, targets := map[int64]bool{}, map[int64]bool{}
+	for _, u := range units {
+		prompts[u.prompt.ID] = true
+		targets[u.target.ID] = true
+	}
+	out := Plan{Prompts: len(prompts), Targets: len(targets), Planned: len(units), RunsPerDay: opts.RunsPerDay}
+	if out.RunsToday, err = r.db.RunsToday(ctx); err != nil {
+		return Plan{}, err
+	}
+	out.WithinCeiling = opts.RunsPerDay <= 0 || out.RunsToday+out.Planned <= opts.RunsPerDay
+	if live, err := r.db.RunningEvaluation(ctx); err == nil {
+		out.RunningEvaluationID = live.ID
+	} else if !errors.Is(err, store.ErrNotFound) {
+		return Plan{}, err
+	}
+	return out, nil
+}
+
+// pass is a pass between begin and finish: it holds this process's lock and
+// its claimed evaluation row.
+type pass struct {
+	r      *Runner
+	units  []unit
+	evalID int64
+}
+
+// begin does everything that may refuse a pass: the in-process lock, the
+// plan, the ceiling and the claim on the database. On success the caller
+// must call finish, which releases the lock.
+func (r *Runner) begin(ctx context.Context, opts Options) (*pass, error) {
 	r.mu.Lock()
 	if r.running {
 		r.mu.Unlock()
-		return Result{}, ErrAlreadyRunning
+		return nil, r.alreadyRunning(ctx)
 	}
 	r.running = true
 	r.mu.Unlock()
+	ok := false
 	defer func() {
-		r.mu.Lock()
-		r.running = false
-		r.mu.Unlock()
+		if !ok {
+			r.release()
+		}
 	}()
 
 	units, err := r.plan(ctx, opts)
 	if err != nil {
-		return Result{}, err
+		return nil, err
 	}
 
 	// The ceiling is checked before anything runs. A guard that stops halfway
@@ -152,24 +294,58 @@ func (r *Runner) Run(ctx context.Context, opts Options) (Result, error) {
 	if opts.RunsPerDay > 0 {
 		today, err := r.db.RunsToday(ctx)
 		if err != nil {
-			return Result{}, err
+			return nil, err
 		}
 		if today+len(units) > opts.RunsPerDay {
-			return Result{}, fmt.Errorf("%w: %d answers today plus %d planned would pass the ceiling of %d, so nothing was run",
+			return nil, fmt.Errorf("%w: %d answers today plus %d planned would pass the ceiling of %d, so nothing was run",
 				ErrOverCeiling, today, len(units), opts.RunsPerDay)
 		}
 	}
 
-	started := time.Now()
-	evalID, err := r.db.CreateEvaluation(ctx, len(units))
-	if err != nil {
-		return Result{}, err
+	// The lock above is this process's; the claim is every process's.
+	evalID, err := r.db.ClaimEvaluation(ctx, len(units))
+	var live *store.EvaluationRunningError
+	if errors.As(err, &live) {
+		return nil, &AlreadyRunningError{EvaluationID: live.ID}
 	}
+	if err != nil {
+		return nil, err
+	}
+	ok = true
+	return &pass{r: r, units: units, evalID: evalID}, nil
+}
+
+// alreadyRunning names the pass in flight, if its row is written yet.
+func (r *Runner) alreadyRunning(ctx context.Context) error {
+	if live, err := r.db.RunningEvaluation(ctx); err == nil {
+		return &AlreadyRunningError{EvaluationID: live.ID}
+	}
+	return &AlreadyRunningError{}
+}
+
+func (r *Runner) release() {
+	r.mu.Lock()
+	r.running = false
+	r.mu.Unlock()
+}
+
+// finish runs a begun pass to the end and releases the lock.
+func (p *pass) finish(ctx context.Context) (Result, error) {
+	r, units, evalID := p.r, p.units, p.evalID
+	defer r.release()
+
+	// The heartbeat tells other processes this pass is live; it stops when
+	// the pass does, and a process that dies stops it too.
+	beat, stopBeat := context.WithCancel(context.WithoutCancel(ctx))
+	defer stopBeat()
+	go r.heartbeat(beat, evalID)
+
+	started := time.Now()
 	r.publish(Event{EvaluationID: evalID, Kind: "started", Planned: len(units)})
 
 	providers, err := r.providersFor(units)
 	if err != nil {
-		r.db.FinishEvaluation(ctx, evalID, store.EvaluationFailed)
+		r.db.FinishEvaluation(context.WithoutCancel(ctx), evalID, store.EvaluationFailed)
 		return Result{}, err
 	}
 
@@ -181,7 +357,7 @@ func (r *Runner) Run(ctx context.Context, opts Options) (Result, error) {
 	var analyzer Analyzer
 	if r.NewAnalyzer != nil {
 		if analyzer, err = r.NewAnalyzer(ctx); err != nil {
-			r.db.FinishEvaluation(ctx, evalID, store.EvaluationFailed)
+			r.db.FinishEvaluation(context.WithoutCancel(ctx), evalID, store.EvaluationFailed)
 			return Result{}, err
 		}
 	}
@@ -192,7 +368,7 @@ func (r *Runner) Run(ctx context.Context, opts Options) (Result, error) {
 	if ctx.Err() != nil {
 		status = store.EvaluationCancelled
 	}
-	if err := r.db.FinishEvaluation(ctx, evalID, status); err != nil && ctx.Err() == nil {
+	if err := r.db.FinishEvaluation(context.WithoutCancel(ctx), evalID, status); err != nil {
 		return Result{}, err
 	}
 
@@ -221,6 +397,22 @@ func (r *Runner) Run(ctx context.Context, opts Options) (Result, error) {
 	}, nil
 }
 
+// heartbeat marks the pass live every HeartbeatEvery until ctx ends.
+func (r *Runner) heartbeat(ctx context.Context, evalID int64) {
+	t := time.NewTicker(HeartbeatEvery)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			if err := r.db.Heartbeat(ctx, evalID); err != nil && ctx.Err() == nil && r.log != nil {
+				r.log.Warn("could not mark the pass as live", "evaluation", evalID, "error", err)
+			}
+		}
+	}
+}
+
 // plan expands prompts by targets into the units of work.
 func (r *Runner) plan(ctx context.Context, opts Options) ([]unit, error) {
 	prompts, err := r.db.Prompts(ctx, false)
@@ -230,6 +422,13 @@ func (r *Runner) plan(ctx context.Context, opts Options) ([]unit, error) {
 	targets, err := r.db.Targets(ctx, true)
 	if err != nil {
 		return nil, err
+	}
+
+	if opts.PromptID > 0 && !hasPrompt(prompts, opts.PromptID) {
+		return nil, fmt.Errorf("%w: %d (list_prompts shows the ids; an inactive prompt does not run)", ErrUnknownPrompt, opts.PromptID)
+	}
+	if opts.TargetSpec != "" && !hasTarget(targets, opts.TargetSpec) {
+		return nil, fmt.Errorf("%w: %q (list_targets shows the configured ones; a disabled target does not run)", ErrUnknownTarget, opts.TargetSpec)
 	}
 
 	var units []unit
@@ -256,6 +455,24 @@ func (r *Runner) plan(ctx context.Context, opts Options) ([]unit, error) {
 		return nil, fmt.Errorf("%w: %d active prompts and %d enabled targets", ErrNothingToRun, len(prompts), len(targets))
 	}
 	return units, nil
+}
+
+func hasPrompt(prompts []store.Prompt, id int64) bool {
+	for _, p := range prompts {
+		if p.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+func hasTarget(targets []store.Target, spec string) bool {
+	for _, t := range targets {
+		if t.Spec == spec {
+			return true
+		}
+	}
+	return false
 }
 
 // providersFor constructs one provider per distinct provider name, so a pass

@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,22 @@ import (
 // day. It is a ceiling on surprise, not a budget: this project never converts
 // usage to currency.
 const DefaultRunsPerDay = 200
+
+// RunsPerDaySetting is the Settings key that overrides limits.runs_per_day.
+const RunsPerDaySetting = "runs_per_day"
+
+// ResolveRunsPerDay is the daily ceiling every entry point applies: the value
+// saved in Settings, then limelit.yaml, then DefaultRunsPerDay. stored is the
+// Settings value, "" when none is saved.
+func ResolveRunsPerDay(stored string, cfg *Config) int {
+	if n, err := strconv.Atoi(strings.TrimSpace(stored)); err == nil && n > 0 {
+		return n
+	}
+	if cfg != nil && cfg.Limits.RunsPerDay > 0 {
+		return cfg.Limits.RunsPerDay
+	}
+	return DefaultRunsPerDay
+}
 
 // Config is the parsed limelit.yaml.
 type Config struct {
