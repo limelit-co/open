@@ -65,7 +65,7 @@ test that enforces each rule.
 | `get_overview_kpis` | same | `days` (1..365, default 30) | Visibility %, citation share %, competitor and prompt counts, competitor ranking, top cited sources |
 | `get_kpi_history` | same | `days` (1..366, default 30) | Daily series behind the headline numbers. `segment` is Cloud-only |
 | `get_matrix` | same | `metric`: `visibility`, `sov`, `position` | Prompt-by-target grid over all chats, no window, same as Cloud. `sentiment` is Cloud-only |
-| `list_top_sources` | same | `limit` (default 50, cap 200), `offset` | One row per cited domain, all time, with source type |
+| `list_top_sources` | same | `days` (1..365, default 30), `limit` (default 50, cap 200) | One row per cited domain over the window, with source type. On Cloud, omitting `days` means all time |
 | `list_source_urls` | same | `value` (host, required), `days` (default 30), `limit` | One row per URL on that host with cited count. `segment` is Cloud-only |
 
 ## Runs
