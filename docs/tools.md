@@ -5,7 +5,7 @@ a bearer token (`limelit serve`). Tool names and argument shapes match
 Limelit Cloud wherever the tool exists there, so a conversation or a skill
 written against this server keeps working after `limelit upgrade`.
 
-Three rules hold for every tool:
+Four rules hold for every tool:
 
 - **Same name, same shape.** Where a Cloud tool exists, its name, required
   arguments and result shape are reproduced. Open-core additions are optional
@@ -15,6 +15,13 @@ Three rules hold for every tool:
   is a hosted feature. Silently ignoring a filter would return a wrong number.
 - **No stubs.** Tools that exist only in Cloud are not registered here. The
   `upgrade_to_cloud` description carries the list.
+- **A new argument on a shared tool goes to Cloud first.** An agent that
+  upgrades keeps sending it. Cloud refuses an argument it does not know on a
+  tool that spends or writes, and ignores it on a read, which returns an
+  unfiltered answer. So the argument ships on Cloud, then here.
+  `TestSharedToolsMatchCloud` compares every shared tool with Cloud's catalog
+  (`internal/mcpserver/testdata/cloud_tools.json`) and fails on an argument
+  Cloud lacks unless `openOnlyArguments` records why that is safe.
 
 Every result that carries a metric also carries `access` (`api` or `scraped`)
 per target, and `n` (the number of chats the metric rests on).
