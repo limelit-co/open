@@ -35,9 +35,6 @@ var openOnlyArguments = map[string]string{
 	"list_top_sources.segment":  "declared only so it can be refused with a pointer to Cloud; never accepted here",
 
 	"get_run_activity.evaluation_id": "read; on Cloud the call reports the org's current run activity instead of one run, which is still a true answer",
-	"list_chats.show":                "read; KNOWN GAP: Cloud ignores it, so show=missed lists every answer after an upgrade",
-	"list_chats.target":              "read; KNOWN GAP: Cloud ignores it, so the list spans every engine after an upgrade",
-	"list_top_sources.days":          "read; KNOWN GAP: Cloud ignores it, so the ranking is all-time after an upgrade",
 }
 
 type cloudCatalog struct {
