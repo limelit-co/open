@@ -1060,4 +1060,11 @@ tr.row-branded { opacity: 0.72; }
   color: var(--ink-2); font-size: 12.5px; font-weight: 500; white-space: nowrap; text-decoration: none;
 }
 .gh-star:hover { background: var(--bg-2); color: var(--ink); text-decoration: none; }
-@media (max-width: 600px) { .gh-star span { display: none; } }
+.gh-star-count {
+  margin-left: 2px; padding-left: 8px; border-left: 1px solid var(--rule);
+  font-weight: 600; font-variant-numeric: tabular-nums;
+}
+@media (max-width: 600px) {
+  .gh-star-label { display: none; }
+  .gh-star-count { margin-left: 0; padding-left: 0; border-left: 0; }
+}

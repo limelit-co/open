@@ -4,6 +4,9 @@
 package ui
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -81,12 +84,67 @@ func TestTheTopBarAsksForAStar(t *testing.T) {
 	_, _, h := newApp(t, providertest.Registry())
 	seedProperty(t, h)
 	body := get(t, h, "/prompts").Body.String()
-	if !strings.Contains(body, `class="gh-star" href="https://github.com/limelit-co/open"`) || !strings.Contains(body, "<span>Star</span>") {
+	if !strings.Contains(body, `class="gh-star" href="https://github.com/limelit-co/open"`) || !strings.Contains(body, `<span class="gh-star-label">Star</span>`) {
 		t.Error("no star link in the top bar")
 	}
 	star := strings.Index(body, `class="gh-star"`)
 	run := strings.Index(body, `action="/run"`)
 	if star < 0 || run < 0 || star > run {
 		t.Error("the star link is not right before Run now")
+	}
+}
+
+// fakeAllowance serves only the allowance, with the star thank-you fields.
+func fakeAllowance(t *testing.T, body map[string]any) {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer lmlt_test" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		json.NewEncoder(w).Encode(body)
+	}))
+	t.Cleanup(srv.Close)
+	t.Setenv("LIMELIT_CLOUD_API", srv.URL)
+	t.Setenv("LIMELIT_CLOUD_KEY", "lmlt_test")
+}
+
+func starOffer(claimed bool) map[string]any {
+	return map[string]any{
+		"enabled": true, "monthly_credits": 1000, "used_this_month": 1100, "daily_credits": 150, "used_today": 10,
+		"bonus_left": 400, "bonus_used_this_month": 100, "account": "Kindle to PDF",
+		"star": map[string]any{"enabled": true, "credits": 500, "claimed": claimed, "repo": "limelit-co/open",
+			"claim_url": "https://limelit.co/settings/open-key#star"},
+	}
+}
+
+// TestTheStarSaysWhatItBringsUntilClaimed. On the free credits the star link
+// offers the thank-you and goes to the page that checks it; once claimed it
+// is the plain repository link again. The meter's total counts the bonus
+// left and the bonus already spent this month.
+func TestTheStarSaysWhatItBringsUntilClaimed(t *testing.T) {
+	fakeAllowance(t, starOffer(false))
+	_, _, h := newApp(t, providertest.Registry())
+	seedProperty(t, h)
+	body := get(t, h, "/prompts").Body.String()
+	// html/template writes "+" as &#43;.
+	if !strings.Contains(body, `href="https://limelit.co/settings/open-key#star"`) || !strings.Contains(body, "Star · &#43;500 credits") {
+		t.Error("the star link does not offer the thank-you")
+	}
+	if !strings.Contains(body, "1,100 / 1,500") || !strings.Contains(body, "Includes 500 thank-you credits") {
+		t.Error("the meter does not count the bonus")
+	}
+	if strings.Contains(body, "Used up") {
+		t.Error("1,100 of 1,500 reads as used up: the check ignores the bonus")
+	}
+}
+
+func TestAClaimedStarIsThePlainLink(t *testing.T) {
+	fakeAllowance(t, starOffer(true))
+	_, _, h := newApp(t, providertest.Registry())
+	seedProperty(t, h)
+	body := get(t, h, "/prompts").Body.String()
+	if strings.Contains(body, "500 credits</span>") || !strings.Contains(body, `class="gh-star" href="https://github.com/limelit-co/open"`) {
+		t.Error("a claimed star still offers credits")
 	}
 }

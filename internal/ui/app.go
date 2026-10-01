@@ -82,6 +82,14 @@ type App struct {
 		at  time.Time
 		ok  bool
 	}
+	// stars caches the repository's GitHub star count for the star link.
+	stars struct {
+		sync.Mutex
+		n    int
+		ok   bool
+		at   time.Time
+		busy bool
+	}
 }
 
 // New builds the dashboard handler set. run may be nil, which leaves the Run
@@ -92,12 +100,18 @@ func New(db *store.DB, registry *provider.Registry, keys *secrets.Keyring, run *
 	if err != nil {
 		return nil, err
 	}
-	userAgent := "LimelitOpen/" + version + " (+https://github.com/limelit-co/open)"
-	return &App{db: db, registry: registry, keys: keys, runner: run, metrics: metrics.New(db), views: views, log: log, version: version, commit: commit, cfg: cfg, demo: DemoMode(),
-		siteLookup: func(ctx context.Context, domain string) (siteinfo.Info, error) {
-			return siteinfo.Lookup(ctx, domain, userAgent)
-		},
-	}, nil
+	a := &App{db: db, registry: registry, keys: keys, runner: run, metrics: metrics.New(db), views: views, log: log, version: version, commit: commit, cfg: cfg, demo: DemoMode()}
+	a.siteLookup = func(ctx context.Context, domain string) (siteinfo.Info, error) {
+		return siteinfo.Lookup(ctx, domain, a.userAgent())
+	}
+	// Read the star count now, so the first page already has it.
+	a.starCount()
+	return a, nil
+}
+
+// userAgent names this build to the sites and APIs it reads.
+func (a *App) userAgent() string {
+	return "LimelitOpen/" + a.version + " (+https://github.com/limelit-co/open)"
 }
 
 // Routes registers every dashboard route on mux.
@@ -221,6 +235,7 @@ func (a *App) base(r *http.Request, title, current string) (Base, store.Counts, 
 	if !a.demo {
 		b.Usage = a.usageView(ctx)
 	}
+	b.Star = a.starView(ctx)
 	if counts.LastChatAt != "" {
 		b.LastRun = counts.LastChatAt
 	}
