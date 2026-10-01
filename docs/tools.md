@@ -25,8 +25,8 @@ per target, and `n` (the number of chats the metric rests on).
 |---|---|---|---|
 | `get_active_property` | same | none | The front door: call it first. Returns name, website domain, aliases and the configured targets, plus a `setup` block (open-core): `data_state` (`not_set_up`, `setup_incomplete`, `never_run`, `stale`, `settling`, `ready`), `has_answers`, `next_step` with the dashboard link, `suggested_days` when the default 30 days are empty, `once_set_up_you_can_ask` and `try_asking`. A fresh instance gets a normal answer, not an error |
 
-Setup (brand, competitors, prompts, provider keys) and runs happen in the
-dashboard; there are no write tools here yet. `next_step` says where.
+Setup (brand, competitors, prompts, provider keys) happens in the dashboard;
+`next_step` says where. Runs can start from either: see [Runs](#runs).
 
 ## Competitors
 
@@ -60,6 +60,45 @@ test that enforces each rule.
 | `get_matrix` | same | `metric`: `visibility`, `sov`, `position` | Prompt-by-target grid over all chats, no window, same as Cloud. `sentiment` is Cloud-only |
 | `list_top_sources` | same | `limit` (default 50, cap 200), `offset` | One row per cited domain, all time, with source type |
 | `list_source_urls` | same | `value` (host, required), `days` (default 30), `limit` | One row per URL on that host with cited count. `segment` is Cloud-only |
+
+## Runs
+
+The only tools here that spend anything: each answer is a call to the user's
+own provider. They exist when the server has a runner (`limelit mcp` and the
+HTTP endpoint of `limelit serve` both do) and are absent otherwise.
+
+| Tool | Cloud | Arguments | Notes |
+|---|---|---|---|
+| `reevaluate_prompt` | same | `prompt_id` (required), `target` (open-core), `dry_run` (open-core, default `true`) | One prompt against every enabled target, or the one named |
+| `reevaluate_all_prompts` | same | `target` (open-core), `dry_run` (open-core, default `true`) | Every active prompt against every enabled target: the dashboard's Run now |
+| `get_run_activity` | same | `evaluation_id` (open-core, default the latest) | `status` (`running`, `done`, `failed`, `cancelled`), `planned`, `completed`, `failed`, `no_answer_surface`, `started_at`, `finished_at` (UTC), and `error` when a run stopped before fetching anything (a provider with no key) |
+
+The order is fixed by the descriptions and the server instructions: call with
+`dry_run=true` (the default), show the user the plan, call again with
+`dry_run=false` only after they confirm, then poll `get_run_activity` until
+`status` is `done`.
+
+- **The plan** is counts only, never currency (as `get_usage`): `prompts`,
+  `targets`, `planned` answers, `runs_today` against `runs_per_day` (the limit
+  in Settings), `within_ceiling`, and `running_evaluation_id` when a run is
+  already in progress.
+- **A start** returns at once with `evaluation_id`, `status: running` and
+  `planned`, plus Cloud's field (`runs_enqueued` on `reevaluate_prompt`,
+  `runs_planned` on `reevaluate_all_prompts`). The run continues in the
+  background, the same pass Run now starts.
+- **Refusals**, before anything is spent: an unknown or inactive prompt, a
+  target that is not configured or is disabled, a run already in progress
+  (the error names its id), or a run that would pass the daily limit.
+- **One run at a time, across processes.** `limelit serve` and `limelit mcp`
+  are separate processes on one database. A running pass keeps a heartbeat
+  on its evaluation row, and a start is refused while any row's heartbeat is
+  fresh. A row whose heartbeat stopped (its process is gone) reads as `failed`
+  in `get_run_activity` and no longer blocks.
+- **Over stdio** the server is a child of the desktop app. Quitting the app
+  stops a run it started; `get_run_activity` then reports it failed, and the
+  answers it already recorded are kept.
+- Unlike Cloud, `get_run_activity` reports one evaluation (a pass), not
+  per-engine queue counts: an open-core pass is the unit that runs.
 
 ## Open-core only
 

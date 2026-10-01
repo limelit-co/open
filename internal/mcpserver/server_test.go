@@ -287,9 +287,11 @@ func TestUsageCarriesNoCurrency(t *testing.T) {
 func TestInstructionsWarnAboutTheDenominators(t *testing.T) {
 	// The handshake is the only chance to tell a model what these numbers
 	// exclude, before it reports one.
-	for _, want := range []string{"branded", "no AI Overview", "api", "scraped", "low_n", "Cloud"} {
-		if !strings.Contains(instructions, want) {
-			t.Errorf("the server instructions do not mention %q", want)
+	for _, runs := range []bool{false, true} {
+		for _, want := range []string{"branded", "no AI Overview", "api", "scraped", "low_n", "Cloud"} {
+			if !strings.Contains(instructionsFor(runs), want) {
+				t.Errorf("runs=%v: the server instructions do not mention %q", runs, want)
+			}
 		}
 	}
 }

@@ -574,15 +574,8 @@ func (a *App) saveLimits(w http.ResponseWriter, r *http.Request) {
 func (a *App) RunsPerDay(ctx context.Context) int { return a.runsPerDay(ctx) }
 
 func (a *App) runsPerDay(ctx context.Context) int {
-	if v, err := a.db.Setting(ctx, settingRunsPerDay); err == nil && v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			return n
-		}
-	}
-	if a.cfg != nil && a.cfg.Limits.RunsPerDay > 0 {
-		return a.cfg.Limits.RunsPerDay
-	}
-	return config.DefaultRunsPerDay
+	stored, _ := a.db.Setting(ctx, settingRunsPerDay)
+	return config.ResolveRunsPerDay(stored, a.cfg)
 }
 
 // saveSchedule stores the cadence. The scheduler re-reads it, so the change

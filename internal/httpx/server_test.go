@@ -14,7 +14,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/limelit-co/open/internal/provider"
+	"github.com/limelit-co/open/internal/runner"
 	"github.com/limelit-co/open/internal/store"
+	"github.com/limelit-co/open/internal/ui"
 )
 
 func newTestServer(t *testing.T) *Server {
@@ -24,7 +29,7 @@ func newTestServer(t *testing.T) *Server {
 		t.Fatalf("store.Open: %v", err)
 	}
 	t.Cleanup(func() { db.Close() })
-	return New(":0", db, slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
+	return New(":0", db, slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil, nil)
 }
 
 func TestHealthzReportsDatabaseState(t *testing.T) {
@@ -86,7 +91,7 @@ func TestHealthzIsRoutedOnGetOnly(t *testing.T) {
 func TestServeShutsDownOnContextCancel(t *testing.T) {
 	// Graceful shutdown is what keeps a scheduled evaluation from being killed
 	// mid-write when the container is told to stop.
-	s := New("127.0.0.1:0", mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
+	s := New("127.0.0.1:0", mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() { done <- s.Serve(ctx, nil) }()
@@ -99,7 +104,7 @@ func TestServeShutsDownOnContextCancel(t *testing.T) {
 // TestServeAnnouncesTheAddressItBound. The startup message is printed from
 // ready, so ready has to carry an address that already answers.
 func TestServeAnnouncesTheAddressItBound(t *testing.T) {
-	s := New("127.0.0.1:0", mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
+	s := New("127.0.0.1:0", mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	bound := make(chan net.Addr, 1)
@@ -130,7 +135,7 @@ func TestServeAnnouncesNothingWhenThePortIsTaken(t *testing.T) {
 	}
 	defer taken.Close()
 
-	s := New(taken.Addr().String(), mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil)
+	s := New(taken.Addr().String(), mustDB(t), slog.New(slog.NewTextHandler(io.Discard, nil)), "test", nil, nil)
 	called := false
 	if err := s.Serve(context.Background(), func(net.Addr) { called = true }); err == nil {
 		t.Error("Serve on a taken port returned no error")
@@ -148,4 +153,46 @@ func mustDB(t *testing.T) *store.DB {
 	}
 	t.Cleanup(func() { db.Close() })
 	return db
+}
+
+// TestADemoGetsNoRunTools: a read-only demo refuses Run now, so its MCP
+// endpoint must not offer a way around that with the operator's keys.
+func TestADemoGetsNoRunTools(t *testing.T) {
+	db, err := store.Open(context.Background(), filepath.Join(t.TempDir(), "limelit.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { db.Close() })
+	run := runner.New(db, provider.NewRegistry(), provider.StaticCredentials(nil), slog.New(slog.NewTextHandler(io.Discard, nil)))
+	ceiling := func(context.Context) int { return 10 }
+
+	for _, demo := range []bool{false, true} {
+		if demo {
+			t.Setenv(ui.DemoEnv, "1")
+		}
+		srv, err := New_(db, "", run, ceiling)
+		if err != nil {
+			t.Fatal(err)
+		}
+		clientT, serverT := mcp.NewInMemoryTransports()
+		go srv.Run(context.Background(), serverT)
+		s, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "1"}, nil).Connect(context.Background(), clientT, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res, err := s.ListTools(context.Background(), nil)
+		s.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		has := false
+		for _, tool := range res.Tools {
+			if tool.Name == "reevaluate_all_prompts" {
+				has = true
+			}
+		}
+		if has == demo {
+			t.Errorf("demo=%v: run tools registered = %v", demo, has)
+		}
+	}
 }

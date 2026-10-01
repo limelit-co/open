@@ -387,3 +387,76 @@ func waitFor(t *testing.T, cond func() bool) {
 	}
 	t.Fatal("condition never became true")
 }
+
+func TestStartReturnsOnceThePassIsClaimed(t *testing.T) {
+	// The dashboard, the scheduler and the MCP tools hand out the id at once
+	// and let the pass run on.
+	r, db, _ := seed(t, 2, provider.StubConfig{})
+	gate := make(chan struct{})
+	r.NewAnalyzer = func(context.Context) (Analyzer, error) {
+		<-gate
+		return nil, nil
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	st, err := r.Start(ctx, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cancel() // the caller going away must not abandon the pass
+	if st.EvaluationID == 0 || st.Planned != 2 {
+		t.Fatalf("started = %+v", st)
+	}
+	if e, _ := db.Evaluation(context.Background(), st.EvaluationID); e.Status != store.EvaluationRunning || e.Stale {
+		t.Errorf("while held: %+v", e)
+	}
+	close(gate)
+	res, err := st.Wait()
+	if err != nil || res.Completed != 2 {
+		t.Fatalf("wait = %+v, %v", res, err)
+	}
+	if e, _ := db.Evaluation(context.Background(), st.EvaluationID); e.Status != store.EvaluationDone {
+		t.Errorf("after the pass: %q, want done even though the caller's context ended", e.Status)
+	}
+}
+
+func TestStartRefusesWhileAnotherProcessRuns(t *testing.T) {
+	// The runner's lock is per process; the claim is what another process
+	// on the same file sees.
+	r, db, _ := seed(t, 1, provider.StubConfig{})
+	other, err := db.ClaimEvaluation(context.Background(), 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = r.Start(context.Background(), Options{})
+	var running *AlreadyRunningError
+	if !errors.As(err, &running) || running.EvaluationID != other || !errors.Is(err, ErrAlreadyRunning) {
+		t.Fatalf("start = %v, want refused naming evaluation %d", err, other)
+	}
+	if r.Running() {
+		t.Error("a refused start left the lock held")
+	}
+}
+
+func TestPlanCountsWithoutClaiming(t *testing.T) {
+	r, db, _ := seed(t, 3, provider.StubConfig{})
+	p, err := r.Plan(context.Background(), Options{RunsPerDay: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Prompts != 3 || p.Targets != 1 || p.Planned != 3 || p.RunsPerDay != 2 || p.WithinCeiling {
+		t.Errorf("plan = %+v", p)
+	}
+	if _, err := db.LatestEvaluation(context.Background()); !errors.Is(err, store.ErrNotFound) {
+		t.Errorf("a plan wrote an evaluation: %v", err)
+	}
+}
+
+func TestUnknownPromptOrTargetIsNamed(t *testing.T) {
+	r, _, _ := seed(t, 1, provider.StubConfig{})
+	if _, err := r.Run(context.Background(), Options{PromptID: 999}); !errors.Is(err, ErrUnknownPrompt) {
+		t.Errorf("unknown prompt: %v", err)
+	}
+	if _, err := r.Run(context.Background(), Options{TargetSpec: "gemini:stub"}); !errors.Is(err, ErrUnknownTarget) {
+		t.Errorf("unknown target: %v", err)
+	}
+}
