@@ -1,0 +1,38 @@
+{
+  "name": "limelit",
+  "owner": {
+    "name": "Limelit",
+    "email": "hello@limelit.co",
+    "url": "https://limelit.co"
+  },
+  "metadata": {
+    "description": "Limelit plugins for AI search visibility: free site audits for AI crawlers and llms.txt, plus Limelit Cloud and Limelit Open connected to Claude.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "limelit-audit",
+      "source": "./plugins/limelit-audit",
+      "description": "Free AI search audits with no account: which AI crawlers your robots.txt lets in, and whether your llms.txt is present and well formed.",
+      "version": "0.1.0",
+      "category": "marketing",
+      "keywords": ["geo", "aeo", "ai-search", "robots-txt", "llms-txt", "seo"]
+    },
+    {
+      "name": "limelit",
+      "source": "./plugins/limelit",
+      "description": "Connect Limelit Cloud: see how ChatGPT, Claude, Perplexity, Gemini and Google AI answers rank and cite your brand against competitors, and what to fix next.",
+      "version": "0.1.0",
+      "category": "marketing",
+      "keywords": ["geo", "aeo", "ai-visibility", "share-of-voice", "mcp"]
+    },
+    {
+      "name": "limelit-open",
+      "source": "./plugins/limelit-open",
+      "description": "Connect a self-hosted Limelit Open install: your own AI visibility tracking, read from Claude over the local limelit binary.",
+      "version": "0.1.0",
+      "category": "marketing",
+      "keywords": ["geo", "aeo", "ai-visibility", "self-hosted", "open-source", "mcp"]
+    }
+  ]
+}

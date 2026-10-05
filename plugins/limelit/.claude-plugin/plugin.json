@@ -1,0 +1,23 @@
+{
+  "name": "limelit",
+  "displayName": "Limelit",
+  "version": "0.1.0",
+  "description": "Connect Limelit Cloud: see how ChatGPT, Claude, Perplexity, Gemini and Google AI answers rank and cite your brand against competitors, and what to fix next.",
+  "author": {
+    "name": "Limelit",
+    "email": "hello@limelit.co",
+    "url": "https://limelit.co"
+  },
+  "homepage": "https://limelit.co/mcp-docs",
+  "repository": "https://github.com/limelit-co/open",
+  "license": "Apache-2.0",
+  "keywords": ["geo", "aeo", "ai-visibility", "share-of-voice", "mcp"],
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "Limelit API key",
+      "description": "Your personal Limelit API key. Create one at https://limelit.co/settings.",
+      "sensitive": true
+    }
+  }
+}

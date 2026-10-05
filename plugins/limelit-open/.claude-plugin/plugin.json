@@ -1,0 +1,29 @@
+{
+  "name": "limelit-open",
+  "displayName": "Limelit Open",
+  "version": "0.1.0",
+  "description": "Connect a self-hosted Limelit Open install: your own AI visibility tracking, read from Claude over the local limelit binary.",
+  "author": {
+    "name": "Limelit",
+    "email": "hello@limelit.co",
+    "url": "https://limelit.co"
+  },
+  "homepage": "https://github.com/limelit-co/open",
+  "repository": "https://github.com/limelit-co/open",
+  "license": "Apache-2.0",
+  "keywords": ["geo", "aeo", "ai-visibility", "self-hosted", "open-source", "mcp"],
+  "userConfig": {
+    "limelit_path": {
+      "type": "string",
+      "title": "Path to the limelit binary",
+      "description": "Absolute path to your limelit binary, for example /Users/you/limelit/limelit. `limelit serve` prints it at startup, under Claude Desktop.",
+      "sensitive": false
+    },
+    "data_dir": {
+      "type": "string",
+      "title": "Limelit data directory",
+      "description": "Absolute path to your Limelit Open data directory (the folder holding limelit.db), for example /Users/you/limelit/data.",
+      "sensitive": false
+    }
+  }
+}

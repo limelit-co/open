@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "limelit": {
+      "type": "http",
+      "url": "https://api.limelit.co/mcp",
+      "headers": {
+        "Authorization": "Bearer ${user_config.api_key}"
+      }
+    }
+  }
+}

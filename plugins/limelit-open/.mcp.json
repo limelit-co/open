@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "limelit-open": {
+      "command": "${user_config.limelit_path}",
+      "args": ["mcp"],
+      "env": {
+        "LIMELIT_DATA_DIR": "${user_config.data_dir}"
+      }
+    }
+  }
+}
