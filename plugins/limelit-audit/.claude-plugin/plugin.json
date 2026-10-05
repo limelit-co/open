@@ -1,0 +1,15 @@
+{
+  "name": "limelit-audit",
+  "displayName": "Limelit AI Search Audit",
+  "version": "0.1.0",
+  "description": "Free AI search audits with no account: which AI crawlers your robots.txt lets in, and whether your llms.txt is present and well formed.",
+  "author": {
+    "name": "Limelit",
+    "email": "hello@limelit.co",
+    "url": "https://limelit.co"
+  },
+  "homepage": "https://limelit.co",
+  "repository": "https://github.com/limelit-co/open",
+  "license": "Apache-2.0",
+  "keywords": ["geo", "aeo", "ai-search", "robots-txt", "llms-txt", "seo"]
+}

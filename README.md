@@ -52,6 +52,7 @@ metric definitions, so moving to the hosted product is one command.
 - [Features](#features)
 - [Quick start](#quick-start)
 - [Connect Claude (MCP)](#connect-claude-mcp)
+- [Claude plugins and skills](#claude-plugins-and-skills)
 - [Engines and providers](#engines-and-providers)
 - [Configuration](#configuration)
 - [How the numbers are computed](#how-the-numbers-are-computed)
@@ -350,6 +351,27 @@ than an error.
 Tool names mirror Limelit Cloud, so a conversation or a skill written against
 this server keeps working after you upgrade. Full catalog:
 [docs/tools.md](docs/tools.md).
+
+## Claude plugins and skills
+
+This repository is also a Claude plugin marketplace. Add it once, then install
+the plugins you want:
+
+```
+/plugin marketplace add limelit-co/open
+/plugin install limelit-open@limelit
+```
+
+In the Claude desktop app or Cowork: **Plugins**, then **+ Add**, then **Add
+marketplace**, and enter `limelit-co/open`.
+
+| Plugin | What it does |
+|---|---|
+| [`limelit-open`](plugins/limelit-open) | Connects this install over stdio, with the skill `limelit-open-visibility-report`. Claude asks for the binary path and the data directory. |
+| [`limelit-audit`](plugins/limelit-audit) | Two skills that need no install and no account: `ai-crawler-check` (which AI crawlers a robots.txt lets in, and what each block costs) and `llms-txt-check` (audits a site's llms.txt and drafts a better one). |
+| [`limelit`](plugins/limelit) | Connects Limelit Cloud instead, with a Cloud API key. |
+
+Details and privacy notes: [plugins/README.md](plugins/README.md).
 
 ## Engines and providers
 
