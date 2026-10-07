@@ -15,6 +15,7 @@
   <a href="go.mod"><img alt="Go 1.25+" src="https://img.shields.io/badge/go-1.25%2B-00ADD8.svg?logo=go&logoColor=white"></a>
   <a href="#status"><img alt="Status: pre-release" src="https://img.shields.io/badge/status-pre--release-orange.svg"></a>
   <a href="https://limelit.co"><img alt="Limelit Cloud" src="https://img.shields.io/badge/hosted-limelit.co-111.svg"></a>
+  <a href="https://discord.gg/g2Ef3WSTTC"><img alt="Discord" src="https://img.shields.io/badge/chat-Discord-5865F2.svg?logo=discord&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -710,6 +711,8 @@ adding a provider. The three worth knowing before a pull request:
   are stating that you wrote the patch, or have the right to submit it under
   this license. There is no CLA and no copyright assignment; you keep the
   copyright in what you write.
+
+Questions or ideas: join the [Limelit Discord](https://discord.gg/g2Ef3WSTTC).
 
 ## License
 
