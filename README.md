@@ -7,7 +7,7 @@
 <p align="center">
   Track how ChatGPT, Claude, Perplexity, Gemini, Google AI Overview and Google AI Mode
   <br />
-  mention and cite your brand against your competitors.
+  mention and cite your brand against your competitors, with an MCP server for AI visibility tracking built in.
 </p>
 
 <p align="center">
