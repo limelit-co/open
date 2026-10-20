@@ -99,7 +99,7 @@ func TestCloudSyncToggle(t *testing.T) {
 		}
 	}
 	// The owner's copy rules, on everything the setting renders.
-	if bad := regexp.MustCompile(`(?i)\b(api|scraped)\b|—|&mdash;|\$|€|£|pric`); bad.MatchString(block) {
+	if bad := regexp.MustCompile(`(?i)\b(api|scraped)\b|\x{2014}|&(mdash|#8212);|\$|\x{20ac}|\x{a3}|pric`); bad.MatchString(block) {
 		t.Errorf("the sync setting breaks the copy rules: %q", bad.FindString(block))
 	}
 	if strings.Count(page, `name="cred_LIMELIT_CLOUD_KEY"`) != 1 {
