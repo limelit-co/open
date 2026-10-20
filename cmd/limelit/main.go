@@ -166,7 +166,7 @@ func cmdServe(ctx context.Context, args []string) error {
 		log.Warn("closed evaluations left running by an earlier process", "count", n)
 	}
 
-	run := newRunner(ctx, db, registry, keys, log)
+	run := newRunner(ctx, db, registry, keys, log, syncInBackground)
 	// Answers stored under older matching rules, or before a brand was
 	// added, are read again once, here, before anyone looks at a number.
 	if _, _, err := run.EnsureAnalyzed(ctx); err != nil {
@@ -385,7 +385,7 @@ func cmdMCP(ctx context.Context, args []string) error {
 	deps := mcpserver.Deps{DB: db}
 	// A read-only demo starts no runs from any surface.
 	if !ui.DemoMode() {
-		deps.Runner, deps.RunsPerDay = newRunner(ctx, db, provider.Default(), keys, log), runsPerDay(db, cfg)
+		deps.Runner, deps.RunsPerDay = newRunner(ctx, db, provider.Default(), keys, log, syncInBackground), runsPerDay(db, cfg)
 	}
 	srv, err := mcpserver.New(deps)
 	if err != nil {
@@ -395,11 +395,13 @@ func cmdMCP(ctx context.Context, args []string) error {
 }
 
 // newRunner builds the runner every command uses: the compiled-in providers,
-// keys from the environment then this machine's store, and the analyzer read
-// fresh at the start of each pass.
-func newRunner(ctx context.Context, db *store.DB, registry *provider.Registry, keys *secrets.Keyring, log *slog.Logger) *runner.Runner {
+// keys from the environment then this machine's store, the analyzer read
+// fresh at the start of each pass, and the copy to Limelit Cloud after each
+// pass when sync is on.
+func newRunner(ctx context.Context, db *store.DB, registry *provider.Registry, keys *secrets.Keyring, log *slog.Logger, sync syncAfter) *runner.Runner {
 	run := runner.New(db, registry, credentials.Source(ctx, db, keys, log), log)
 	run.NewAnalyzer = func(c context.Context) (runner.Analyzer, error) { return runner.NewStoreAnalyzer(c, db) }
+	run.OnFinished = cloudSyncHook(db, keys, log, sync)
 	return run
 }
 
@@ -441,7 +443,9 @@ func cmdRun(ctx context.Context, args []string) error {
 		return err
 	}
 
-	run := newRunner(ctx, db, provider.Default(), keys, log)
+	// The copy to Limelit Cloud, when sync is on, happens before Run returns:
+	// this process exits right after.
+	run := newRunner(ctx, db, provider.Default(), keys, log, syncBeforeExit)
 	res, err := run.Run(ctx, runner.Options{TargetSpec: *targetSpec, RunsPerDay: runsPerDay(db, cfg)(ctx)})
 	if err != nil {
 		return err
