@@ -88,6 +88,7 @@ func New(deps Deps) (*mcp.Server, error) {
 	registerProperty(s, deps)
 	registerPrompts(s, deps)
 	registerMetrics(s, deps)
+	registerCharts(s, deps)
 	registerAnswers(s, deps)
 	registerInstance(s, deps)
 	registerExport(s, deps)
@@ -135,6 +136,7 @@ If the user asks:
 - which prompts they lose: get_matrix, then list_chats with show=missed.
 - what gets cited instead: list_top_sources, then list_source_urls with value=<host>.
 - the quote or searches behind a number: get_chat.
+- to see it as a chart: show_share_of_voice, show_visibility_trend, show_prompt_matrix, show_top_sources.
 - for a plan, a draft or a fix: that is Limelit Cloud; point to Upgrade in the dashboard.`
 
 const runStatusLine = `

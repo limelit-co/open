@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limelit charts</title>
+<style>
+/* The MCP App page the show_ tools draw in. The tokens and the chart rules are
+ * the dashboard's, copied from internal/ui/static/app.css so a chart reads the
+ * same in both places; TestChartsPageTokensMatchTheDashboard fails when a value
+ * here drifts from the stylesheet. Light or dark is an attribute on the root,
+ * set from the host's theme until the viewer flips it, so a switch is instant. */
+:root {
+  color-scheme: light;
+  --brand: #5a5af0;
+  --brand-strong: #3c3cc9;
+  --brand-soft: #eeeefb;
+  --ink: #14141c;
+  --ink-2: #43474f;
+  --ink-3: #6b7280;
+  --ink-4: #9ca3af;
+  --on-ink: #ffffff;
+  --bg: #ffffff;
+  --bg-2: #f7f7f9;
+  --surface: #ffffff;
+  --rule: #e6e8ec;
+  --rule-2: #d3d6dd;
+  --warn-bg: #fef3e2;
+  --warn-fg: #b45309;
+  --cell-empty: transparent;
+  --cell-0: #f1f2f6;
+  --cell-1: #dfe0fa;
+  --cell-2: #c3c5f6;
+  --cell-3: #9c9ff0;
+  --cell-4: #787ceb;
+  --cell-5: #4a4ad9;
+  --cell-0-ink: var(--ink);
+  --cell-1-ink: var(--ink);
+  --cell-2-ink: var(--ink);
+  --cell-3-ink: var(--ink);
+  --cell-4-ink: var(--ink);
+  --cell-5-ink: #ffffff;
+  --cell-ring: #d3d6dd;
+  --series-1: #c98a2e;
+  --series-2: #2e9a8c;
+  --series-3: #c0466f;
+  --series-4: #7c5cc4;
+  --series-5: #4a9a4e;
+  --series-6: #2f86c2;
+  --series-7: #8f7468;
+  --series-8: #d9633b;
+  --chart-own: #5a5af0;
+  --chart-grid: #eef0f4;
+  --chart-base: #d3d6dd;
+  --chart-field: #c2c6cf;
+  --chart-cursor: #14141c;
+  --plot-gap: #f6f6f9;
+  --area-top: rgb(90 90 240 / 24%);
+  --area-bottom: rgb(90 90 240 / 0%);
+  --own-glow: transparent;
+  --tip-bg: #ffffff;
+  --tip-border: #e6e8ec;
+  --tip-shadow: 0 6px 24px rgb(20 20 28 / 10%), 0 1px 3px rgb(20 20 28 / 6%);
+  --src-own: var(--brand);
+  --src-competitor: #c2185b;
+  --src-social: #e0851f;
+  --src-informational: #2a9d8f;
+  --src-other: #9ca3af;
+  --radius-sm: 6px;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --brand-strong: #a3a3ff;
+  --brand-soft: #232340;
+  --ink: #f2f2f5;
+  --ink-2: #c3c6cd;
+  --ink-3: #9096a1;
+  --ink-4: #7d8492;
+  --on-ink: #0b0b0f;
+  --bg: #0e0e12;
+  --bg-2: #1f1f27;
+  --surface: #17171d;
+  --rule: #26262e;
+  --rule-2: #35353f;
+  --warn-bg: #3a2a0c;
+  --warn-fg: #fbbf24;
+  --cell-empty: transparent;
+  --cell-0: #1c1d26;
+  --cell-1: #23244a;
+  --cell-2: #2f3170;
+  --cell-3: #3f42a0;
+  --cell-4: #5457cc;
+  --cell-5: #7d80ef;
+  --cell-0-ink: var(--ink);
+  --cell-1-ink: var(--ink);
+  --cell-2-ink: var(--ink);
+  --cell-3-ink: var(--ink);
+  --cell-4-ink: var(--ink);
+  --cell-5-ink: var(--on-ink);
+  --cell-ring: #3f404d;
+  --series-1: #e0a054;
+  --series-2: #56bfb0;
+  --series-3: #e07298;
+  --series-4: #ab98e8;
+  --series-5: #7ec081;
+  --series-6: #62b4e8;
+  --series-7: #bfa89e;
+  --series-8: #ef8a66;
+  --chart-own: #9d9dff;
+  --chart-grid: #1f1f28;
+  --chart-base: #35353f;
+  --chart-field: #4a4e5a;
+  --chart-cursor: #f2f2f5;
+  --plot-gap: #131319;
+  --area-top: rgb(157 157 255 / 32%);
+  --area-bottom: rgb(157 157 255 / 0%);
+  --own-glow: rgb(157 157 255 / 38%);
+  --tip-bg: #1f1f27;
+  --tip-border: #35353f;
+  --tip-shadow: 0 6px 24px rgb(0 0 0 / 50%), 0 1px 3px rgb(0 0 0 / 40%);
+  --src-own: var(--brand-strong);
+  --src-competitor: #f06292;
+  --src-social: #f0a04b;
+  --src-informational: #4fc3b0;
+  --src-other: #6b7280;
+}
+
+/* The page. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  padding: 16px 18px 14px; font-family: var(--sans); font-size: 14px; line-height: 1.5;
+  color: var(--ink-2); background: var(--surface); -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 16px; }
+.eyebrow { margin: 0 0 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+h1 { margin: 0; font-size: 17px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+.subtle { margin: 0; font-size: 12px; color: var(--ink-3); }
+.tools { display: flex; align-items: center; gap: 6px; }
+.seg { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--rule); border-radius: 8px; }
+.seg[hidden], .menu-wrap[hidden] { display: none; }
+.seg button { border: 0; border-radius: var(--radius-sm); padding: 4px 10px; background: transparent; color: var(--ink-3); font-size: 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--brand-soft); color: var(--brand-strong); font-weight: 600; }
+.seg button:disabled { opacity: 0.55; cursor: progress; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink-2); font-size: 12px; cursor: pointer; }
+.btn:hover { border-color: var(--rule-2); color: var(--ink); }
+.btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.menu-wrap { position: relative; }
+.menu { position: absolute; right: 0; top: 34px; z-index: 10; min-width: 190px; padding: 4px; border: 1px solid var(--tip-border); border-radius: 10px; background: var(--tip-bg); box-shadow: var(--tip-shadow); }
+.menu[hidden] { display: none; }
+.menu button { display: block; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; font-size: 12.5px; color: var(--ink); cursor: pointer; }
+.menu button:hover, .menu button:focus-visible { background: var(--bg-2); outline: none; }
+.menu small { display: block; color: var(--ink-3); font-size: 11px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.chips:empty { display: none; }
+.chip { padding: 2px 9px; border-radius: 999px; background: var(--bg-2); color: var(--ink-2); font-size: 12px; font-weight: 500; }
+.chip-warn { background: var(--warn-bg); color: var(--warn-fg); }
+#caption { margin: 8px 0 0; font-size: 13.5px; color: var(--ink); }
+#caption:empty { display: none; }
+#status { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-3); }
+#status:empty { display: none; }
+#status.alert { color: var(--warn-fg); }
+#chart { margin-top: 14px; }
+#chart:empty { display: none; }
+.empty { padding: 26px 16px; border: 1px dashed var(--rule-2); border-radius: 10px; text-align: center; }
+.empty strong { display: block; color: var(--ink); font-size: 15px; font-weight: 600; }
+.empty span { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-3); }
+#note { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rule); }
+#note:empty { display: none; }
+#tip { position: fixed; z-index: 20; max-width: 280px; padding: 6px 9px; border: 1px solid var(--tip-border); border-radius: var(--radius-sm); background: var(--tip-bg); box-shadow: var(--tip-shadow); color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; pointer-events: none; }
+#tip[hidden] { display: none; }
+#toast { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: var(--ink); color: var(--surface); font-size: 12px; }
+#toast[hidden] { display: none; }
+
+/* Share of voice: the ring beside the bars, stacked when the frame is narrow. */
+.sov { display: flex; align-items: center; gap: 22px; }
+.sov .chart-donut { width: 168px; height: 168px; flex: none; }
+.sov .chart-bars { flex: 1; min-width: 0; }
+@media (max-width: 520px) { .sov { flex-direction: column; align-items: stretch; } .sov .chart-donut { align-self: center; } }
+
+/* Charts, from the dashboard. */
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-variant-numeric: tabular-nums; font-family: var(--sans); }
+.chart .grid { stroke: var(--chart-grid); stroke-width: 1; shape-rendering: crispEdges; }
+.chart .grid-base { stroke: var(--chart-base); }
+.chart .axis { fill: var(--ink-4); font-size: 10px; }
+.s-own { --c: var(--chart-own); }
+.s-1 { --c: var(--series-1); }
+.s-2 { --c: var(--series-2); }
+.s-3 { --c: var(--series-3); }
+.s-4 { --c: var(--series-4); }
+.s-5 { --c: var(--series-5); }
+.s-6 { --c: var(--series-6); }
+.s-7 { --c: var(--series-7); }
+.s-8 { --c: var(--series-8); }
+.s-rest, .s-field { --c: var(--chart-field); }
+.chart-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.chart-defs .stop-a { stop-color: var(--area-top); }
+.chart-defs .stop-b { stop-color: var(--area-bottom); }
+
+.chart-race .gap-band { fill: var(--plot-gap); }
+.chart-race .tick { stroke: var(--chart-base); stroke-width: 1; }
+.chart-race .axis-y, .chart-race .axis-x, .chart-race .axis-strip { font-size: 10.5px; fill: var(--ink-4); }
+.chart-race .axis-strip { font-size: 9.5px; }
+.chart-race .n-bar { fill: var(--chart-field); opacity: 0.55; }
+.chart-race .n-bar.n-low { fill: var(--warn-fg); opacity: 0.55; }
+.chart-race .series.line { fill: none; stroke: var(--c); stroke-width: 1.25; opacity: 0.45; stroke-linejoin: round; stroke-linecap: round; }
+.chart-race .rival-lead .series.line { stroke-width: 1.5; opacity: 0.7; }
+.chart-race .series-own.line { stroke-width: 2.25; opacity: 1; filter: drop-shadow(0 0 6px var(--own-glow)); }
+.chart-race .series.line.bridge { stroke-dasharray: 3 5; opacity: 0.4; filter: none; }
+.chart-race .series-own.line.bridge { opacity: 0.7; }
+.chart-race .area-own { fill: url(#ll-area-own); stroke: none; }
+/* No hover script draws the rivals' dots here, so they always show: on a
+   sparse series a dot is the only mark a day leaves. */
+.chart-race .rivals .dot { fill: var(--c); stroke: var(--surface); stroke-width: 1.5; opacity: 0.85; }
+.chart-race .own .dot { fill: var(--c); stroke: var(--surface); stroke-width: 2; }
+.chart-race .own .dot.dot-thin { fill: var(--surface); stroke: var(--c); stroke-width: 1.5; }
+.chart-race .rivals .dot.dot-thin { fill: var(--surface); stroke: var(--c); }
+.chart-race .halo { fill: var(--chart-own); opacity: 0.18; }
+.chart-race .lead { stroke: var(--c); stroke-width: 1; opacity: 0.5; }
+.chart-race .end { font-size: 11.5px; fill: var(--c); font-weight: 600; }
+.chart-race .end .end-name { fill: var(--ink-2); font-weight: 500; }
+.chart-race .end-own { font-weight: 700; }
+.chart-race .end-own .end-name { fill: var(--ink); font-weight: 650; }
+.chart-race .cursor { display: none; }
+
+.donut-track { stroke: var(--bg-2); }
+.chart-donut .arc { stroke: var(--c); stroke-linecap: butt; transition: stroke-width 140ms ease, opacity 140ms ease; }
+.chart-donut .arc.series-own { stroke-width: 20; }
+.chart-donut:hover .arc { opacity: 0.5; }
+.chart-donut .arc:hover { opacity: 1; stroke-width: 22; }
+.donut-value { font-size: 32px; font-weight: 650; fill: var(--ink); letter-spacing: -0.03em; }
+.donut-label { font-size: 10.5px; fill: var(--ink-3); letter-spacing: 0.08em; }
+.donut-denom { font-size: 11px; fill: var(--ink-4); }
+
+/* The bar list (internal/chart Bars). */
+.chart-bars .bar-label { font-size: 13px; fill: var(--ink); }
+.chart-bars .own .bar-label { font-weight: 650; }
+.chart-bars .bar-you { fill: var(--chart-own); font-size: 11.5px; font-weight: 600; }
+.chart-bars .bar-tag { fill: var(--ink-3); font-size: 11.5px; font-weight: 400; }
+.chart-bars .bar-value { font-size: 13px; font-weight: 650; fill: var(--ink); }
+.chart-bars .bar-sub { fill: var(--ink-3); font-size: 11.5px; font-weight: 400; }
+.chart-bars .bar-track { fill: var(--bg-2); }
+.chart-bars .bar-fill { fill: var(--c); }
+.chart-bars .bar-row:hover .bar-fill { filter: brightness(1.08); }
+.src-own { --c: var(--src-own); }
+.src-competitor { --c: var(--src-competitor); }
+.src-social { --c: var(--src-social); }
+.src-informational { --c: var(--src-informational); }
+.src-other { --c: var(--chart-field); }
+
+/* The prompt grid (internal/chart PromptGrid): the dashboard's heat ramp. */
+.chart-grid .grid-col { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
+.chart-grid .grid-prompt { font-size: 12px; fill: var(--ink); }
+.chart-grid .grid-branded { fill: var(--ink-3); font-style: italic; }
+.chart-grid .cell rect { fill: var(--cell-0); stroke: none; }
+.chart-grid .cell text { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.chart-grid .cell.hm-none rect { fill: var(--cell-empty); stroke: var(--rule-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart-grid .cell.cell-noanswer rect { stroke-dasharray: 1 3; }
+.chart-grid .cell.cell-noanswer text { font-size: 10px; font-weight: 500; fill: var(--ink-3); }
+.chart-grid .cell.hm-0 rect { fill: var(--cell-0); stroke: var(--cell-ring); stroke-width: 1; }
+.chart-grid .cell.hm-0 text { fill: var(--cell-0-ink); }
+.chart-grid .cell.hm-1 rect { fill: var(--cell-1); }
+.chart-grid .cell.hm-1 text { fill: var(--cell-1-ink); }
+.chart-grid .cell.hm-2 rect { fill: var(--cell-2); }
+.chart-grid .cell.hm-2 text { fill: var(--cell-2-ink); }
+.chart-grid .cell.hm-3 rect { fill: var(--cell-3); }
+.chart-grid .cell.hm-3 text { fill: var(--cell-3-ink); }
+.chart-grid .cell.hm-4 rect { fill: var(--cell-4); }
+.chart-grid .cell.hm-4 text { fill: var(--cell-4-ink); }
+.chart-grid .cell.hm-5 rect { fill: var(--cell-5); }
+.chart-grid .cell.hm-5 text { fill: var(--cell-5-ink); }
+.chart-grid .cell:hover rect { stroke: var(--ink-3); stroke-width: 1.5; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <p class="eyebrow">Limelit</p>
+    <h1 id="title">Chart</h1>
+    <p id="window" class="subtle">Waiting for the chart.</p>
+  </div>
+  <div class="tools">
+    <div id="windows" class="seg" role="group" aria-label="Window" hidden>
+      <button type="button" data-days="7" aria-pressed="false">7 days</button>
+      <button type="button" data-days="30" aria-pressed="false">30 days</button>
+      <button type="button" data-days="90" aria-pressed="false">90 days</button>
+    </div>
+    <button id="theme" class="btn" type="button" aria-label="Switch to the dark theme" title="Switch theme">
+      <svg id="theme-icon" viewBox="0 0 24 24" aria-hidden="true"></svg>
+    </button>
+    <div id="export" class="menu-wrap" hidden>
+      <button id="export-button" class="btn" type="button" aria-haspopup="menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>
+        Export
+      </button>
+      <div id="export-menu" class="menu" role="menu" hidden>
+        <button type="button" role="menuitem" data-format="csv">CSV<small>The figures behind the chart</small></button>
+        <button type="button" role="menuitem" data-format="png">PNG<small>The chart as an image</small></button>
+        <button type="button" role="menuitem" data-format="pdf">PDF<small>The chart on one page</small></button>
+      </div>
+    </div>
+  </div>
+</header>
+<div id="chips" class="chips"></div>
+<p id="caption" aria-live="polite"></p>
+<p id="status" role="status"></p>
+<div id="chart"></div>
+<p id="note" class="subtle"></p>
+<div id="tip" role="tooltip" hidden></div>
+<div id="toast" role="status" hidden></div>
+<svg class="chart-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs><linearGradient id="ll-area-own" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="stop-a"/><stop offset="1" class="stop-b"/></linearGradient></defs></svg>
+<script>
+"use strict";
+// The view side of MCP Apps (ext-apps spec 2026-01-26), by hand: JSON-RPC over
+// postMessage with the host. A tool result's text is the figures; its _meta
+// carries the drawing, made on the server by internal/chart.
+(function () {
+  var PROTOCOL = "2026-01-26";
+  var META_KEY = "co.limelit/chart";
+  var TOOLS = {
+    share_of_voice: "show_share_of_voice",
+    visibility_trend: "show_visibility_trend",
+    prompt_matrix: "show_prompt_matrix",
+    top_sources: "show_top_sources"
+  };
+  var TITLES = {
+    share_of_voice: "Share of voice",
+    visibility_trend: "Visibility over time",
+    prompt_matrix: "Visibility by prompt and engine",
+    top_sources: "Most cited sources"
+  };
+  var NOTES = {
+    share_of_voice: "Share of voice is a brand's mentions over every tracked brand's mentions in the same answers. One answer naming a brand twice counts twice. Prompts that name your brand are left out.",
+    visibility_trend: "Visibility is the share of answers that name a brand. A stretch nobody ran is shaded and bridged with a dashed line, never drawn as zero. Prompts that name your brand are left out.",
+    prompt_matrix: "Each cell is how many of that prompt's stored answers on that engine name your brand. A search that showed no AI answer is not counted against you.",
+    top_sources: "The sites the engines cite when they answer, counted once per citation."
+  };
+  var ICONS = {
+    moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>'
+  };
+
+  var el = function (id) { return document.getElementById(id); };
+  var nextId = 1;
+  var pending = {};
+  var caps = {};
+  var themeChosen = false;
+  var current = null; // { data, html }
+  var args = {};
+
+  function post(msg) { window.parent.postMessage(msg, "*"); }
+  function request(method, params) {
+    var id = nextId++;
+    return new Promise(function (resolve, reject) {
+      pending[id] = { resolve: resolve, reject: reject };
+      post({ jsonrpc: "2.0", id: id, method: method, params: params || {} });
+    });
+  }
+  function notify(method, params) { post({ jsonrpc: "2.0", method: method, params: params || {} }); }
+
+  function setStatus(text, alert) {
+    var s = el("status");
+    s.textContent = text || "";
+    s.className = alert ? "alert" : "";
+  }
+  function toast(text) {
+    var t = el("toast");
+    t.textContent = text;
+    t.hidden = false;
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+
+  // ---- Theme
+
+  function applyTheme(theme) {
+    if (theme !== "light" && theme !== "dark") {
+      theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", theme);
+    var other = theme === "dark" ? "light" : "dark";
+    el("theme-icon").innerHTML = theme === "dark" ? ICONS.sun : ICONS.moon;
+    el("theme").setAttribute("aria-label", "Switch to the " + other + " theme");
+    el("theme").title = "Switch to the " + other + " theme";
+  }
+  function hostTheme(ctx) {
+    if (ctx && ctx.theme && !themeChosen) applyTheme(ctx.theme);
+  }
+
+  // ---- Size: the host sizes the frame from what the page reports.
+
+  function watchSize() {
+    var lastW = 0, lastH = 0, queued = false;
+    function measure() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(function () {
+        queued = false;
+        var root = document.documentElement, prev = root.style.height;
+        root.style.height = "max-content";
+        var h = Math.ceil(root.getBoundingClientRect().height);
+        root.style.height = prev;
+        var w = Math.ceil(window.innerWidth);
+        if (w !== lastW || h !== lastH) {
+          lastW = w; lastH = h;
+          notify("ui/notifications/size-changed", { width: w, height: h });
+        }
+      });
+    }
+    measure();
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(measure);
+      ro.observe(document.documentElement);
+      ro.observe(document.body);
+    }
+  }
+
+  // ---- Reading a result
+
+  function resultText(result) {
+    var parts = (result && result.content) || [];
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i] && parts[i].type === "text") return parts[i].text;
+    }
+    return "";
+  }
+  function readResult(result) {
+    if (!result || result.isError) return null;
+    var data = result.structuredContent;
+    if (!data || typeof data !== "object") {
+      try { data = JSON.parse(resultText(result)); } catch (e) { data = null; }
+    }
+    if (!data || !TOOLS[data.view]) return null;
+    var meta = result._meta && result._meta[META_KEY];
+    return { data: data, html: meta && typeof meta.html === "string" ? meta.html : null };
+  }
+
+  // ---- Drawing
+
+  function plural(n, label) {
+    var unit = label || "answers";
+    if (n === 1) unit = unit.replace(/s$/, "");
+    return n.toLocaleString() + " " + unit;
+  }
+  function chip(text, warn) {
+    var c = document.createElement("span");
+    c.className = warn ? "chip chip-warn" : "chip";
+    c.textContent = text;
+    return c;
+  }
+  function emptyState(heading, detail) {
+    var box = document.createElement("div");
+    box.className = "empty";
+    var h = document.createElement("strong");
+    h.textContent = heading;
+    var p = document.createElement("span");
+    p.textContent = detail;
+    box.appendChild(h);
+    box.appendChild(p);
+    return box;
+  }
+  function emptyFor(d) {
+    switch (d.view) {
+      case "share_of_voice":
+        if (d.n === 0) return ["No answers yet", "Nothing ran in this window, so there is no share of voice to show."];
+        if (!d.tracked_mentions) return ["No brand named", "There are answers in this window, but none of them named a brand you track."];
+        return null;
+      case "visibility_trend":
+        return d.n === 0 ? ["No answers yet", "Nothing ran in this window, so there is no visibility to chart."] : null;
+      case "prompt_matrix":
+        return d.n === 0 ? ["Nothing measured yet", "No prompt has an answer stored yet."] : null;
+      case "top_sources":
+        return !(d.sources && d.sources.length) ? ["No citations yet", "No answer in this window cited a source."] : null;
+    }
+    return null;
+  }
+  function windowText(d) {
+    if (d.view === "prompt_matrix") return "Every stored answer";
+    var days = d.window_days || 0;
+    var span = days === 1 ? "the last day" : "the last " + days + " days";
+    if (d.view === "visibility_trend") return (d.series_step === "week" ? "Weekly, " : "Daily, ") + span;
+    return span.charAt(0).toUpperCase() + span.slice(1);
+  }
+  function shortDate(iso) {
+    var t = new Date(iso + "T00:00:00Z");
+    return isNaN(t) ? iso : t.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+  }
+  // bestPoint is the trend's highest measured day, or week.
+  function bestPoint(d) {
+    var best = null, pts = (d.visibility && d.visibility.points) || [];
+    for (var i = 0; i < pts.length; i++) {
+      if (pts[i].value !== null && pts[i].value !== undefined && (!best || pts[i].value > best.value)) best = pts[i];
+    }
+    if (!best) return "";
+    var pct = (best.value < 10 && best.value > 0 ? best.value.toFixed(1) : Math.round(best.value)) + "%";
+    return (d.series_step === "week" ? "Best week of " : "Best day ") + shortDate(best.date) + ": " + pct;
+  }
+
+  // Each <title> becomes the hover text of its element, read by the tip
+  // below and by screen readers through aria-label.
+  function liftTitles(root) {
+    var titles = root.querySelectorAll("title");
+    for (var i = 0; i < titles.length; i++) {
+      var t = titles[i], owner = t.parentNode;
+      if (owner && owner.tagName && owner.tagName.toLowerCase() !== "svg") {
+        owner.setAttribute("data-tip", t.textContent);
+        owner.setAttribute("aria-label", t.textContent);
+        owner.removeChild(t);
+      }
+    }
+  }
+
+  function render(r) {
+    current = r;
+    var d = r.data;
+    el("title").textContent = TITLES[d.view];
+    el("window").textContent = windowText(d);
+    var chips = el("chips");
+    chips.textContent = "";
+    chips.appendChild(chip(plural(d.n || 0, d.basis_label)));
+    if (d.view === "visibility_trend" && bestPoint(d)) chips.appendChild(chip(bestPoint(d)));
+    if (d.low_n) chips.appendChild(chip("Still settling: fewer than 20 " + (d.basis_label || "answers"), true));
+    // The settling clause is already a chip above.
+    el("caption").textContent = (d.caption || "").replace(/\s*Still settling:[^.]*\.\s*$/, "");
+    el("note").textContent = NOTES[d.view];
+
+    var box = el("chart");
+    box.textContent = "";
+    var empty = emptyFor(d);
+    if (empty) {
+      box.appendChild(emptyState(empty[0], empty[1]));
+      setStatus("");
+    } else if (r.html === null) {
+      setStatus("The drawing did not arrive with this result, so only the figures above are shown.", true);
+    } else {
+      // Markup from this server: every string in it was escaped where it was drawn.
+      box.innerHTML = r.html;
+      liftTitles(box);
+      setStatus("");
+    }
+    setWindows(d.window_days || 0, false);
+    el("export").hidden = !caps.downloadFile;
+  }
+
+  function show(result) {
+    var r = readResult(result);
+    if (!r) {
+      var why = resultText(result);
+      setStatus(why ? "Could not draw this chart: " + why : "Could not draw this chart.", true);
+      return null;
+    }
+    render(r);
+    return r;
+  }
+
+  // ---- Hover
+
+  function tipFor(target) {
+    var node = target;
+    while (node && node !== document.body) {
+      if (node.getAttribute && node.getAttribute("data-tip")) return node.getAttribute("data-tip");
+      node = node.parentNode;
+    }
+    return "";
+  }
+  el("chart").addEventListener("pointermove", function (e) {
+    var tip = el("tip"), text = tipFor(e.target);
+    if (!text) { tip.hidden = true; return; }
+    tip.textContent = text;
+    tip.hidden = false;
+    var x = e.clientX + 14, y = e.clientY + 14;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    if (x + w > window.innerWidth - 6) x = e.clientX - w - 10;
+    if (y + h > window.innerHeight - 6) y = e.clientY - h - 10;
+    tip.style.left = Math.max(4, x) + "px";
+    tip.style.top = Math.max(4, y) + "px";
+  });
+  el("chart").addEventListener("pointerleave", function () { el("tip").hidden = true; });
+
+  // ---- Window switch
+
+  function setWindows(days, busy) {
+    var box = el("windows");
+    box.hidden = !caps.serverTools || !days;
+    var buttons = box.querySelectorAll("button");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].disabled = !!busy;
+      buttons[i].setAttribute("aria-pressed", String(Number(buttons[i].getAttribute("data-days")) === days));
+    }
+  }
+  function refresh(days) {
+    if (!current) return;
+    var view = current.data.view, shown = current.data.window_days || 0;
+    var next = Object.assign({}, args, { days: days });
+    setWindows(days, true);
+    setStatus(days === 1 ? "Loading the last day." : "Loading the last " + days + " days.");
+    request("tools/call", { name: TOOLS[view], arguments: next }).then(function (result) {
+      var r = show(result);
+      if (!r) { setWindows(shown, false); return; }
+      args = next;
+      if (caps.updateModelContext && r.data.caption) {
+        // So the model knows what the viewer is now looking at.
+        request("ui/update-model-context", {
+          content: [{ type: "text", text: "The viewer switched the " + TITLES[view].toLowerCase() + " chart to the last " + days + " days. " + r.data.caption }]
+        }).catch(function () {});
+      }
+    }).catch(function () {
+      setWindows(shown, false);
+      setStatus("Could not load that window here. Ask for it in the chat instead.", true);
+    });
+  }
+
+  // ---- Export
+
+  function csvCell(v) {
+    var s = v === null || v === undefined ? "" : String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function csvFor(d) {
+    var rows = [];
+    switch (d.view) {
+      case "share_of_voice":
+        rows.push(["Brand", "Share of voice (%)", "Mentions", "Answers naming it", "Yours"]);
+        (d.rows || []).forEach(function (r) { rows.push([r.brand, r.sov_pct, r.mentions, r.answers, r.is_you ? "yes" : "no"]); });
+        break;
+      case "visibility_trend":
+        var rivals = (d.brand_series || []).filter(function (b) { return !b.is_you; });
+        var head = ["Date", "Visibility (%)", "Answers", "Citation share (%)", "Citations"];
+        rivals.forEach(function (b) { head.push(b.brand + " (%)"); });
+        rows.push(head);
+        var share = {}, byBrand = rivals.map(function (b) {
+          var m = {};
+          b.points.forEach(function (p) { m[p.date] = p.value; });
+          return m;
+        });
+        (d.citation_share.points || []).forEach(function (p) { share[p.date] = p; });
+        d.visibility.points.forEach(function (p) {
+          var s = share[p.date] || {};
+          var row = [p.date, p.value, p.basis, s.value, s.basis];
+          byBrand.forEach(function (m) { row.push(m[p.date]); });
+          rows.push(row);
+        });
+        break;
+      case "prompt_matrix":
+        rows.push(["Prompt", "Names your brand", "Engine", "Named in", "Answers", "Visibility (%)", "Status"]);
+        (d.rows || []).forEach(function (r) {
+          d.platforms.forEach(function (key) {
+            var c = r.cells[key], label = (d.platform_labels || {})[key] || key;
+            if (!c) rows.push([r.text, r.branded ? "yes" : "no", label, "", "", "", "not asked"]);
+            else if (c.surface_status === "no_answer_surface") rows.push([r.text, r.branded ? "yes" : "no", label, "", "", "", "no AI answer"]);
+            else rows.push([r.text, r.branded ? "yes" : "no", label, c.mentions, c.n, c.value, "answered"]);
+          });
+        });
+        break;
+      case "top_sources":
+        rows.push(["Domain", "Source type", "Citations", "Answers citing it"]);
+        (d.sources || []).forEach(function (s) { rows.push([s.domain, s.source_type, s.citation_count, s.answers]); });
+        break;
+    }
+    return rows.map(function (r) { return r.map(csvCell).join(","); }).join("\n") + "\n";
+  }
+
+  // An SVG drawn as an image cannot see this page's stylesheet, so each
+  // element carries its computed style inline, and the gradient the race
+  // fills with travels inside the copy.
+  var STYLE_PROPS = ["fill", "fill-opacity", "stroke", "stroke-width", "stroke-opacity", "stroke-dasharray",
+    "stroke-linecap", "stroke-linejoin", "opacity", "font-family", "font-size", "font-weight", "font-style",
+    "letter-spacing", "text-anchor", "dominant-baseline", "visibility", "display"];
+  function inlineStyles(from, to) {
+    var cs = getComputedStyle(from), style = "";
+    for (var i = 0; i < STYLE_PROPS.length; i++) {
+      var v = cs.getPropertyValue(STYLE_PROPS[i]);
+      if (v) style += STYLE_PROPS[i] + ":" + v + ";";
+    }
+    to.setAttribute("style", style);
+  }
+  function svgImage(svg) {
+    var box = svg.getBoundingClientRect();
+    var copy = svg.cloneNode(true);
+    inlineStyles(svg, copy);
+    var a = svg.querySelectorAll("*"), b = copy.querySelectorAll("*");
+    for (var i = 0; i < a.length; i++) inlineStyles(a[i], b[i]);
+    var stops = document.querySelectorAll(".chart-defs stop");
+    var defs = '<defs><linearGradient id="ll-area-own" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + getComputedStyle(stops[0]).stopColor + '"/>' +
+      '<stop offset="1" stop-color="' + getComputedStyle(stops[1]).stopColor + '"/></linearGradient></defs>';
+    copy.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    copy.setAttribute("width", String(box.width));
+    copy.setAttribute("height", String(box.height));
+    copy.insertAdjacentHTML("afterbegin", defs);
+    var text = new XMLSerializer().serializeToString(copy);
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () { resolve({ img: img, box: box }); };
+      img.onerror = function () { reject(new Error("svg image")); };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(text);
+    });
+  }
+  function drawText(ctx, node, top) {
+    var text = node && node.textContent && node.textContent.trim();
+    if (!text) return;
+    var cs = getComputedStyle(node), r = node.getBoundingClientRect();
+    if (cs.textTransform === "uppercase") text = text.toUpperCase();
+    ctx.font = cs.fontStyle + " " + cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+    ctx.fillStyle = cs.color;
+    ctx.textBaseline = "top";
+    // A canvas measures a font a little differently from the page, so a line
+    // wraps at the room it has to the page's edge, not at its own box, which
+    // is only as wide as the text was on screen. Centered text keeps its box.
+    var centered = cs.textAlign === "center";
+    var room = centered ? r.width : document.documentElement.clientWidth - r.left - 16;
+    var x = centered ? r.left + r.width / 2 : r.left;
+    ctx.textAlign = centered ? "center" : "left";
+    var lineH = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.4;
+    var words = text.split(/\s+/), line = "", y = r.top - top;
+    for (var i = 0; i < words.length; i++) {
+      var trial = line ? line + " " + words[i] : words[i];
+      if (line && ctx.measureText(trial).width > room) {
+        ctx.fillText(line, x, y);
+        line = words[i];
+        y += lineH;
+      } else {
+        line = trial;
+      }
+    }
+    ctx.fillText(line, x, y);
+    ctx.textAlign = "left";
+  }
+  // The chart as the viewer sees it, without the controls, at twice the
+  // pixel density.
+  function snapshot() {
+    var scale = 2, top = 0;
+    var bottom = el("note").getBoundingClientRect().bottom + 16;
+    var width = document.documentElement.clientWidth;
+    var canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(width * scale);
+    canvas.height = Math.ceil((bottom - top) * scale);
+    var ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+    ctx.fillRect(0, 0, width, bottom - top);
+    var svgs = el("chart").querySelectorAll("svg");
+    return Promise.all(Array.prototype.map.call(svgs, svgImage)).then(function (images) {
+      ["title", "window", "caption", "status", "note"].forEach(function (id) { drawText(ctx, el(id), top); });
+      drawText(ctx, document.querySelector(".eyebrow"), top);
+      var chipsNodes = el("chips").children;
+      for (var i = 0; i < chipsNodes.length; i++) {
+        var c = chipsNodes[i], cs = getComputedStyle(c), r = c.getBoundingClientRect();
+        ctx.fillStyle = cs.backgroundColor;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(r.left, r.top - top, r.width, r.height, r.height / 2);
+        else ctx.rect(r.left, r.top - top, r.width, r.height);
+        ctx.fill();
+        ctx.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+        ctx.fillStyle = cs.color;
+        ctx.textBaseline = "middle";
+        ctx.fillText(c.textContent, r.left + parseFloat(cs.paddingLeft), r.top - top + r.height / 2);
+      }
+      var empties = el("chart").querySelectorAll(".empty strong, .empty span");
+      for (var k = 0; k < empties.length; k++) drawText(ctx, empties[k], top);
+      images.forEach(function (it) { ctx.drawImage(it.img, it.box.left, it.box.top - top, it.box.width, it.box.height); });
+      return canvas;
+    });
+  }
+
+  function bytesToBase64(bytes) {
+    var s = "";
+    for (var i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+  function base64ToBytes(b64) {
+    var s = atob(b64), out = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+    return out;
+  }
+
+  // pdfWithImage writes a one-page PDF around a JPEG: a catalog, a page
+  // tree, one page the size of the image, the JPEG as an image XObject
+  // (DCTDecode, so its bytes go in unchanged), a content stream that paints
+  // it across the page, and the cross-reference table that indexes them.
+  // pixelsPerPoint turns the canvas's pixels into PDF points.
+  function pdfWithImage(jpeg, width, height, pixelsPerPoint, title) {
+    var enc = new TextEncoder();
+    var parts = [], length = 0, offsets = [0];
+    function put(chunk) {
+      var bytes = typeof chunk === "string" ? enc.encode(chunk) : chunk;
+      parts.push(bytes);
+      length += bytes.length;
+    }
+    function object(dict, stream) {
+      offsets.push(length);
+      put((offsets.length - 1) + " 0 obj\n" + dict + "\n");
+      if (stream) {
+        put("stream\n");
+        put(stream);
+        put("\nendstream\n");
+      }
+      put("endobj\n");
+    }
+    var w = (width / pixelsPerPoint).toFixed(2), h = (height / pixelsPerPoint).toFixed(2);
+    var paint = enc.encode("q " + w + " 0 0 " + h + " 0 0 cm /Chart Do Q");
+    var safe = String(title).replace(/[^\x20-\x7e]/g, "").replace(/[\\()]/g, function (c) { return "\\" + c; });
+    put("%PDF-1.4\n");
+    put(new Uint8Array([37, 200, 201, 202, 203, 10])); // a binary marker line: "%" then four high bytes
+    object("<< /Type /Catalog /Pages 2 0 R >>");
+    object("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+    object("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + w + " " + h + "] /Resources << /XObject << /Chart 4 0 R >> >> /Contents 5 0 R >>");
+    object("<< /Type /XObject /Subtype /Image /Width " + width + " /Height " + height +
+      " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + jpeg.length + " >>", jpeg);
+    object("<< /Length " + paint.length + " >>", paint);
+    object("<< /Title (" + safe + ") /Creator (Limelit Open) >>");
+    var xref = length;
+    var table = "xref\n0 " + offsets.length + "\n0000000000 65535 f \n";
+    for (var i = 1; i < offsets.length; i++) table += ("000000000" + offsets[i]).slice(-10) + " 00000 n \n";
+    put(table);
+    put("trailer\n<< /Size " + offsets.length + " /Root 1 0 R /Info 6 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
+    var out = new Uint8Array(length), at = 0;
+    parts.forEach(function (p) { out.set(p, at); at += p.length; });
+    return out;
+  }
+
+  function exportAs(format) {
+    if (!current) return;
+    var d = current.data, now = new Date();
+    var stamp = now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2) + "-" + ("0" + now.getDate()).slice(-2);
+    var name = "limelit-" + d.view.replace(/_/g, "-") + (d.window_days ? "-" + d.window_days + "d" : "") + "-" + stamp;
+    var made;
+    if (format === "csv") {
+      made = Promise.resolve({ uri: "file:///" + name + ".csv", mimeType: "text/csv", text: csvFor(d) });
+    } else {
+      made = snapshot().then(function (canvas) {
+        if (format === "png") {
+          return { uri: "file:///" + name + ".png", mimeType: "image/png", blob: canvas.toDataURL("image/png").split(",")[1] };
+        }
+        var jpeg = base64ToBytes(canvas.toDataURL("image/jpeg", 0.92).split(",")[1]);
+        // The canvas is drawn at two pixels per CSS pixel, and a CSS pixel is
+        // three quarters of a point.
+        var pdf = pdfWithImage(jpeg, canvas.width, canvas.height, 2 / 0.75, "Limelit: " + TITLES[d.view]);
+        return { uri: "file:///" + name + ".pdf", mimeType: "application/pdf", blob: bytesToBase64(pdf) };
+      });
+    }
+    made.then(function (resource) {
+      return request("ui/download-file", { contents: [{ type: "resource", resource: resource }] }).then(function (res) {
+        toast(res && res.isError ? "Export cancelled" : "Saved " + resource.uri.slice(8));
+      });
+    }).catch(function () { toast("Could not export this chart"); });
+  }
+  function closeMenu() {
+    el("export-menu").hidden = true;
+    el("export-button").setAttribute("aria-expanded", "false");
+  }
+
+  // ---- Wiring
+
+  window.addEventListener("message", function (event) {
+    if (event.source !== window.parent) return;
+    var msg = event.data;
+    if (!msg || msg.jsonrpc !== "2.0") return;
+    if (msg.method === undefined) {
+      var p = pending[msg.id];
+      if (!p) return;
+      delete pending[msg.id];
+      if (msg.error) p.reject(new Error(msg.error.message || "request failed"));
+      else p.resolve(msg.result);
+      return;
+    }
+    if (msg.id !== undefined && msg.id !== null) {
+      if (msg.method === "ui/resource-teardown" || msg.method === "ping") post({ jsonrpc: "2.0", id: msg.id, result: {} });
+      else post({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: "Method not found" } });
+      return;
+    }
+    switch (msg.method) {
+      case "ui/notifications/tool-input":
+        args = Object.assign({}, (msg.params && msg.params.arguments) || {});
+        break;
+      case "ui/notifications/tool-result":
+        show(msg.params);
+        break;
+      case "ui/notifications/tool-cancelled":
+        setStatus("This chart was cancelled.", true);
+        break;
+      case "ui/notifications/host-context-changed":
+        hostTheme(msg.params);
+        break;
+    }
+  });
+
+  var dayButtons = el("windows").querySelectorAll("button");
+  for (var i = 0; i < dayButtons.length; i++) {
+    dayButtons[i].addEventListener("click", function (e) { refresh(Number(e.currentTarget.getAttribute("data-days"))); });
+  }
+  el("theme").addEventListener("click", function () {
+    themeChosen = true;
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+  el("export-button").addEventListener("click", function (e) {
+    e.stopPropagation();
+    var open = el("export-menu").hidden;
+    el("export-menu").hidden = !open;
+    el("export-button").setAttribute("aria-expanded", String(open));
+  });
+  var formats = el("export-menu").querySelectorAll("button[data-format]");
+  for (var j = 0; j < formats.length; j++) {
+    formats[j].addEventListener("click", function (e) {
+      closeMenu();
+      exportAs(e.currentTarget.getAttribute("data-format"));
+    });
+  }
+  document.addEventListener("click", closeMenu);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+
+  applyTheme();
+  request("ui/initialize", {
+    appInfo: { name: "Limelit Open charts", version: "2" },
+    appCapabilities: {},
+    protocolVersion: PROTOCOL
+  }).then(function (res) {
+    caps = (res && res.hostCapabilities) || {};
+    hostTheme(res && res.hostContext);
+    notify("ui/notifications/initialized");
+    watchSize();
+  }).catch(function () {
+    setStatus("Could not connect to the chat it is shown in.", true);
+  });
+})();
+</script>
+</body>
+</html>

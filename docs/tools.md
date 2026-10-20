@@ -68,6 +68,27 @@ test that enforces each rule.
 | `list_top_sources` | same | `days` (1..365, default 30), `limit` (default 50, cap 200) | One row per cited domain over the window, with source type. On Cloud, omitting `days` means all time |
 | `list_source_urls` | same | `value` (host, required), `days` (default 30), `limit` | One row per URL on that host with cited count. `segment` is Cloud-only |
 
+## Charts
+
+These four draw in an MCP App: each points at `ui://limelit-open/charts/v1.html`
+(`text/html;profile=mcp-app`), a page embedded in the binary that a host
+able to draw (Claude Desktop, Claude, ChatGPT) shows inline, with a theme
+switch, a 7, 30 or 90 day switch where the host can call tools, and CSV, PNG
+or PDF export where it can download. The drawing is SVG from the dashboard's
+renderers and travels in the result's `_meta` (`co.limelit/chart`), which
+hosts keep out of the model's context; the text is complete JSON without it,
+so a client that cannot draw reads the same figures. Every result carries `view`, `n`,
+`basis_label` (what `n` counts: `answers`, or `citations` for top sources),
+`low_n`, `caption` (one sentence that quotes `n` and says when the figures
+are still settling) and `window_days` where the tool has a window.
+
+| Tool | Cloud | Arguments | Notes |
+|---|---|---|---|
+| `show_share_of_voice` | same | `days` (1..365, default 30) | `rows` of `brand`, `is_you`, `sov_pct`, plus `mentions` and `answers` (open-core). `n` is the answers in the window. `sov_pct` is null when no tracked brand was named. `segment` is Cloud-only |
+| `show_visibility_trend` | same | `days` (1..365, default 30) | `visibility` and `citation_share` per calendar day, `null` on a day nobody ran, with `current` for the whole window. `brand_series` (open-core) is the property and the six most mentioned rivals, measured days or weeks only. Up to 90 days every series has a point per day; past that a point per week (open-core), dated its Monday (the first, the window's first day) and holding the week's share, as `series_step` says (`brand_series_step` repeats it). `n` is the answers in the window |
+| `show_prompt_matrix` | same | none | Every stored answer, the scope of `get_matrix`. `cell_basis` is `all_answers`: a cell is the share of the prompt's answers on that engine naming the brand, with its `n` and `mentions` (open-core). Cloud's cell is the latest answer. A second target on one engine is its own column, `<engine>_2`, named in `platform_labels` |
+| `show_top_sources` | same | `days` (1..365, default 30), `limit` (1..25, default 10) | `sources` of `domain`, `source_type`, `citation_count`. `n` is the citations behind the domains shown. A `limit` outside 1..25 is refused, not clamped |
+
 ## Runs
 
 The only tools here that spend anything: each answer is a call to the user's
