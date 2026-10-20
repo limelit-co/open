@@ -26,9 +26,11 @@ import (
 //	   counts as the brand (2026-09-30).
 const AnalyzerVersion = "2"
 
-// analysisSignatureKey is the setting holding the signature stored answers
-// were last analyzed under.
-const analysisSignatureKey = "analysis_signature"
+// AnalysisSignatureSetting is the setting holding the signature stored
+// answers were last analyzed under. Exported because the Cloud sync compares
+// it with the one it last sent under: a change means the mentions and
+// citations already in Cloud are out of date.
+const AnalysisSignatureSetting = "analysis_signature"
 
 // analysisSignature names everything a stored answer's derived rows depend
 // on: the rules and the brands they look for. Any change to either means the
@@ -91,7 +93,7 @@ func (r *Runner) ensureAnalyzed(ctx context.Context) (store.ReanalyzeResult, boo
 	if err != nil {
 		return store.ReanalyzeResult{}, false, err
 	}
-	if stored, err := r.db.Setting(ctx, analysisSignatureKey); err == nil && stored == sig {
+	if stored, err := r.db.Setting(ctx, AnalysisSignatureSetting); err == nil && stored == sig {
 		return store.ReanalyzeResult{}, false, nil
 	}
 	analyzer, err := r.NewAnalyzer(ctx)
@@ -118,7 +120,7 @@ func (r *Runner) ensureAnalyzed(ctx context.Context) (store.ReanalyzeResult, boo
 	if err != nil {
 		return res, false, err
 	}
-	if err := r.db.SetSetting(ctx, analysisSignatureKey, sig); err != nil {
+	if err := r.db.SetSetting(ctx, AnalysisSignatureSetting, sig); err != nil {
 		return res, true, err
 	}
 	if r.log != nil {

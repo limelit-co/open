@@ -460,3 +460,47 @@ func TestUnknownPromptOrTargetIsNamed(t *testing.T) {
 		t.Errorf("unknown target: %v", err)
 	}
 }
+
+// TestOnFinishedSeesWhatThePassStored. The Cloud sync hangs off this hook,
+// so it has to run once, before Run returns (limelit run exits right after),
+// with the evaluation closed and the stored answers read under the current
+// signature. A pass refused at the start never reaches it.
+func TestOnFinishedSeesWhatThePassStored(t *testing.T) {
+	r, db, _ := seed(t, 2, provider.StubConfig{Answer: "Acme leads."})
+	r.NewAnalyzer = func(c context.Context) (Analyzer, error) { return NewStoreAnalyzer(c, db) }
+	ctx := context.Background()
+
+	var calls []Result
+	var status, signature string
+	r.OnFinished = func(c context.Context, res Result) {
+		calls = append(calls, res)
+		if ev, err := db.Evaluation(c, res.EvaluationID); err == nil {
+			status = ev.Status
+		}
+		signature, _ = db.Setting(c, AnalysisSignatureSetting)
+	}
+
+	res, err := r.Run(ctx, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(calls) != 1 {
+		t.Fatalf("OnFinished ran %d times by the time Run returned, want once", len(calls))
+	}
+	if calls[0] != res {
+		t.Errorf("OnFinished saw %+v, Run returned %+v", calls[0], res)
+	}
+	if status != store.EvaluationDone {
+		t.Errorf("the evaluation was %q when the hook ran, want it closed", status)
+	}
+	if signature == "" {
+		t.Error("the hook ran before the stored answers were read under the current signature")
+	}
+
+	if _, err := r.Run(ctx, Options{RunsPerDay: 1}); !errors.Is(err, ErrOverCeiling) {
+		t.Fatalf("a pass over the ceiling = %v", err)
+	}
+	if len(calls) != 1 {
+		t.Error("a refused pass ran OnFinished")
+	}
+}

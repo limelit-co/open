@@ -195,6 +195,54 @@ func TestSinceCascadesToEverythingHangingOffAChat(t *testing.T) {
 	}
 }
 
+// TestUntilIsExclusiveSoWindowsPartitionTheAnswers. A sync sends history in
+// consecutive [Since, Until) windows; an answer on a boundary day has to land
+// in exactly one of them, and what hangs off it has to travel with it.
+func TestUntilIsExclusiveSoWindowsPartitionTheAnswers(t *testing.T) {
+	ctx := context.Background()
+	db := seeded(t)
+	targets, _ := db.Targets(ctx, false)
+	prompts, _ := db.Prompts(ctx, false)
+	for _, day := range []string{"2026-01-01", "2026-01-02", "2026-01-03"} {
+		if _, err := db.RecordChat(ctx, store.ChatRecord{
+			PromptID: prompts[0].ID, TargetID: targets[0].ID, Status: store.ChatOK, Text: "Acme on " + day,
+			CreatedAt: day + " 12:00:00", Calls: 1,
+			Mentions:  []store.Mention{{BrandName: "Acme", BrandKey: "acme"}},
+			Citations: []store.Citation{{URL: "https://acme.com/" + day, Host: "acme.com", Site: "acme.com", Position: 1, SourceType: "own"}},
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	count := func(doc map[string]any, table string) int {
+		rows, _ := doc[table].([]any)
+		return len(rows)
+	}
+	middle := exportJSON(t, db, Options{Since: "2026-01-02", Until: "2026-01-03"})
+	if middle["until"] != "2026-01-03" {
+		t.Errorf("until = %v, want it recorded in the envelope", middle["until"])
+	}
+	for _, table := range []string{"chats", "mentions", "citations", "usage"} {
+		if n := count(middle, table); n != 1 {
+			t.Errorf("%s in [01-02, 01-03) = %d rows, want the one answer of 01-02", table, n)
+		}
+	}
+
+	// Three windows covering everything carry every answer exactly once.
+	all := exportJSON(t, db, Options{})
+	var total int
+	for _, w := range []Options{{Until: "2026-01-02"}, {Since: "2026-01-02", Until: "2026-01-03"}, {Since: "2026-01-03"}} {
+		total += count(exportJSON(t, db, w), "chats")
+	}
+	if total != count(all, "chats") {
+		t.Errorf("the windows carry %d answers between them, the whole export %d", total, count(all, "chats"))
+	}
+	// Configuration is not time series and survives an upper bound too.
+	if n := count(exportJSON(t, db, Options{Until: "2000-01-01"}), "prompts"); n == 0 {
+		t.Error("prompts were filtered away by until")
+	}
+}
+
 // TestExportRoundTripsEveryMetric is the acceptance criterion: export, load
 // into a fresh instance, and every number is identical.
 func TestExportRoundTripsEveryMetric(t *testing.T) {
