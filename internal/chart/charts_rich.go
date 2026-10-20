@@ -1,7 +1,7 @@
 // Copyright 2026 Limelit. Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the repository root for the full terms.
 
-package ui
+package chart
 
 // The richer charts: the competitor race, the share-of-voice donut, the
 // visibility-by-engine bars, the citation mix, and the fan-out word cloud.
@@ -19,12 +19,12 @@ import (
 	"strings"
 )
 
-// seriesClass assigns a stable colour class to a brand.
+// SeriesClass assigns a stable colour class to a brand.
 //
 // Alphabetical over the full set of names, never by rank or by the filtered
 // subset, so a brand keeps its colour across every screen and every week. The
 // property is always the brand colour and never takes a series slot.
-func seriesClass(name string, all []string, isOwn bool) string {
+func SeriesClass(name string, all []string, isOwn bool) string {
 	if isOwn {
 		return "s-own"
 	}
@@ -207,7 +207,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 				cls += " n-low"
 			}
 			fmt.Fprintf(&b, `<rect class="%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="1.5"><title>%s: %s</title></rect>`,
-				cls, ax.xs[i]-w/2, raceStripBase-h, w, h, template.HTMLEscapeString(days[i]), answersWord(dayN[i]))
+				cls, ax.xs[i]-w/2, raceStripBase-h, w, h, template.HTMLEscapeString(days[i]), AnswersWord(dayN[i]))
 		}
 		b.WriteString(`</g>`)
 	}
@@ -281,7 +281,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 				e.s.Class, e.x+8, e.y, raceW-racePadR+8, spread[i])
 		}
 		fmt.Fprintf(&b, `<text class="end %s" x="%.0f" y="%.1f" dominant-baseline="middle"><tspan class="end-val">%s%%</tspan><tspan class="end-name" dx="7">%s</tspan></text>`,
-			cls, raceW-racePadR+14, spread[i], pct(e.s.Last), template.HTMLEscapeString(e.s.Name))
+			cls, raceW-racePadR+14, spread[i], Pct(e.s.Last), template.HTMLEscapeString(e.s.Name))
 	}
 	b.WriteString(`</g>`)
 
@@ -392,15 +392,15 @@ func raceSeries(b *strings.Builder, s RaceSeries, ax dateAxis, dayIdx map[string
 			r = 5
 		}
 		fmt.Fprintf(b, `<circle class="%s" cx="%.1f" cy="%.1f" r="%.1f" data-i="%d" data-brand="%s" data-v="%s" data-n="%d"><title>%s, %s: %s%% of %s%s</title></circle>`,
-			dcls, p.x, p.y, r, p.i, template.HTMLEscapeString(s.Name), pct(p.p.Value), p.p.N,
-			template.HTMLEscapeString(s.Name), template.HTMLEscapeString(p.p.Day), pct(p.p.Value), answersWord(p.p.N), thin)
+			dcls, p.x, p.y, r, p.i, template.HTMLEscapeString(s.Name), Pct(p.p.Value), p.p.N,
+			template.HTMLEscapeString(s.Name), template.HTMLEscapeString(p.p.Day), Pct(p.p.Value), AnswersWord(p.p.N), thin)
 	}
 }
 
 func raceLabel(series []RaceSeries, ax dateAxis, days []string) string {
 	parts := make([]string, 0, len(series))
 	for _, s := range series {
-		parts = append(parts, fmt.Sprintf("%s %s%%", s.Name, pct(s.Last)))
+		parts = append(parts, fmt.Sprintf("%s %s%%", s.Name, Pct(s.Last)))
 	}
 	span := ""
 	if n := len(days); n > 0 {
@@ -504,10 +504,10 @@ func Donut(slices []DonutSlice, own DonutOwn) template.HTML {
 		case s.Rest:
 			cls += " arc-rest"
 		}
-		title := fmt.Sprintf("%s: %s%% of all tracked-brand mentions", template.HTMLEscapeString(s.Name), pct(s.Share))
+		title := fmt.Sprintf("%s: %s%% of all tracked-brand mentions", template.HTMLEscapeString(s.Name), Pct(s.Share))
 		if frac >= 0.999 {
 			fmt.Fprintf(&b, `<circle class="%s" cx="%.0f" cy="%.0f" r="%.0f" fill="none" stroke-width="%.0f" data-name="%s" data-v="%s"><title>%s</title></circle>`,
-				cls, cx, cy, r, stroke, template.HTMLEscapeString(s.Name), pct(s.Share), title)
+				cls, cx, cy, r, stroke, template.HTMLEscapeString(s.Name), Pct(s.Share), title)
 			start += frac
 			continue
 		}
@@ -520,18 +520,18 @@ func Donut(slices []DonutSlice, own DonutOwn) template.HTML {
 		a0 := -math.Pi/2 + start*2*math.Pi + gapAng/2
 		a1 := a0 + frac*2*math.Pi - gapAng
 		fmt.Fprintf(&b, `<path class="%s" d="%s" fill="none" stroke-width="%.0f" pathLength="1" style="--d:%.3f;--t:%.3f" data-name="%s" data-v="%s"><title>%s</title></path>`,
-			cls, arcPath(cx, cy, r, a0, a1), stroke, start, frac, template.HTMLEscapeString(s.Name), pct(s.Share), title)
+			cls, arcPath(cx, cy, r, a0, a1), stroke, start, frac, template.HTMLEscapeString(s.Name), Pct(s.Share), title)
 		start += frac
 	}
 
 	if own.HasData {
-		fmt.Fprintf(&b, `<text class="donut-value" x="%.0f" y="94" text-anchor="middle">%s%%</text>`, cx, pct(own.Share))
+		fmt.Fprintf(&b, `<text class="donut-value" x="%.0f" y="94" text-anchor="middle">%s%%</text>`, cx, Pct(own.Share))
 		fmt.Fprintf(&b, `<text class="donut-label" x="%.0f" y="112" text-anchor="middle">your share</text>`, cx)
-		fmt.Fprintf(&b, `<text class="donut-denom" x="%.0f" y="130" text-anchor="middle">%s of %s</text>`, cx, thousands(own.Mentions), thousands(own.Total))
+		fmt.Fprintf(&b, `<text class="donut-denom" x="%.0f" y="130" text-anchor="middle">%s of %s</text>`, cx, Thousands(own.Mentions), Thousands(own.Total))
 	} else {
 		fmt.Fprintf(&b, `<text class="donut-value" x="%.0f" y="94" text-anchor="middle">0%%</text>`, cx)
 		fmt.Fprintf(&b, `<text class="donut-label" x="%.0f" y="112" text-anchor="middle">never named</text>`, cx)
-		fmt.Fprintf(&b, `<text class="donut-denom" x="%.0f" y="130" text-anchor="middle">of %s mentions</text>`, cx, thousands(own.Total))
+		fmt.Fprintf(&b, `<text class="donut-denom" x="%.0f" y="130" text-anchor="middle">of %s mentions</text>`, cx, Thousands(own.Total))
 	}
 	b.WriteString(`</svg>`)
 	return template.HTML(b.String())
@@ -540,7 +540,7 @@ func Donut(slices []DonutSlice, own DonutOwn) template.HTML {
 func donutLabel(slices []DonutSlice) string {
 	parts := make([]string, 0, len(slices))
 	for _, s := range slices {
-		parts = append(parts, fmt.Sprintf("%s %s%%", s.Name, pct(s.Share)))
+		parts = append(parts, fmt.Sprintf("%s %s%%", s.Name, Pct(s.Share)))
 	}
 	return "Share of voice: " + strings.Join(parts, ", ") + "."
 }
@@ -660,7 +660,7 @@ func EngineBars(groups []EngineGroup) template.HTML {
 			label = label[:19] + "."
 		}
 		fmt.Fprintf(&b, `<text class="eng" x="%.0f" y="%.1f" text-anchor="end">%s</text>`, stripLabelX, cy-4, template.HTMLEscapeString(label))
-		count := answersWord(g.Answers)
+		count := AnswersWord(g.Answers)
 		countCls := ""
 		if g.Answers < thinN {
 			count += ", thin"
@@ -692,8 +692,8 @@ func EngineBars(groups []EngineGroup) template.HTML {
 				}
 			}
 			fmt.Fprintf(&b, `<circle class="%s" r="%.1f" cx="%.1f" cy="%.1f" data-brand="%s" data-v="%s"><title>%s on %s: %s%% of %s</title></circle>`,
-				cls, r, x, cy, template.HTMLEscapeString(bar.Name), pct(bar.Visibility),
-				template.HTMLEscapeString(bar.Name), template.HTMLEscapeString(engineLabel(g.Engine)), pct(bar.Visibility), answersWord(g.Answers))
+				cls, r, x, cy, template.HTMLEscapeString(bar.Name), Pct(bar.Visibility),
+				template.HTMLEscapeString(bar.Name), template.HTMLEscapeString(engineLabel(g.Engine)), Pct(bar.Visibility), AnswersWord(g.Answers))
 		}
 		for _, bar := range g.Bars {
 			if !bar.IsOwn && bar.Class == "s-field" {
@@ -722,7 +722,7 @@ func EngineBars(groups []EngineGroup) template.HTML {
 				anchor = "start"
 			}
 			fmt.Fprintf(&b, `<text class="lead-val %s" x="%.1f" y="%.1f" text-anchor="%s">%s %s%%</text>`,
-				bestRival.Class, lx, cy-11, anchor, template.HTMLEscapeString(bestRival.Name), pct(bestRival.Visibility))
+				bestRival.Class, lx, cy-11, anchor, template.HTMLEscapeString(bestRival.Name), Pct(bestRival.Visibility))
 		}
 
 		// Right: your value and your rank on this engine.
@@ -737,10 +737,10 @@ func EngineBars(groups []EngineGroup) template.HTML {
 				fmt.Fprintf(&b, `<text class="val val-zero" x="%.0f" y="%.1f">0%%</text>`, stripValX, cy-3)
 				fmt.Fprintf(&b, `<text class="val-sub" x="%.0f" y="%.1f">not named</text>`, stripValX, cy+11)
 			} else {
-				fmt.Fprintf(&b, `<text class="val" x="%.0f" y="%.1f">%s%%</text>`, stripValX, cy-3, pct(own.Visibility))
+				fmt.Fprintf(&b, `<text class="val" x="%.0f" y="%.1f">%s%%</text>`, stripValX, cy-3, Pct(own.Visibility))
 				sub := fmt.Sprintf("%s of %d", ordinal(rank), len(g.Bars))
 				if rank > 1 && bestRival != nil {
-					sub = fmt.Sprintf("%s, %s %s%%", ordinal(rank), bestRival.Name, pct(bestRival.Visibility))
+					sub = fmt.Sprintf("%s, %s %s%%", ordinal(rank), bestRival.Name, Pct(bestRival.Visibility))
 				}
 				fmt.Fprintf(&b, `<text class="val-sub" x="%.0f" y="%.1f">%s</text>`, stripValX, cy+11, template.HTMLEscapeString(sub))
 			}
@@ -757,7 +757,7 @@ func stripLabel(rows []EngineGroup, ownOf func(EngineGroup) (EngineBar, bool)) s
 	parts := make([]string, 0, len(rows))
 	for _, g := range rows {
 		if own, ok := ownOf(g); ok {
-			parts = append(parts, fmt.Sprintf("%s %s%% of %s", engineLabel(g.Engine), pct(own.Visibility), answersWord(g.Answers)))
+			parts = append(parts, fmt.Sprintf("%s %s%% of %s", engineLabel(g.Engine), Pct(own.Visibility), AnswersWord(g.Answers)))
 		}
 	}
 	if len(parts) == 0 {
@@ -789,9 +789,9 @@ type MixDay struct {
 	Total  int
 }
 
-// mixOrder is the stacking order, bottom to top. Own first so your share sits
+// MixOrder is the stacking order, bottom to top. Own first so your share sits
 // on the baseline where it can be read without a legend.
-var mixOrder = []string{"own", "competitor", "informational", "social", "other"}
+var MixOrder = []string{"own", "competitor", "informational", "social", "other"}
 
 // CitationMixChart draws citations by source type per day as 100% stacked
 // bars: who the engines trust, and whether that is changing.
@@ -838,7 +838,7 @@ func CitationMixChart(days []MixDay) template.HTML {
 		x := ax.xs[di] - barW/2
 		fmt.Fprintf(&b, `<g class="col" data-day="%s">`, template.HTMLEscapeString(d.Day))
 		yCursor := padTop + plotH
-		for _, kind := range mixOrder {
+		for _, kind := range MixOrder {
 			n := d.Counts[kind]
 			if n == 0 {
 				continue
@@ -851,7 +851,7 @@ func CitationMixChart(days []MixDay) template.HTML {
 		}
 		if digits(di) {
 			ownShare := float64(d.Counts["own"]) / float64(d.Total) * 100
-			fmt.Fprintf(&b, `<text class="mix-val" x="%.1f" y="%.1f" text-anchor="middle">%s%%</text>`, ax.xs[di], padTop-5, pct(ownShare))
+			fmt.Fprintf(&b, `<text class="mix-val" x="%.1f" y="%.1f" text-anchor="middle">%s%%</text>`, ax.xs[di], padTop-5, Pct(ownShare))
 			fmt.Fprintf(&b, `<text class="axis axis-sub" x="%.1f" y="%.0f" text-anchor="middle">%d</text>`, ax.xs[di], h-3, d.Total)
 		}
 		b.WriteString(`</g>`)

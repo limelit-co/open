@@ -15,7 +15,6 @@ package ui
 import (
 	"fmt"
 	"html/template"
-	"strings"
 )
 
 // KPIView is one headline number.
@@ -289,45 +288,6 @@ type CitationsPage struct {
 	Answers int
 	LowN    bool
 	Kinds   []KPIView
-}
-
-// pct formats a percentage the way every surface here formats it: no decimal
-// unless the number is small enough that the decimal is the difference
-// between "nothing" and "something".
-func pct(v float64) string {
-	if v > 0 && v < 10 {
-		return strings.TrimSuffix(fmt.Sprintf("%.1f", v), ".0")
-	}
-	return fmt.Sprintf("%.0f", v)
-}
-
-// thousands writes an integer with separators: 1,297 not 1297. fmt has no
-// verb for it.
-func thousands(n int) string {
-	s := fmt.Sprintf("%d", n)
-	neg := strings.HasPrefix(s, "-")
-	if neg {
-		s = s[1:]
-	}
-	var b strings.Builder
-	for i, c := range s {
-		if i > 0 && (len(s)-i)%3 == 0 {
-			b.WriteByte(',')
-		}
-		b.WriteRune(c)
-	}
-	if neg {
-		return "-" + b.String()
-	}
-	return b.String()
-}
-
-// answersWord keeps the denominator readable at n=1.
-func answersWord(n int) string {
-	if n == 1 {
-		return "1 answer"
-	}
-	return fmt.Sprintf("%d answers", n)
 }
 
 // delta formats a change in percentage points.

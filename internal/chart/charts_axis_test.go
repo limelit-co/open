@@ -1,7 +1,7 @@
 // Copyright 2026 Limelit. Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the repository root for the full terms.
 
-package ui
+package chart
 
 import (
 	"math"
@@ -288,8 +288,8 @@ func TestOrdinalAndThousands(t *testing.T) {
 		}
 	}
 	for n, want := range map[int]string{0: "0", 999: "999", 1000: "1,000", 1297: "1,297", 17140: "17,140", 1234567: "1,234,567", -1234: "-1,234"} {
-		if got := thousands(n); got != want {
-			t.Errorf("thousands(%d) = %q, want %q", n, got, want)
+		if got := Thousands(n); got != want {
+			t.Errorf("Thousands(%d) = %q, want %q", n, got, want)
 		}
 	}
 }

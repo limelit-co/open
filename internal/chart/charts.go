@@ -1,16 +1,16 @@
 // Copyright 2026 Limelit. Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the repository root for the full terms.
 
-package ui
-
-// Charts, drawn as SVG on the server.
+// Package chart draws Limelit's charts as SVG on the server, for the
+// dashboard (internal/ui) and for the MCP chart tools (internal/mcpserver),
+// so a chart reads the same wherever it is opened.
 //
 // No charting library. Every chart renders and reads without JavaScript:
-// <title> elements are the tooltips and end labels are the legend.
-// static/charts.js adds hover only, reads values off data-* attributes Go
-// wrote, and computes nothing about the data. Everything here emits an SVG
-// string the templates drop inline, so the charts inherit the page's CSS
-// custom properties and follow light and dark without a second palette.
+// <title> elements are the tooltips and end labels are the legend. The
+// dashboard's static/charts.js adds hover only, reads values off data-*
+// attributes Go wrote, and computes nothing about the data. Everything here
+// emits an SVG string the page drops inline, so the charts inherit the page's
+// CSS custom properties and follow light and dark without a second palette.
 //
 // Two rules this file follows.
 //
@@ -22,6 +22,7 @@ package ui
 // The degenerate cases come first. A new install has one day of data, or
 // none. A series with one point has no line to draw, and the usual way that
 // fails is a divide by len(points)-1.
+package chart
 
 import (
 	"fmt"
@@ -128,7 +129,7 @@ func TrendChart(points []TrendPoint) template.HTML {
 			r = 5.0
 		}
 		fmt.Fprintf(&b, `<circle class="dot" cx="%.1f" cy="%.1f" r="%.1f"><title>%s: %s of %s</title></circle>`,
-			x(i), trendY(p.Value), r, template.HTMLEscapeString(p.Day), pct(p.Value)+"%", answersWord(p.N))
+			x(i), trendY(p.Value), r, template.HTMLEscapeString(p.Day), Pct(p.Value)+"%", AnswersWord(p.N))
 	}
 
 	if len(points) == 1 {
@@ -147,11 +148,11 @@ func TrendChart(points []TrendPoint) template.HTML {
 func trendLabel(points []TrendPoint) string {
 	if len(points) == 1 {
 		return fmt.Sprintf("Visibility on %s: %s%% of %s. One day of history.",
-			points[0].Day, pct(points[0].Value), answersWord(points[0].N))
+			points[0].Day, Pct(points[0].Value), AnswersWord(points[0].N))
 	}
 	first, last := points[0], points[len(points)-1]
 	return fmt.Sprintf("Visibility across %d days, %s to %s. From %s%% to %s%%.",
-		len(points), first.Day, last.Day, pct(first.Value), pct(last.Value))
+		len(points), first.Day, last.Day, Pct(first.Value), Pct(last.Value))
 }
 
 func trendY(v float64) float64 {
@@ -201,12 +202,12 @@ func Sparkline(values []float64) template.HTML {
 // reader can see exactly what it rests on.
 const CellMinN = 5
 
-// cellBin picks the heat class for one grid cell.
+// CellBin picks the heat class for one grid cell.
 //
 // It returns a class, never a colour. The readable ink over each step differs
 // by theme and flips at a different step in each, which CSS can express and a
 // Go string cannot.
-func cellBin(answers int, percent float64) string {
+func CellBin(answers int, percent float64) string {
 	if answers == 0 {
 		return "hm-none"
 	}
