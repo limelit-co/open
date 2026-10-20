@@ -100,6 +100,7 @@ func (a *App) buildSettings(r *http.Request, base Base) (SettingsPage, error) {
 	}
 	if !a.demo {
 		page.MCP = a.mcpView(r)
+		page.CloudSync = a.cloudSyncView(ctx)
 	}
 
 	for _, e := range engines.All() {
