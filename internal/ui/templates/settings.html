@@ -145,6 +145,38 @@
       </form>
       {{end}}
     </div>
+    {{if and .Free $.CloudSync.Shown}}{{with $.CloudSync}}
+    <div class="cloud-sync" id="cloud-sync">
+      <h4>Sync to Limelit Cloud <span class="badge{{if .On}} badge-own{{end}}">{{if .On}}on{{else}}off{{end}}</span></h4>
+      <p class="hint">After every run, copies your prompts, competitors and answers, with their mentions and citations, to the Limelit Cloud workspace the key above belongs to. Provider keys never leave this machine. ChatGPT can then chart them through the Limelit app: in ChatGPT developer mode, add <code>https://limelit.co/mcp/apps</code> as a connector. One Limelit Open instance can sync into a workspace at a time. Turning sync off stops the copying; what was already copied stays in Limelit Cloud.</p>
+      {{with .Note}}<div class="notice notice-{{.Kind}} notice-inline" role="status">{{.Text}}</div>{{end}}
+      {{if .Problem}}<div class="notice notice-warn notice-inline">{{.Problem}}</div>{{end}}
+      {{if .Status}}<p class="hint">{{.Status}}</p>{{end}}
+      <div class="btn-row">
+        {{if .On}}
+        <form method="post" action="/settings/cloud-sync/now">
+          <button class="btn" type="submit">Sync now</button>
+        </form>
+        <form method="post" action="/settings/cloud-sync">
+          <input type="hidden" name="sync" value="off">
+          <button class="btn btn-ghost" type="submit">Turn sync off</button>
+        </form>
+        {{else}}
+        <form method="post" action="/settings/cloud-sync">
+          <input type="hidden" name="sync" value="on">
+          <button class="btn" type="submit"{{if not .KeySet}} disabled{{end}}>Turn sync on</button>
+        </form>
+        {{if .RetryOff}}
+        <form method="post" action="/settings/cloud-sync">
+          <input type="hidden" name="sync" value="off">
+          <button class="btn btn-ghost" type="submit">Tell Limelit Cloud sync is off</button>
+        </form>
+        {{end}}
+        {{end}}
+      </div>
+      {{if not .KeySet}}<p class="hint">Save a Limelit Cloud key above to turn sync on.</p>{{end}}
+    </div>
+    {{end}}{{end}}
     {{end}}
   </div>
   {{end}}

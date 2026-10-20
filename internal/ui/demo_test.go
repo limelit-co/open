@@ -62,6 +62,7 @@ func TestDemoRefusesEveryMutatingRoute(t *testing.T) {
 		"/settings/targets/pause", "/settings/targets/resume",
 		"/settings/keys", "/settings/keys/test", "/settings/keys/forget", "/settings/limits",
 		"/settings/schedule", "/settings/mcp/rotate", "/settings/mcp/forget",
+		"/settings/cloud-sync", "/settings/cloud-sync/now",
 		"/run", "/upgrade",
 		"/setup/brand", "/setup/competitors", "/setup/prompts", "/setup/provider", "/setup/finish",
 	} {

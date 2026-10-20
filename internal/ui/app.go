@@ -145,6 +145,8 @@ func (a *App) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /settings/schedule", a.readOnly(a.saveSchedule))
 	mux.HandleFunc("POST /settings/mcp/rotate", a.readOnly(a.rotateMCPToken))
 	mux.HandleFunc("POST /settings/mcp/forget", a.readOnly(a.forgetMCPToken))
+	mux.HandleFunc("POST /settings/cloud-sync", a.readOnly(a.setCloudSync))
+	mux.HandleFunc("POST /settings/cloud-sync/now", a.readOnly(a.syncCloudNow))
 	mux.HandleFunc("GET /upgrade", a.upgrade)
 	mux.HandleFunc("POST /upgrade", a.readOnly(a.runUpgrade))
 	mux.HandleFunc("POST /run", a.readOnly(a.run))

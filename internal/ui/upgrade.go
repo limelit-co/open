@@ -8,15 +8,12 @@ package ui
 // button and the command cannot drift.
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/limelit-co/open/internal/provider"
-	"github.com/limelit-co/open/internal/store"
 	"github.com/limelit-co/open/internal/upgrade"
 )
 
@@ -80,15 +77,8 @@ func (a *App) runUpgrade(w http.ResponseWriter, r *http.Request) {
 	// that already tracks a different brand is the wrong place for this
 	// one's history, so say so and upload nothing.
 	if key != "" {
-		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-		setup, err := provider.FetchLimelitSetup(ctx, key)
-		cancel()
-		if prop, perr := a.db.Property(r.Context()); err == nil && perr == nil && setup.Brand.Domain != "" &&
-			store.NormalizeDomain(setup.Brand.Domain) != store.NormalizeDomain(prop.Domain) {
-			a.upgradeWith(w, r, func(p *UpgradePage) {
-				p.Error = fmt.Sprintf("That Limelit Cloud key belongs to %s (%s), which tracks a different brand, so nothing was uploaded. Create a key in the Cloud account for %s.",
-					setup.Brand.Name, setup.Brand.Domain, prop.Domain)
-			})
+		if msg := a.cloudBrandMismatch(r.Context(), key, "nothing was uploaded"); msg != "" {
+			a.upgradeWith(w, r, func(p *UpgradePage) { p.Error = msg })
 			return
 		}
 	}

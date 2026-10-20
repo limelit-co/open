@@ -256,6 +256,28 @@ type SettingsPage struct {
 	// NextRun says when the next automatic pass is due, "" when off.
 	NextRun string
 	MCP     MCPView
+	// CloudSync is the Sync to Limelit Cloud setting, shown in the Limelit
+	// Cloud key's card. Not built on a demo.
+	CloudSync CloudSyncView
+}
+
+// CloudSyncView is the Sync to Limelit Cloud setting: whether it is on,
+// whether there is a key to sync with, and how the last attempt went.
+type CloudSyncView struct {
+	// Shown is false on a demo, which never shows it.
+	Shown bool
+	On    bool
+	// KeySet is true when a Limelit Cloud key is saved or in the
+	// environment. Sync copies to the workspace that key belongs to.
+	KeySet bool
+	// Status is one line on the last copy, "" when there is nothing to say.
+	Status string
+	// Problem is the last attempt's failure, "" when it went through.
+	Problem string
+	// RetryOff is true when sync is off here but Cloud was not told.
+	RetryOff bool
+	// Note is the outcome of the button just pressed.
+	Note *Flash
 }
 
 // UpgradePage is the honest boundary with the hosted product, and the form
