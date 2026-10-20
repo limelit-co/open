@@ -53,20 +53,60 @@ type RaceSeries struct {
 	Last float64
 }
 
-// Race geometry. The plot is x 44..1028, y 24..360. The bands under it are
-// disjoint on purpose: ticks 360..365, date glyphs around 370..380, the
-// answers strip 388..408, so a full-height count bar never touches a date.
-const (
-	raceW, raceH        = 1160.0, 418.0
-	racePadL, racePadR  = 44.0, 132.0
-	racePadT, racePlotB = 24.0, 360.0
-	raceDateY           = 378.0
-	raceStripBase       = 408.0
-	raceStripH          = 20.0
-)
+// raceFrame is the size a race chart is drawn at, in viewBox units. Text is
+// sized by CSS in the same units, so a frame is chosen for the width it will
+// be shown at: the dashboard's is wide, and a chat frame is about 700 pixels,
+// where the dashboard's drawing would shrink its text below reading size.
+type raceFrame struct {
+	w, h        float64
+	padL, padR  float64
+	padT, plotB float64
+	dateY       float64
+	stripBase   float64
+	stripH      float64
+	// labelGap is the least room between two date labels.
+	labelGap float64
+	// nameMax cuts an end label's brand name to this many runes; 0 keeps it
+	// whole.
+	nameMax int
+	// week says each point is a week, named by its first day.
+	week bool
+}
 
-func raceY(v float64) float64 {
-	return racePadT + (racePlotB-racePadT)*(1-clampPct(v)/100)
+// dashboardRace is the overview's frame. The plot is x 44..1028, y 24..360.
+// The bands under it are disjoint on purpose: ticks 360..365, date glyphs
+// around 370..380, the answers strip 388..408, so a full-height count bar
+// never touches a date.
+var dashboardRace = raceFrame{
+	w: 1160, h: 418, padL: 44, padR: 132, padT: 24, plotB: 360,
+	dateY: 378, stripBase: 408, stripH: 20, labelGap: 70,
+}
+
+// narrowRace is the frame for a chat, about 720 units across: the plot is x
+// 40..570, y 18..300, dates at 318 and the answers strip 334..352.
+var narrowRace = raceFrame{
+	w: 720, h: 360, padL: 40, padR: 150, padT: 18, plotB: 300,
+	dateY: 318, stripBase: 352, stripH: 18, labelGap: 64, nameMax: 16,
+}
+
+func (f raceFrame) y(v float64) float64 {
+	return f.padT + (f.plotB-f.padT)*(1-clampPct(v)/100)
+}
+
+// when names a point's day, or its week, inside a sentence; whenStart names
+// it at the start of one.
+func (f raceFrame) when(day string) string {
+	if f.week {
+		return "week of " + day
+	}
+	return day
+}
+
+func (f raceFrame) whenStart(day string) string {
+	if f.week {
+		return "Week of " + day
+	}
+	return day
 }
 
 // RaceChart draws every tracked brand's visibility over time on one chart.
@@ -81,6 +121,19 @@ func raceY(v float64) float64 {
 // drawn through consecutive measured days. Points resting on fewer than
 // thinN answers are hollow. Values at the right edge replace a legend.
 func RaceChart(series []RaceSeries) template.HTML {
+	return raceChart(series, dashboardRace)
+}
+
+// RaceChartNarrow draws the same chart for a frame about 700 pixels wide,
+// such as an MCP App in a chat. week says each point is a week, dated by its
+// first day, and the chart says so.
+func RaceChartNarrow(series []RaceSeries, week bool) template.HTML {
+	f := narrowRace
+	f.week = week
+	return raceChart(series, f)
+}
+
+func raceChart(series []RaceSeries, f raceFrame) template.HTML {
 	if len(series) == 0 {
 		return ""
 	}
@@ -113,7 +166,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 		}
 	}
 	n := len(days)
-	ax := dateScale(days, racePadL, raceW-racePadR)
+	ax := dateScale(days, f.padL, f.w-f.padR)
 
 	// Answers per day, for the strip and the ticks. Every brand's point on a
 	// day rests on the same answers, so the max is the day's count.
@@ -138,7 +191,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 
 	var b strings.Builder
 	fmt.Fprintf(&b, `<svg class="chart chart-race" viewBox="0 0 %.0f %.0f" role="img" aria-label="%s">`,
-		raceW, raceH, template.HTMLEscapeString(raceLabel(series, ax, days)))
+		f.w, f.h, template.HTMLEscapeString(raceLabel(series, ax, days, f.week)))
 
 	// Gap bands: the stretches nobody measured.
 	b.WriteString(`<g class="bands" aria-hidden="true">`)
@@ -152,7 +205,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 			continue
 		}
 		fmt.Fprintf(&b, `<rect class="gap-band" x="%.1f" y="%.0f" width="%.1f" height="%.0f" rx="3"><title>No run between %s and %s</title></rect>`,
-			x0, racePadT, x1-x0, racePlotB-racePadT, template.HTMLEscapeString(days[i]), template.HTMLEscapeString(days[i+1]))
+			x0, f.padT, x1-x0, f.plotB-f.padT, template.HTMLEscapeString(days[i]), template.HTMLEscapeString(days[i+1]))
 	}
 	b.WriteString(`</g>`)
 
@@ -160,17 +213,17 @@ func RaceChart(series []RaceSeries) template.HTML {
 	// line rather than colliding with the first point.
 	b.WriteString(`<g class="gridlines" aria-hidden="true">`)
 	for _, v := range []float64{100, 75, 50, 25, 0} {
-		y := raceY(v)
+		y := f.y(v)
 		cls := "grid"
 		if v == 0 {
 			cls = "grid grid-base"
 		}
-		fmt.Fprintf(&b, `<line class="%s" x1="%.0f" x2="%.0f" y1="%.1f" y2="%.1f" vector-effect="non-scaling-stroke"/>`, cls, racePadL, raceW-racePadR, y, y)
+		fmt.Fprintf(&b, `<line class="%s" x1="%.0f" x2="%.0f" y1="%.1f" y2="%.1f" vector-effect="non-scaling-stroke"/>`, cls, f.padL, f.w-f.padR, y, y)
 		label := fmt.Sprintf("%.0f", v)
 		if v == 100 {
 			label += "%"
 		}
-		fmt.Fprintf(&b, `<text class="axis axis-y" x="%.0f" y="%.1f" text-anchor="end" dominant-baseline="middle">%s</text>`, racePadL-10, y, label)
+		fmt.Fprintf(&b, `<text class="axis axis-y" x="%.0f" y="%.1f" text-anchor="end" dominant-baseline="middle">%s</text>`, f.padL-10, y, label)
 	}
 	b.WriteString(`</g>`)
 
@@ -182,10 +235,10 @@ func RaceChart(series []RaceSeries) template.HTML {
 			thin = " data-thin"
 		}
 		fmt.Fprintf(&b, `<line class="tick" x1="%.1f" x2="%.1f" y1="%.0f" y2="%.0f" vector-effect="non-scaling-stroke" data-i="%d" data-x="%.1f" data-day="%s" data-n="%d"%s/>`,
-			ax.xs[i], ax.xs[i], racePlotB, racePlotB+5, i, ax.xs[i], template.HTMLEscapeString(dayLabel(ax, i, days[i])), dayN[i], thin)
+			ax.xs[i], ax.xs[i], f.plotB, f.plotB+5, i, ax.xs[i], template.HTMLEscapeString(dayLabel(ax, i, days[i])), dayN[i], thin)
 	}
-	for _, l := range xLabels(ax, days, 70) {
-		fmt.Fprintf(&b, `<text class="axis axis-x" x="%.1f" y="%.0f" text-anchor="middle">%s</text>`, l.X, raceDateY, template.HTMLEscapeString(l.Text))
+	for _, l := range xLabels(ax, days, f.labelGap) {
+		fmt.Fprintf(&b, `<text class="axis axis-x" x="%.1f" y="%.0f" text-anchor="middle">%s</text>`, l.X, f.dateY, template.HTMLEscapeString(l.Text))
 	}
 	b.WriteString(`</g>`)
 
@@ -197,17 +250,21 @@ func RaceChart(series []RaceSeries) template.HTML {
 		}
 	}
 	if nMax > 0 {
-		b.WriteString(`<g class="n-strip" aria-label="Answers per measured day">`)
-		fmt.Fprintf(&b, `<text class="axis axis-strip" x="%.0f" y="%.1f" dominant-baseline="middle">answers per day</text>`, raceW-racePadR+14, raceStripBase-raceStripH*0.3)
+		per := "day"
+		if f.week {
+			per = "week"
+		}
+		fmt.Fprintf(&b, `<g class="n-strip" aria-label="Answers per measured %s">`, per)
+		fmt.Fprintf(&b, `<text class="axis axis-strip" x="%.0f" y="%.1f" dominant-baseline="middle">answers per %s</text>`, f.w-f.padR+14, f.stripBase-f.stripH*0.3, per)
 		w := math.Max(4, math.Min(14, ax.perDay*0.7))
 		for i := 0; i < n; i++ {
-			h := math.Max(1.5, raceStripH*math.Sqrt(float64(dayN[i])/float64(nMax)))
+			h := math.Max(1.5, f.stripH*math.Sqrt(float64(dayN[i])/float64(nMax)))
 			cls := "n-bar"
 			if dayN[i] < thinN {
 				cls += " n-low"
 			}
 			fmt.Fprintf(&b, `<rect class="%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="1.5"><title>%s: %s</title></rect>`,
-				cls, ax.xs[i]-w/2, raceStripBase-h, w, h, template.HTMLEscapeString(days[i]), AnswersWord(dayN[i]))
+				cls, ax.xs[i]-w/2, f.stripBase-h, w, h, template.HTMLEscapeString(f.whenStart(days[i])), AnswersWord(dayN[i]))
 		}
 		b.WriteString(`</g>`)
 	}
@@ -228,7 +285,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 		if lead[s.Name] {
 			b.WriteString(`<g class="rival-lead">`)
 		}
-		raceSeries(&b, s, ax, dayIdx, false)
+		raceSeries(&b, s, ax, dayIdx, false, f)
 		if lead[s.Name] {
 			b.WriteString(`</g>`)
 		}
@@ -237,7 +294,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 
 	if own != nil && len(own.Points) > 0 {
 		b.WriteString(`<g class="own">`)
-		raceSeries(&b, *own, ax, dayIdx, true)
+		raceSeries(&b, *own, ax, dayIdx, true, f)
 		b.WriteString(`</g>`)
 	}
 
@@ -258,13 +315,13 @@ func RaceChart(series []RaceSeries) template.HTML {
 		if !ok {
 			continue
 		}
-		ends = append(ends, endLabel{s: s, x: ax.xs[i], y: raceY(last.Value), hasPoint: true})
+		ends = append(ends, endLabel{s: s, x: ax.xs[i], y: f.y(last.Value), hasPoint: true})
 	}
 	ys := make([]float64, len(ends))
 	for i, e := range ends {
 		ys[i] = e.y
 	}
-	spread := spreadLabels(ys, 14, racePadT, racePlotB)
+	spread := spreadLabels(ys, 14, f.padT, f.plotB)
 	b.WriteString(`<g class="ends">`)
 	for i, e := range ends {
 		cls := e.s.Class
@@ -276,16 +333,20 @@ func RaceChart(series []RaceSeries) template.HTML {
 		// axis places at the plot's right edge; a lone point in the middle
 		// of a one-day axis would otherwise get a long coloured line to the
 		// gutter that reads as a trend.
-		if math.Abs(spread[i]-e.y) > 1 && e.x >= raceW-racePadR-0.5 {
+		if math.Abs(spread[i]-e.y) > 1 && e.x >= f.w-f.padR-0.5 {
 			fmt.Fprintf(&b, `<line class="lead %s" x1="%.1f" y1="%.1f" x2="%.0f" y2="%.1f" vector-effect="non-scaling-stroke"/>`,
-				e.s.Class, e.x+8, e.y, raceW-racePadR+8, spread[i])
+				e.s.Class, e.x+8, e.y, f.w-f.padR+8, spread[i])
+		}
+		name := e.s.Name
+		if f.nameMax > 0 {
+			name = truncate(name, f.nameMax)
 		}
 		fmt.Fprintf(&b, `<text class="end %s" x="%.0f" y="%.1f" dominant-baseline="middle"><tspan class="end-val">%s%%</tspan><tspan class="end-name" dx="7">%s</tspan></text>`,
-			cls, raceW-racePadR+14, spread[i], Pct(e.s.Last), template.HTMLEscapeString(e.s.Name))
+			cls, f.w-f.padR+14, spread[i], Pct(e.s.Last), template.HTMLEscapeString(name))
 	}
 	b.WriteString(`</g>`)
 
-	fmt.Fprintf(&b, `<line class="cursor" x1="0" x2="0" y1="%.0f" y2="%.0f" vector-effect="non-scaling-stroke" aria-hidden="true"/>`, racePadT, racePlotB)
+	fmt.Fprintf(&b, `<line class="cursor" x1="0" x2="0" y1="%.0f" y2="%.0f" vector-effect="non-scaling-stroke" aria-hidden="true"/>`, f.padT, f.plotB)
 	b.WriteString(`</svg>`)
 	return template.HTML(b.String())
 }
@@ -293,7 +354,7 @@ func RaceChart(series []RaceSeries) template.HTML {
 // raceSeries writes one brand: a curve per solid run, one dashed path for
 // the bridges, a dot per measured day, and for the property an area under
 // each run plus a halo on the latest point.
-func raceSeries(b *strings.Builder, s RaceSeries, ax dateAxis, dayIdx map[string]int, isOwn bool) {
+func raceSeries(b *strings.Builder, s RaceSeries, ax dateAxis, dayIdx map[string]int, isOwn bool, f raceFrame) {
 	// Points in axis order, skipping any whose day is not on the axis.
 	type pt struct {
 		i    int
@@ -306,7 +367,7 @@ func raceSeries(b *strings.Builder, s RaceSeries, ax dateAxis, dayIdx map[string
 		if !ok {
 			continue
 		}
-		pts = append(pts, pt{i: i, x: ax.xs[i], y: raceY(p.Value), p: p})
+		pts = append(pts, pt{i: i, x: ax.xs[i], y: f.y(p.Value), p: p})
 	}
 	sort.Slice(pts, func(a, c int) bool { return pts[a].i < pts[c].i })
 	if len(pts) == 0 {
@@ -347,7 +408,7 @@ func raceSeries(b *strings.Builder, s RaceSeries, ax dateAxis, dayIdx map[string
 		}
 		path := monotonePath(xs, ys)
 		if isOwn && len(run) >= 2 {
-			fmt.Fprintf(b, `<path class="area area-own" d="%s L%.1f %.0f L%.1f %.0f Z"/>`, path, xs[len(xs)-1], racePlotB, xs[0], racePlotB)
+			fmt.Fprintf(b, `<path class="area area-own" d="%s L%.1f %.0f L%.1f %.0f Z"/>`, path, xs[len(xs)-1], f.plotB, xs[0], f.plotB)
 		}
 		if len(run) >= 2 {
 			if line.Len() > 0 {
@@ -393,11 +454,11 @@ func raceSeries(b *strings.Builder, s RaceSeries, ax dateAxis, dayIdx map[string
 		}
 		fmt.Fprintf(b, `<circle class="%s" cx="%.1f" cy="%.1f" r="%.1f" data-i="%d" data-brand="%s" data-v="%s" data-n="%d"><title>%s, %s: %s%% of %s%s</title></circle>`,
 			dcls, p.x, p.y, r, p.i, template.HTMLEscapeString(s.Name), Pct(p.p.Value), p.p.N,
-			template.HTMLEscapeString(s.Name), template.HTMLEscapeString(p.p.Day), Pct(p.p.Value), AnswersWord(p.p.N), thin)
+			template.HTMLEscapeString(s.Name), template.HTMLEscapeString(f.when(p.p.Day)), Pct(p.p.Value), AnswersWord(p.p.N), thin)
 	}
 }
 
-func raceLabel(series []RaceSeries, ax dateAxis, days []string) string {
+func raceLabel(series []RaceSeries, ax dateAxis, days []string, week bool) string {
 	parts := make([]string, 0, len(series))
 	for _, s := range series {
 		parts = append(parts, fmt.Sprintf("%s %s%%", s.Name, Pct(s.Last)))
@@ -408,10 +469,14 @@ func raceLabel(series []RaceSeries, ax dateAxis, days []string) string {
 		if ax.dated {
 			first, last = shortDate(ax.ts[0]), shortDate(ax.ts[n-1])
 		}
+		unit := "day"
+		if week {
+			unit = "week"
+		}
 		if n == 1 {
-			span = fmt.Sprintf(", one measured day, %s", first)
+			span = fmt.Sprintf(", one measured %s, %s", unit, first)
 		} else {
-			span = fmt.Sprintf(", %d measured days from %s to %s", n, first, last)
+			span = fmt.Sprintf(", %d measured %ss from %s to %s", n, unit, first, last)
 		}
 	}
 	return "Visibility by brand" + span + ". Latest: " + strings.Join(parts, ", ") + "."
