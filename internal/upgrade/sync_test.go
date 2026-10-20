@@ -510,7 +510,7 @@ func TestSyncNeedsAKeyAndSendsNoProviderKey(t *testing.T) {
 // TestSyncWordingFollowsTheCopyRules. These sentences are shown in Settings:
 // no em dash, and neither of the two words the dashboard never uses.
 func TestSyncWordingFollowsTheCopyRules(t *testing.T) {
-	banned := regexp.MustCompile(`(?i)\b(api|scraped)\b|—|&mdash;`)
+	banned := regexp.MustCompile(`(?i)\b(api|scraped)\b|\x{2014}|&(mdash|#8212);`)
 	errs := []error{
 		&CloudError{Status: 409, Code: "another_instance_syncing"},
 		&CloudError{Status: 401},
