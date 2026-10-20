@@ -68,7 +68,11 @@ func cloudSyncHook(db *store.DB, keys *secrets.Keyring, log *slog.Logger, mode s
 		}
 		if mode == syncBeforeExit {
 			// The pass's own context: Ctrl-C stops the copy too, and the
-			// next run sends what this one did not.
+			// next run sends what this one did not. A pass already stopped
+			// that way copies nothing, rather than recording a failure.
+			if ctx.Err() != nil {
+				return
+			}
 			c, cancel := context.WithTimeout(ctx, runSyncTimeout)
 			defer cancel()
 			copyNow(c)
