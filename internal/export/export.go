@@ -42,6 +42,10 @@ type Options struct {
 	// Since keeps only answers created on or after this date (YYYY-MM-DD),
 	// and everything hanging off them. Empty means everything.
 	Since string
+	// Until keeps only answers created before this date (YYYY-MM-DD,
+	// exclusive), so consecutive Since and Until windows cover each answer
+	// exactly once. Empty means no upper bound.
+	Until string
 	// Now is the timestamp stamped on the export. Injected so a test does not
 	// depend on the clock.
 	Now string
@@ -69,6 +73,9 @@ func WriteJSON(ctx context.Context, db *store.DB, w io.Writer, opts Options) err
 	}
 	if opts.Since != "" {
 		bw.printf(`,"since":%s`, quote(opts.Since))
+	}
+	if opts.Until != "" {
+		bw.printf(`,"until":%s`, quote(opts.Until))
 	}
 
 	for _, table := range tables {
@@ -214,8 +221,8 @@ func WriteCSV(ctx context.Context, db *store.DB, dir string, opts Options) ([]st
 	return written, nil
 }
 
-// tableQuery is the read for one table, with the since filter applied where
-// it means something.
+// tableQuery is the read for one table, with the since and until filters
+// applied where they mean something.
 //
 // A filter on chats has to reach the rows that hang off them: exporting a
 // mention whose chat was filtered out would produce a file that does not
@@ -224,10 +231,24 @@ func tableQuery(table string, opts Options) (string, []any) {
 	var (
 		args  []any
 		since = strings.TrimSpace(opts.Since)
+		until = strings.TrimSpace(opts.Until)
 	)
-	add := func(v any) string {
-		args = append(args, v)
-		return "?"
+	// window is the WHERE clause bounding one date expression by since
+	// (inclusive) and until (exclusive), or "" when neither is set.
+	window := func(expr string) string {
+		var conds []string
+		if since != "" {
+			args = append(args, since)
+			conds = append(conds, expr+" >= ?")
+		}
+		if until != "" {
+			args = append(args, until)
+			conds = append(conds, expr+" < ?")
+		}
+		if len(conds) == 0 {
+			return ""
+		}
+		return " WHERE " + strings.Join(conds, " AND ")
 	}
 
 	switch table {
@@ -241,45 +262,27 @@ func tableQuery(table string, opts Options) (string, []any) {
 		        FROM target ORDER BY id`, nil
 	case "evaluations":
 		q := `SELECT id, status, planned, completed, failed, started_at, finished_at FROM evaluation`
-		if since != "" {
-			q += ` WHERE date(started_at) >= ` + add(since)
-		}
-		return q + ` ORDER BY id`, args
+		return q + window("date(started_at)") + ` ORDER BY id`, args
 	case "chats":
 		q := `SELECT id, evaluation_id, prompt_id, target_id, status, text, model, error,
 		             input_tokens, output_tokens, calls, created_at FROM chat`
-		if since != "" {
-			q += ` WHERE date(created_at) >= ` + add(since)
-		}
-		return q + ` ORDER BY id`, args
+		return q + window("date(created_at)") + ` ORDER BY id`, args
 	case "mentions":
 		q := `SELECT m.id, m.chat_id, m.competitor_id, m.brand_key, m.brand_name,
 		             m.offset_start, m.offset_end, m.list_rank
 		      FROM mention m JOIN chat c ON c.id = m.chat_id`
-		if since != "" {
-			q += ` WHERE date(c.created_at) >= ` + add(since)
-		}
-		return q + ` ORDER BY m.id`, args
+		return q + window("date(c.created_at)") + ` ORDER BY m.id`, args
 	case "citations":
 		q := `SELECT ct.id, ct.chat_id, ct.url, ct.host, ct.site, ct.title, ct.position, ct.source_type
 		      FROM citation ct JOIN chat c ON c.id = ct.chat_id`
-		if since != "" {
-			q += ` WHERE date(c.created_at) >= ` + add(since)
-		}
-		return q + ` ORDER BY ct.id`, args
+		return q + window("date(c.created_at)") + ` ORDER BY ct.id`, args
 	case "fanout":
 		q := `SELECT f.id, f.chat_id, f.query, f.position
 		      FROM fanout f JOIN chat c ON c.id = f.chat_id`
-		if since != "" {
-			q += ` WHERE date(c.created_at) >= ` + add(since)
-		}
-		return q + ` ORDER BY f.id`, args
+		return q + window("date(c.created_at)") + ` ORDER BY f.id`, args
 	case "usage":
 		q := `SELECT target_id, day, calls, input_tokens, output_tokens FROM usage_day`
-		if since != "" {
-			q += ` WHERE day >= ` + add(since)
-		}
-		return q + ` ORDER BY day, target_id`, args
+		return q + window("day") + ` ORDER BY day, target_id`, args
 	default:
 		// Unreachable: tables is a fixed list in this package.
 		return `SELECT 1 WHERE 0`, nil

@@ -181,7 +181,7 @@ func TestCloudErrorsSayWhatHappenedToTheData(t *testing.T) {
 func TestBuildPayloadProducesValidJSONWithTheIDFirst(t *testing.T) {
 	// The id is spliced into the envelope rather than the document being
 	// decoded and re-encoded, so a malformed splice is the risk worth testing.
-	raw, err := buildPayload(context.Background(), seeded(t), "open-abc", "")
+	raw, err := buildPayload(context.Background(), seeded(t), "open-abc", Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +198,7 @@ func TestBuildPayloadProducesValidJSONWithTheIDFirst(t *testing.T) {
 }
 
 func TestSinceNarrowsThePayload(t *testing.T) {
-	raw, err := buildPayload(context.Background(), seeded(t), "open-abc", "2099-01-01")
+	raw, err := buildPayload(context.Background(), seeded(t), "open-abc", Options{Since: "2099-01-01"})
 	if err != nil {
 		t.Fatal(err)
 	}

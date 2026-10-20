@@ -111,6 +111,16 @@ type Runner struct {
 	// as they were when the process booted. Nil means no derived rows.
 	NewAnalyzer func(context.Context) (Analyzer, error)
 
+	// OnFinished, when set, is called once a pass has run to its end: after
+	// its evaluation row is closed and the stored answers are read again
+	// under the current rules, so what it reads is what the pass stored.
+	// It runs while the pass still holds the lock and before Run returns,
+	// so a caller that must not delay the pass starts its own goroutine.
+	// ctx is the pass's own, which may already be cancelled.
+	// It is not called for a pass refused at the start or failed before it
+	// asked anything.
+	OnFinished func(context.Context, Result)
+
 	// PerProvider caps how many answers are in flight against one provider.
 	// Low on purpose: these are somebody else's rate limits, and a self-host
 	// default that trips them would look like a broken tool.
@@ -391,13 +401,17 @@ func (p *pass) finish(ctx context.Context) (Result, error) {
 		Planned: final.Planned, Completed: final.Completed, Failed: final.Failed,
 	})
 
-	return Result{
+	res := Result{
 		EvaluationID: evalID,
 		Planned:      final.Planned,
 		Completed:    final.Completed,
 		Failed:       final.Failed,
 		Duration:     time.Since(started),
-	}, nil
+	}
+	if r.OnFinished != nil {
+		r.OnFinished(ctx, res)
+	}
+	return res, nil
 }
 
 // heartbeat marks the pass live every HeartbeatEvery until ctx ends.
