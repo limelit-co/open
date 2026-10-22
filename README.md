@@ -18,7 +18,7 @@
   <a href="https://discord.gg/g2Ef3WSTTC"><img alt="Discord" src="https://img.shields.io/badge/chat-Discord-5865F2.svg?logo=discord&logoColor=white"></a>
 </p>
 
-https://github.com/user-attachments/assets/589547b9-7b81-4310-a1b3-298e9b54f8b5
+https://github.com/user-attachments/assets/b5894a6e-bb40-426d-b493-2cedc7e41e90
 
 <p align="center">
   <sub>The launch film, 44 seconds with sound. Also on <a href="https://limelit.co/open">limelit.co/open</a>, or <a href="docs/video/limelit-open-launch.mp4">download the MP4</a>.</sub>
