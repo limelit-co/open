@@ -19,6 +19,12 @@
 </p>
 
 <p align="center">
+  <a href="https://limelit.co/open"><img alt="Watch the 44-second Limelit Open launch film" src="docs/video/limelit-open-launch.png" width="880"></a>
+  <br />
+  <sub>The launch film, 44 seconds with sound. <a href="docs/video/limelit-open-launch.mp4">Download the MP4</a>.</sub>
+</p>
+
+<p align="center">
   <a href="https://demo.limelit.co"><img alt="The race: every tracked brand's visibility by day, with a hover card for one measured day" src="docs/screenshots/race.png" width="880"></a>
 </p>
 
