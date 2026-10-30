@@ -376,7 +376,7 @@ marketplace**, and enter `limelit-co/open`.
 |---|---|
 | [`limelit-open`](plugins/limelit-open) | Connects this install over stdio, with the skill `limelit-open-visibility-report`. Claude asks for the binary path and the data directory. |
 | [`limelit-audit`](plugins/limelit-audit) | Two skills that need no install and no account: `ai-crawler-check` (which AI crawlers a robots.txt lets in, and what each block costs) and `llms-txt-check` (audits a site's llms.txt and drafts a better one). |
-| [`limelit`](plugins/limelit) | Connects Limelit Cloud instead, with a Cloud API key. |
+| [`limelit`](https://github.com/limelit-co/limelit-plugin) | Connects Limelit Cloud instead. You sign in through the browser from `/mcp`, with no key to paste. Adds skills, slash commands such as `/limelit:visibility` and `/limelit:next-post`, and a prompt before anything that spends credits or publishes. It lives in its own repo, [limelit-co/limelit-plugin](https://github.com/limelit-co/limelit-plugin), and installs from here too. |
 
 Details and privacy notes: [plugins/README.md](plugins/README.md).
 
