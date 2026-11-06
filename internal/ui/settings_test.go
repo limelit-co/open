@@ -5,6 +5,7 @@ package ui
 
 import (
 	"context"
+	"html"
 	"net/http"
 	"net/url"
 	"strings"
@@ -79,7 +80,8 @@ func TestSettingsSaysWhereToGetEveryKey(t *testing.T) {
 	body := get(t, h, "/settings").Body.String()
 
 	for _, c := range provider.Catalog() {
-		if !strings.Contains(body, c.KeyURL) {
+		// html/template writes "&" in an href as "&amp;".
+		if !strings.Contains(body, html.EscapeString(c.KeyURL)) {
 			t.Errorf("settings does not link %s at %s", c.Label, c.KeyURL)
 		}
 		if !strings.Contains(body, c.Label) {
