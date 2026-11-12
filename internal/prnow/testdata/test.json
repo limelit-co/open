@@ -1,0 +1,1 @@
+{"success": true, "data": {"message": "API key is valid", "account": {"id": "acc_1", "email": "press@example.com", "name": "Ada Example", "company": "Example Co"}, "credits": 120, "maxSingleWalletCredits": 100, "wallets": {"default": 20, "custom": 0, "reseller": [{"id": "w1", "credits": 100}]}}}
