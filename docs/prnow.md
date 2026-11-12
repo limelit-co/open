@@ -97,8 +97,17 @@ limelit prnow retract G9E1HJK
 Works only while the release is `pending`; PRNow refunds its credits. Once
 editorial work has started it cannot be withdrawn.
 
+## From Claude (MCP)
+
+The same steps are MCP tools on `limelit mcp` and on the endpoint of
+`limelit serve`: `prnow_list_categories`, `prnow_submit_release` and
+`prnow_release_status`. Ask Claude to publish the article; it checks the
+release and shows you the credits first (`dry_run`, on by default), and
+submits only after you confirm. The key is the one `limelit prnow login`
+saved; it is never sent to Claude. See [tools.md](tools.md#press-releases-prnow).
+
 ## What is not here yet
 
-- No MCP tool: publishing is a command-line step for now.
+- Retracting from Claude: `limelit prnow retract` only.
 - PRNow's report, links, events and press release tools endpoints are not
   wrapped.

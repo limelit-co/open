@@ -35,8 +35,9 @@ type Server struct {
 // New builds a Server bound to addr. dash may be nil, which serves the health
 // endpoint alone; that is the shape the tests use.
 // run starts passes for the MCP endpoint's evaluation tools; nil leaves
-// those tools unregistered, as in a test that has no runner.
-func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.App, run *runner.Runner) *Server {
+// those tools unregistered, as in a test that has no runner. pub does the
+// same for the press release tools.
+func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.App, run *runner.Runner, pub mcpserver.PRNowSource) *Server {
 	s := &Server{db: db, log: log, version: version}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.handleHealthz)
@@ -57,7 +58,7 @@ func New(addr string, db *store.DB, log *slog.Logger, version string, dash *ui.A
 	if dash != nil {
 		ceiling = dash.RunsPerDay
 	}
-	if srv, err := New_(db, mcpserver.DashboardURL(addr), run, ceiling); err == nil {
+	if srv, err := New_(db, mcpserver.DashboardURL(addr), run, ceiling, pub); err == nil {
 		mux.Handle("/mcp", mcpserver.Handler(srv, token, log))
 		mux.Handle("/mcp/", mcpserver.Handler(srv, token, log))
 	} else if log != nil {
@@ -148,11 +149,15 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 // The run tools get the same runner and the same ceiling as the dashboard's
 // Run now, so a pass started from an agent is held to the limit in Settings.
 // A read-only demo gets neither, as its Run now refuses: anyone holding the
-// demo's token must not be able to spend the operator's keys.
-func New_(db *store.DB, dashboard string, run *runner.Runner, ceiling func(context.Context) int) (*mcp.Server, error) {
+// demo's token must not be able to spend the operator's keys, and the same
+// holds for the press release tools and the operator's PRNow credits.
+func New_(db *store.DB, dashboard string, run *runner.Runner, ceiling func(context.Context) int, pub mcpserver.PRNowSource) (*mcp.Server, error) {
 	deps := mcpserver.Deps{DB: db, DashboardURL: dashboard}
 	if run != nil && ceiling != nil && !ui.DemoMode() {
 		deps.Runner, deps.RunsPerDay = run, ceiling
+	}
+	if pub != nil && !ui.DemoMode() {
+		deps.PRNow = pub
 	}
 	return mcpserver.New(deps)
 }
