@@ -206,6 +206,7 @@ Limelit Open takes the other side of it:
 | **Query fan-out**: the searches an engine actually ran on the way to its answer, which are often not the question you asked | **working** |
 | **Setup wizard**: brand, competitors, a starter prompt pack from your category, one key | **working** |
 | **Single binary, SQLite**: no cgo, no Docker requirement, no Postgres | **working** |
+| **Press release publishing**: send a news article out through [PRNow](https://prnow.io) from the command line, then follow it to the outlets that ran it ([docs/prnow.md](docs/prnow.md)) | **new** |
 
 ## Quick start
 
@@ -316,6 +317,7 @@ limelit mcp       MCP over stdio, for Claude Desktop and Claude Code
 limelit run       one evaluation pass, then exit
 limelit export    write everything this instance knows to stdout
 limelit login     get a free Limelit Cloud key and save it here
+limelit prnow     publish a news article as a press release through PRNow
 limelit upgrade   move this instance to Limelit Cloud
 limelit version   version and build info
 ```

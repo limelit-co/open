@@ -9,6 +9,7 @@
 //	limelit mcp       MCP over stdio, for a local Claude
 //	limelit run       one evaluation pass, then exit
 //	limelit export    JSON or CSV of everything
+//	limelit prnow     publish a news article as a press release through PRNow
 //	limelit upgrade   move to Limelit Cloud
 //	limelit version   version and commit
 package main
@@ -54,6 +55,7 @@ Commands:
   run       run one evaluation pass and exit
   export    write everything this instance knows to stdout
   login     get a free Limelit Cloud key and save it here (no provider key needed)
+  prnow     publish a news article as a press release through PRNow
   upgrade   move this instance to Limelit Cloud
   version   print version and build info
 
@@ -93,6 +95,8 @@ func run(args []string) error {
 		return cmdUpgrade(ctx, rest)
 	case "login":
 		return cmdLogin(ctx, rest)
+	case "prnow":
+		return cmdPRNow(ctx, rest)
 	case "version":
 		fmt.Println(versionLine())
 		return nil
