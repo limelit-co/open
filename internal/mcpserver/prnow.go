@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -112,6 +113,9 @@ type prnowCategoriesOut struct {
 	Categories []string `json:"categories" jsonschema:"the values categories accepts, case-sensitive"`
 }
 
+// markdownRE spots Markdown a model tends to write: bold, headings, links.
+var markdownRE = regexp.MustCompile(`\*\*\S|(?m)^#{1,6} |\]\(https?://`)
+
 const prnowConfirmFirst = " Call with dry_run=true first (the default) and show the user the release, any problems, " +
 	"and the account's credits. Submitting spends PRNow credits on the user's plan and puts the article in front of " +
 	"news outlets, which cannot be taken back once editorial work starts. Call again with dry_run=false only after the " +
@@ -203,6 +207,9 @@ func prnowSubmit(ctx context.Context, d Deps, in prnowSubmitArgs) (prnowSubmitOu
 	if draft.Plan == "" {
 		check.Errors = append(check.Errors, "plan is required: ask the user which PRNow plan to use (it sets what is spent)")
 	}
+	if markdownRE.MatchString(in.Content) {
+		check.Warnings = append(check.Warnings, "content looks like Markdown, which is sent as typed: write HTML or plain paragraphs (Markdown links also escape the 5-link limit)")
+	}
 	out := prnowSubmitOut{
 		DryRun: dryRun, Ready: check.OK(), Problems: check.Errors, Warnings: check.Warnings,
 		Words: prnow.Words(draft.Content),
@@ -273,6 +280,13 @@ func prnowError(err error, key string) error {
 		return errors.New("the PRNow account does not have enough credits for this plan, so nothing was charged. The user can add credits in their PRNow account")
 	case errors.Is(err, prnow.ErrNotFound):
 		return errors.New("PRNow has no release with that release_id on this account")
+	case errors.Is(err, prnow.ErrIdemReuse):
+		return errors.New("that idempotency_key was already used for a different release. Omit idempotency_key to submit this one as new")
+	case key != "":
+		// No clear answer to a submit: it may have been taken. The key is
+		// the only way to ask again without paying twice, and a tool error
+		// carries nothing but this text.
+		return fmt.Errorf("no clear answer from PRNow (%v); the release may have been taken. Call again with idempotency_key %q, which PRNow charges at most once", err, key)
 	}
 	return err
 }

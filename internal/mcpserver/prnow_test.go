@@ -275,3 +275,34 @@ func TestThePRNowKeyNeverReachesAResult(t *testing.T) {
 		t.Error("an error returned the PRNow key")
 	}
 }
+
+// TestADroppedSubmitKeepsItsKey: a submit with no clear answer may have been
+// taken, so the error must carry the key that makes asking again safe.
+func TestADroppedSubmitKeepsItsKey(t *testing.T) {
+	s, fake := prnowSession(t)
+	fake.On("POST /submit", prnowtest.Reply{Status: 500, Fixture: "credits.json"})
+	args := goodRelease()
+	args["dry_run"] = false
+	res := call(t, s, "prnow_submit_release", args)
+	sent := fake.Requests()[len(fake.Requests())-1].IdempotencyKey
+	if !res.IsError || sent == "" || !strings.Contains(resultText(res), sent) {
+		t.Fatalf("the error does not carry the key %q that was sent: %s", sent, resultText(res))
+	}
+
+	fake.On("POST /submit", prnowtest.Reply{Status: 422, Fixture: "credits.json"})
+	args["idempotency_key"] = sent
+	if res := call(t, s, "prnow_submit_release", args); !strings.Contains(resultText(res), "Omit idempotency_key") {
+		t.Errorf("422: %s", resultText(res))
+	}
+}
+
+func TestMarkdownContentIsFlagged(t *testing.T) {
+	s, _ := prnowSession(t)
+	args := goodRelease()
+	args["content"] = "## Berlin\n\n" + args["content"].(string) + " See [the post](https://example.com)."
+	var out prnowSubmitOut
+	decodeInto(t, call(t, s, "prnow_submit_release", args), &out)
+	if len(out.Warnings) == 0 || !strings.Contains(out.Warnings[0], "Markdown") {
+		t.Fatalf("warnings = %v", out.Warnings)
+	}
+}

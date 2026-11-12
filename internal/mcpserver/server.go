@@ -40,8 +40,9 @@ import (
 const Version = "0.1"
 
 // Deps is what the tools need. Nothing here holds a credential: the tools
-// read stored answers, and the run tools hand a pass to the Runner, which
-// reads provider keys itself. No key ever passes through a tool.
+// read stored answers, the run tools hand a pass to the Runner, which reads
+// provider keys itself, and PRNow resolves its key inside the source. No key
+// ever passes through a tool.
 type Deps struct {
 	DB      *store.DB
 	Metrics *metrics.Service
