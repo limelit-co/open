@@ -27,7 +27,8 @@ limelit prnow categories   # the categories a release can use
 ## Write the release
 
 The body is a file: HTML, or plain text with a blank line between
-paragraphs (it is turned into escaped `<p>` paragraphs). A first line of the
+paragraphs (it is turned into escaped `<p>` paragraphs). Markdown is not
+converted: `**bold**` and `[links](url)` go out as typed. A first line of the
 form `# Headline` is used as the title, or pass `--title`.
 
 PRNow's limits, which are checked before anything is sent, with every problem
@@ -48,14 +49,14 @@ rather than after a round trip.
 ## Draft, then submit
 
 ```bash
-limelit prnow draft  --file release.md --category Business --country Germany --city Berlin
+limelit prnow draft  --file release.txt --category Business --country Germany --city Berlin
 ```
 
 A draft is saved on your PRNow account and nothing is charged. Finish it
 there, or submit from here.
 
 ```bash
-limelit prnow submit --file release.md --category Business --country Germany --city Berlin --plan standard
+limelit prnow submit --file release.txt --category Business --country Germany --city Berlin --plan standard
 ```
 
 Without `--yes`, `submit` sends nothing: it checks the release, shows the
