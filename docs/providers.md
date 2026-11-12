@@ -158,7 +158,7 @@ Build order. The first group ships before the second is started.
 
 | Provider | Engines | Notes |
 |---|---|---|
-| `cloro` | `chatgpt`, `ai_mode`, `perplexity`, `gemini` | Always online. Key: <https://cloro.ai/> |
+| `cloro` | `chatgpt`, `ai_mode`, `gemini`, `bing_copilot` | Always online. Key: <https://dashboard.cloro.dev/api-keys?utm_source=limelit&utm_medium=byok> |
 | `brightdata` | `chatgpt`, `ai_mode`, `ai_overview`, `perplexity`, `gemini`, `bing_copilot` | Key: <https://brightdata.com/> |
 | `oxylabs` | `chatgpt`, `ai_mode`, `ai_overview`, `perplexity` | Key: <https://oxylabs.io/> |
 | `olostep` | `chatgpt`, `ai_mode`, `perplexity` | Key: <https://www.olostep.com/> |

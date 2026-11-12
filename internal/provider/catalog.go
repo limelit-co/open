@@ -97,9 +97,9 @@ var catalog = []CatalogEntry{
 	},
 	{
 		Name: "cloro", Label: "Cloro", Access: AccessScraped,
-		Engines:     map[string]string{ChatGPTEngine: "", AIModeEngine: "", PerplexityEngine: "", GeminiEngine: ""},
+		Engines:     map[string]string{ChatGPTEngine: "", AIModeEngine: "", GeminiEngine: "", BingCopilotEngine: ""},
 		Credentials: []string{"CLORO_API_KEY"},
-		KeyURL:      "https://cloro.ai/",
+		KeyURL:      "https://dashboard.cloro.dev/api-keys?utm_source=limelit&utm_medium=byok",
 		Note:        "Consumer answers as markdown with their sources.",
 	},
 	{

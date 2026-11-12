@@ -15,7 +15,7 @@
 | Plugin | What it does | Needs |
 |---|---|---|
 | [`limelit-audit`](limelit-audit) | Free audits: which AI crawlers your robots.txt allows (`ai-crawler-check`), and whether your llms.txt is present and valid (`llms-txt-check`) | Nothing. No account. |
-| [`limelit`](limelit) | Connects Limelit Cloud: share of voice, lost questions, sources cited instead, next fixes (`limelit-visibility-report`) | A free [Limelit](https://limelit.co) account and API key |
+| [`limelit`](https://github.com/limelit-co/limelit-plugin) | Connects Limelit Cloud: share of voice, lost prompts, sources cited instead, what to write next. Lives in [limelit-co/limelit-plugin](https://github.com/limelit-co/limelit-plugin) | A free [Limelit](https://limelit.co) account. You sign in from `/mcp`, no API key |
 | [`limelit-open`](limelit-open) | Connects a self-hosted [Limelit Open](../README.md) install (`limelit-open-visibility-report`) | Limelit Open installed on your machine |
 
 ## Install
@@ -28,6 +28,9 @@
 ```
 
 Swap in `limelit` or `limelit-open` for the other plugins.
+
+After installing `limelit`, type `/mcp`, highlight the Limelit server, press Enter and
+choose **Authenticate**. Your browser opens limelit.co: sign in and click **Allow access**.
 
 ### Claude desktop app and Cowork
 
