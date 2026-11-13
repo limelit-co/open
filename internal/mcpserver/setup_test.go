@@ -227,7 +227,7 @@ func TestInstructionsRouteToTheFrontDoor(t *testing.T) {
 		{false, session(t, emptyDB(t), ""), "Runs start in the dashboard"},
 		{true, runSession(t, 100, false).s, "dry_run=true"},
 	} {
-		instructions := instructionsFor(tc.runs)
+		instructions := instructionsFor(tc.runs, false)
 		for _, want := range []string{
 			"get_active_property", "has_answers", "next_step", "Not for", "never ask for a key", tc.want,
 			"ChatGPT", "Claude", "Perplexity", "Gemini", "Google AI Overviews", "Google AI Mode", "Bing Copilot",
@@ -252,7 +252,7 @@ func TestInstructionsRouteToTheFrontDoor(t *testing.T) {
 		for _, tool := range res.Tools {
 			registered[tool.Name] = true
 		}
-		for _, name := range regexp.MustCompile(`\b(?:get|list|reevaluate)_[a-z_]+\b`).FindAllString(instructions, -1) {
+		for _, name := range regexp.MustCompile(`\b(?:get|list|reevaluate|prnow)_[a-z_]+\b`).FindAllString(instructions, -1) {
 			if !registered[name] {
 				t.Errorf("runs=%v: the instructions name %q, which is not a registered tool", tc.runs, name)
 			}

@@ -40,8 +40,9 @@ import (
 const Version = "0.1"
 
 // Deps is what the tools need. Nothing here holds a credential: the tools
-// read stored answers, and the run tools hand a pass to the Runner, which
-// reads provider keys itself. No key ever passes through a tool.
+// read stored answers, the run tools hand a pass to the Runner, which reads
+// provider keys itself, and PRNow resolves its key inside the source. No key
+// ever passes through a tool.
 type Deps struct {
 	DB      *store.DB
 	Metrics *metrics.Service
@@ -56,6 +57,11 @@ type Deps struct {
 	// DashboardURL is where serve's dashboard answers, for the setup block's
 	// links. Empty over stdio, where the server cannot know it.
 	DashboardURL string
+	// PRNow resolves the PRNow client for the press release tools at the
+	// moment of each call; the key stays inside it. Nil leaves those tools
+	// unregistered, as a read-only demo must: they spend the operator's
+	// PRNow credits.
+	PRNow PRNowSource
 }
 
 // Runner is the evaluation entry point, as an interface so this package does
@@ -82,7 +88,7 @@ func New(deps Deps) (*mcp.Server, error) {
 		Title:   "Limelit Open",
 		Version: Version,
 	}, &mcp.ServerOptions{
-		Instructions: instructionsFor(deps.Runner != nil),
+		Instructions: instructionsFor(deps.Runner != nil, deps.PRNow != nil),
 	})
 
 	registerProperty(s, deps)
@@ -97,6 +103,9 @@ func New(deps Deps) (*mcp.Server, error) {
 	if deps.Runner != nil {
 		registerRuns(s, deps)
 	}
+	if deps.PRNow != nil {
+		registerPRNow(s, deps)
+	}
 
 	return s, nil
 }
@@ -110,13 +119,17 @@ func New(deps Deps) (*mcp.Server, error) {
 //
 // How to run depends on whether this server has a runner: with one, the run
 // tools and the dry-run-then-confirm order; without, the dashboard. The
-// instructions never name a tool the server does not register.
-func instructionsFor(runs bool) string {
-	run, status := runInDashboard, ""
+// instructions never name a tool the server does not register, which is
+// also why the press release line is there only with the PRNow tools.
+func instructionsFor(runs, publish bool) string {
+	run, status, release := runInDashboard, "", ""
 	if runs {
 		run, status = runWithTools, runStatusLine
 	}
-	return instructionsIntro + run + instructionsRouting + status + instructionsRules
+	if publish {
+		release = publishLine
+	}
+	return instructionsIntro + run + instructionsRouting + status + release + instructionsRules
 }
 
 const instructionsIntro = `Limelit tracks how AI answer engines (ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews, Google AI Mode, Bing Copilot) mention and cite one brand against its competitors. Use it when the user asks how visible their brand is in AI answers or AI search, who is ahead there, which prompts they lose, what gets cited instead, or how to get started with Limelit. Not for Search Console, paid ads or classic SEO rankings.
@@ -141,6 +154,9 @@ If the user asks:
 
 const runStatusLine = `
 - whether a run is done or the numbers are current: get_run_activity.`
+
+const publishLine = `
+- to publish news: prnow_submit_release, dry_run=true, then false once confirmed.`
 
 const instructionsRules = `
 End with one or two questions from try_asking.

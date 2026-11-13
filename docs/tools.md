@@ -128,6 +128,33 @@ The order is fixed by the descriptions and the server instructions: call with
 - Unlike Cloud, `get_run_activity` reports one evaluation (a pass), not
   per-engine queue counts: an open-core pass is the unit that runs.
 
+## Press releases (PRNow)
+
+Open-core only, under names no Cloud tool uses. They publish a news article as
+a press release through [PRNow](https://prnow.io) and follow it to the outlets
+that ran it; [prnow.md](prnow.md) covers the account and the command line.
+They exist when the server has a PRNow source (`limelit mcp` and the HTTP
+endpoint of `limelit serve` both do; a read-only demo does not), and a call
+with no key connected says to run `limelit prnow login`. The key is resolved
+inside the server on each call and never passes through a tool.
+
+| Tool | Arguments | Notes |
+|---|---|---|
+| `prnow_list_categories` | none | The values `categories` accepts, case-sensitive |
+| `prnow_submit_release` | `title`, `content` (both required), `categories`, `country`, `city`, `plan`, `summary`, `meta_title`, `meta_description`, `meta_keywords`, `dry_run` (default `true`), `idempotency_key` | Checks the release against PRNow's limits and returns `ready`, every `problems` entry at once, `warnings`, `words`, and the account's `credits` (a count, never money). With `dry_run=false` it submits and returns `release_id`, `status` and the `idempotency_key` it used |
+| `prnow_release_status` | `release_id` (required) | `status` and `outlets`: each live with `live_url`, or held or rejected with `reason`, and any `credits_refunded` |
+
+The order is the run tools': `dry_run=true` (the default), show the user the
+release and the credits, `dry_run=false` only after they confirm. `plan` is
+required to submit and has no default, because the plan sets what is spent.
+
+- **Nothing is sent** for a release with a problem, whatever `dry_run` says.
+- **A retry is charged once.** Pass back the `idempotency_key` an earlier call
+  returned. When PRNow is still processing a submit, the error says to call
+  again with that key.
+- **A duplicate** (the same title already live on the same plan) is refused,
+  and the error names the existing `release_id`.
+
 ## Open-core only
 
 | Tool | Arguments | Notes |

@@ -17,6 +17,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/limelit-co/open/internal/mcpserver"
+	"github.com/limelit-co/open/internal/prnow"
+	"github.com/limelit-co/open/internal/prnow/prnowtest"
 	"github.com/limelit-co/open/internal/provider"
 	"github.com/limelit-co/open/internal/provider/providertest"
 	"github.com/limelit-co/open/internal/store"
@@ -192,13 +194,22 @@ func TestKeysNeverReachTheMCPTools(t *testing.T) {
 	post(t, h, "/settings/keys", url.Values{"provider": {"openrouter"}, "cred_OPENROUTER_API_KEY": {key}})
 	post(t, h, "/settings/mcp/rotate", nil)
 
-	srv, err := mcpserver.New(mcpserver.Deps{DB: db})
+	// The PRNow tools resolve their own key; it must not come back either.
+	const prnowKey = "prnow_never_returned"
+	fake := prnowtest.New(t, prnowKey)
+	pub := func(context.Context) (*prnow.Client, error) {
+		c := prnow.New(prnowKey)
+		c.BaseURL = fake.BaseURL()
+		return c, nil
+	}
+
+	srv, err := mcpserver.New(mcpserver.Deps{DB: db, PRNow: pub})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, tool := range []string{"list_targets", "get_usage", "export_data"} {
+	for _, tool := range []string{"list_targets", "get_usage", "export_data", "prnow_list_categories", "prnow_submit_release", "prnow_release_status"} {
 		out := callTool(t, srv, tool)
-		if strings.Contains(out, key) || strings.Contains(out, app.MCPToken()) {
+		if strings.Contains(out, key) || strings.Contains(out, app.MCPToken()) || strings.Contains(out, prnowKey) {
 			t.Errorf("%s returned a credential", tool)
 		}
 		if strings.Contains(out, credentialPrefix) || strings.Contains(out, settingMCPToken) {

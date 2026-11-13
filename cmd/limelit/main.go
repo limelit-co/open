@@ -184,7 +184,7 @@ func cmdServe(ctx context.Context, args []string) error {
 
 	startSchedule(ctx, dash, run, db, log)
 
-	srv := httpx.New(*addr, db, log, ver, dash, run)
+	srv := httpx.New(*addr, db, log, ver, dash, run, mcpserver.PRNowFrom(credentials.Source(ctx, db, keys, log)))
 	err = srv.Serve(ctx, func(bound net.Addr) {
 		log.Info("listening", "addr", bound.String(), "database", db.Path(), "version", ver, "commit", rev)
 		// A public demo has no one at its terminal to read this.
@@ -390,6 +390,7 @@ func cmdMCP(ctx context.Context, args []string) error {
 	// A read-only demo starts no runs from any surface.
 	if !ui.DemoMode() {
 		deps.Runner, deps.RunsPerDay = newRunner(ctx, db, provider.Default(), keys, log, syncInBackground), runsPerDay(db, cfg)
+		deps.PRNow = mcpserver.PRNowFrom(credentials.Source(ctx, db, keys, log))
 	}
 	srv, err := mcpserver.New(deps)
 	if err != nil {
