@@ -48,7 +48,7 @@ the buttons cannot express.
 | Mode | What it measures | Typical cost shape | Providers |
 |---|---|---|---|
 | `api` | The vendor's model with web search enabled, called directly | Per token | `openai`, `anthropic`, `perplexity`, `google`, `openrouter`, `limelitapi` |
-| `scraped` | The consumer surface a user actually sees, fetched by a third-party scraping service | Per request | `dataforseo`, `searchapi`, `cloro`, `brightdata`, `oxylabs`, `olostep`, `limelit` |
+| `scraped` | The consumer surface a user actually sees, fetched by a third-party scraping service | Per request | `dataforseo`, `searchapi`, `goanyapi`, `cloro`, `brightdata`, `oxylabs`, `olostep`, `limelit` |
 
 An API answer with web search on and the answer a person sees in the
 consumer product are different surfaces. Limelit treats them as such, and
@@ -153,6 +153,7 @@ Build order. The first group ships before the second is started.
 |---|---|---|
 | `dataforseo` | `ai_overview`, `ai_mode`, `chatgpt`, `gemini`, `perplexity` | SERP endpoints for the two Google surfaces. LLM-scraper endpoints for chatgpt.com and gemini.google.com are a v0.2 candidate. Key: <https://app.dataforseo.com/api-access> |
 | `searchapi` | `ai_overview`, `ai_mode`, `bing_copilot` | Key: <https://www.searchapi.io/> |
+| `goanyapi` | `ai_overview`, `ai_mode` | Pay-as-you-go credits rather than a plan, so a small instance can measure two Google surfaces for about a tenth of a cent per query. An overview that did not render comes back as a success with `feature_available: false`, which this adapter reports as `ErrNoAnswerSurface`. Key: <https://goanyapi.com/pricing> |
 
 ### Scraped, new adapters to the same interface
 
@@ -237,7 +238,7 @@ Credentials:
 ```
 OPENAI_API_KEY, ANTHROPIC_API_KEY, PERPLEXITY_API_KEY, GOOGLE_API_KEY,
 OPENROUTER_API_KEY, DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD, SEARCHAPI_KEY,
-CLORO_API_KEY, BRIGHTDATA_API_TOKEN, OXYLABS_USERNAME, OXYLABS_PASSWORD,
+GOANYAPI_API_KEY, CLORO_API_KEY, BRIGHTDATA_API_TOKEN, OXYLABS_USERNAME, OXYLABS_PASSWORD,
 OLOSTEP_API_KEY, LIMELIT_CLOUD_KEY
 ```
 

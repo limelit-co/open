@@ -1,0 +1,67 @@
+{
+  "code": "ok",
+  "message": "Saved example response",
+  "data": {
+    "endpoint": "google-ai-overview",
+    "query": {
+      "query": "how do solar panels work",
+      "country": "us",
+      "language": "en",
+      "device": "desktop"
+    },
+    "costCredits": 3,
+    "remainingCredits": 997,
+    "result": {
+      "format": "json",
+      "content": {
+        "search_parameters": {
+          "query": "how do solar panels work",
+          "country": "us",
+          "language": "en",
+          "device": "desktop",
+          "feature_available": true
+        },
+        "results": [
+          {
+            "type": "ai_summary",
+            "title": "AI Overview",
+            "text": "Solar panels convert sunlight into electricity through the photovoltaic effect. When photons hit a solar cell, they knock electrons loose from atoms, and the flow of those electrons through an electric field produces a direct current. An inverter then converts that DC into the alternating current a home uses.",
+            "links": [
+              {
+                "title": "EnergySage",
+                "url": "https://news.energysage.com/how-do-solar-panels-work/"
+              },
+              {
+                "title": "National Grid Group",
+                "url": "https://www.nationalgrid.com/stories/energy-explained/how-do-solar-panels-work"
+              },
+              {
+                "title": "EnergySage",
+                "url": "https://news.energysage.com/how-do-solar-panels-work/"
+              }
+            ]
+          }
+        ],
+        "serp_features": [
+          {
+            "type": "ai_summary",
+            "title": "AI Overview",
+            "text": "Solar panels convert sunlight into electricity through the photovoltaic effect. When photons hit a solar cell, they knock electrons loose from atoms, and the flow of those electrons through an electric field produces a direct current. An inverter then converts that DC into the alternating current a home uses.",
+            "links": [
+              {
+                "title": "EnergySage",
+                "url": "https://news.energysage.com/how-do-solar-panels-work/"
+              },
+              {
+                "title": "National Grid Group",
+                "url": "https://www.nationalgrid.com/stories/energy-explained/how-do-solar-panels-work"
+              }
+            ]
+          }
+        ],
+        "has_next_page": false,
+        "next_page_token": ""
+      }
+    }
+  }
+}
