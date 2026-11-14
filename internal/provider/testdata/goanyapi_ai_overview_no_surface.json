@@ -1,0 +1,31 @@
+{
+  "code": "ok",
+  "message": "Saved example response",
+  "data": {
+    "endpoint": "google-ai-overview",
+    "query": {
+      "query": "acme widgets invoice portal login",
+      "country": "us",
+      "language": "en",
+      "device": "desktop"
+    },
+    "costCredits": 3,
+    "remainingCredits": 994,
+    "result": {
+      "format": "json",
+      "content": {
+        "search_parameters": {
+          "query": "acme widgets invoice portal login",
+          "country": "us",
+          "language": "en",
+          "device": "desktop",
+          "feature_available": false
+        },
+        "results": [],
+        "serp_features": [],
+        "has_next_page": false,
+        "next_page_token": ""
+      }
+    }
+  }
+}

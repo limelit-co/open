@@ -79,6 +79,13 @@ var catalog = []CatalogEntry{
 		Note:        "Gemini with Google Search grounding.",
 	},
 	{
+		Name: "goanyapi", Label: "GoAnyAPI", Access: AccessScraped,
+		Engines:     map[string]string{AIOverviewEngine: "", AIModeEngine: ""},
+		Credentials: []string{"GOANYAPI_API_KEY"},
+		KeyURL:      "https://goanyapi.com/pricing",
+		Note:        "The two Google answer surfaces, metered per query on a pay-as-you-go balance.",
+	},
+	{
 		Name: "dataforseo", Label: "DataForSEO", Access: AccessScraped,
 		Engines: map[string]string{
 			AIOverviewEngine: "", AIModeEngine: "",

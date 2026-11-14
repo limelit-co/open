@@ -68,6 +68,19 @@ func Default() *Registry {
 		},
 	})
 
+	// A second scraped route to the same two Google surfaces, on a
+	// pay-as-you-go balance instead of a subscription. Two scrapers
+	// disagreeing about one surface is a signal about the surface.
+	reg.Register(Registration{
+		Name:        "goanyapi",
+		Access:      AccessScraped,
+		Engines:     map[string]string{AIOverviewEngine: "", AIModeEngine: ""},
+		Credentials: []string{"GOANYAPI_API_KEY"},
+		New: func(src CredentialSource) (Provider, error) {
+			return NewGoAnyAPI(src("GOANYAPI_API_KEY"))
+		},
+	})
+
 	// The only route to Bing Copilot in this build, and a second read on the
 	// two Google AI surfaces. Two scrapers disagreeing about the same surface
 	// is a signal about the surface, not noise.
