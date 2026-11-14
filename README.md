@@ -409,7 +409,7 @@ never averaged together, because they measure different things.
 | Access | Providers | What it measures |
 |---|---|---|
 | `api` | `openai`, `anthropic`, `perplexity`, `google`, `openrouter` | The vendor's model with web search enabled, billed per token |
-| `scraped` | `dataforseo`, `searchapi`, `cloro`, `brightdata`, `oxylabs`, `olostep` | The consumer surface a person actually sees, billed per request |
+| `scraped` | `dataforseo`, `searchapi`, `goanyapi`, `cloro`, `brightdata`, `oxylabs`, `olostep` | The consumer surface a person actually sees, billed per request |
 
 Adding a provider is one HTTP call, one response parse and a fixture, against
 a small Go interface. See [docs/providers.md](docs/providers.md); the open
