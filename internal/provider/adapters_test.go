@@ -5,17 +5,19 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 )
 
-// The fixtures here are real recorded answers, captured from the live APIs on
-// 2026-09-11. Every test runs against them with no network and no key.
+// The fixtures here are recorded answers from the live APIs. Tests need no
+// external network or real credentials.
 
 func against(t *testing.T, fixture string) http.Handler {
 	t.Helper()
@@ -35,16 +37,23 @@ func newAnthropicAgainst(t *testing.T, h http.Handler) *anthropicProvider {
 	return ap
 }
 
+type handlerTransport struct{ http.Handler }
+
+func (h handlerTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	defer r.Body.Close()
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	return w.Result(), nil
+}
+
 func newPerplexityAgainst(t *testing.T, h http.Handler) *perplexityProvider {
 	t.Helper()
-	srv := httptest.NewServer(h)
-	t.Cleanup(srv.Close)
 	p, err := NewPerplexity("pplx-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	pp := p.(*perplexityProvider)
-	pp.endpoint = srv.URL + "/chat/completions"
+	pp.client.Transport = handlerTransport{h}
 	return pp
 }
 
@@ -125,43 +134,120 @@ func TestAnthropicDeduplicatesSourcesAndQueries(t *testing.T) {
 }
 
 func TestPerplexityParsesARecordedAnswer(t *testing.T) {
-	p := newPerplexityAgainst(t, against(t, "perplexity_answer.json"))
+	p := newPerplexityAgainst(t, against(t, "perplexity_agent_answer.json"))
 	resp, err := p.Run(context.Background(), Request{Engine: PerplexityEngine, Prompt: "q"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.TrimSpace(resp.Text) == "" {
-		t.Fatal("no answer text")
+	if want := "For a mid-sized German company, I’d shortlist **STACKIT, IONOS, and plusserver** first."; resp.Text != want {
+		t.Errorf("text = %q, want %q", resp.Text, want)
 	}
-	if resp.Model != "sonar" {
-		t.Errorf("model = %q", resp.Model)
+	if resp.Model != "openai/gpt-6-luna" || resp.InputTokens != 8699 || resp.OutputTokens != 509 || resp.Calls != 1 {
+		t.Errorf("model = %q, tokens = %d in/%d out, calls = %d", resp.Model, resp.InputTokens, resp.OutputTokens, resp.Calls)
 	}
-	if len(resp.Citations) == 0 {
-		t.Fatal("no citations parsed")
+	want := []Citation{
+		{URL: "https://www.qovery.com/blog/kubernetes-platform-stackit-ionos-open-telekom-cloud-comparison", Title: "Kubernetes Platforms on STACKIT, IONOS, and Open Telekom Cloud", Position: 1},
+		{URL: "https://www.qovery.com/blog/eu-cloud-providers-managed-kubernetes-2026-sovereignty-checklist", Title: "Which EU Cloud Providers Support Kubernetes? The 2026 List, Prices ...", Position: 2},
 	}
-	for i, c := range resp.Citations {
-		if !strings.HasPrefix(c.URL, "http") {
-			t.Errorf("citation %d has a non-URL: %q", i, c.URL)
+	if !slices.Equal(resp.Citations, want) {
+		t.Errorf("citations = %+v, want %+v", resp.Citations, want)
+	}
+}
+
+func TestPerplexitySendsAgentRequest(t *testing.T) {
+	for _, tc := range []struct {
+		model, effort string
+	}{
+		{"", "fast"},
+		{"sonar", "fast"},
+		{"low", "low"},
+		{"high@2026-11-11.0", "high@2026-11-11.0"},
+	} {
+		t.Run(tc.effort+"/"+tc.model, func(t *testing.T) {
+			fixture := against(t, "perplexity_agent_answer.json")
+			p := newPerplexityAgainst(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodPost || r.URL.Path != "/v1/agent" {
+					t.Errorf("%s %s, want POST /v1/agent", r.Method, r.URL.Path)
+				}
+				var body map[string]any
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Error(err)
+				}
+				if len(body) != 3 || body["input"] != "a verbatim prompt" || body["effort"] != tc.effort || body["max_output_tokens"] != float64(1500) {
+					t.Errorf("request body = %+v, want input, effort %q and max_output_tokens 1500", body, tc.effort)
+				}
+				fixture.ServeHTTP(w, r)
+			}))
+			if _, err := p.Run(context.Background(), Request{Engine: PerplexityEngine, Model: tc.model, Prompt: "a verbatim prompt"}); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestPerplexityRejectsAnUnknownEffort(t *testing.T) {
+	p := newPerplexityAgainst(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("an unknown effort must be rejected before making a request")
+	}))
+	_, err := p.Run(context.Background(), Request{Engine: PerplexityEngine, Model: "sonar-pro"})
+	if err == nil || !strings.Contains(err.Error(), `unsupported effort "sonar-pro"`) {
+		t.Fatalf("err = %v, want an unsupported effort error", err)
+	}
+}
+
+func TestPerplexityJoinsTextAndDeduplicatesSources(t *testing.T) {
+	p := newPerplexityAgainst(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"status":"completed","output":[
+			{"type":"message","content":[{"type":"output_text","text":"First. "},{"type":"reasoning","text":"Ignored."},{"type":"output_text","text":"Second. "}]},
+			{"type":"search_results","results":[{"url":"https://example.com/one","title":"One"}]},
+			{"type":"message","content":[{"type":"output_text","text":"Third."}]},
+			{"type":"search_results","results":[{"url":"https://example.com/one","title":"Duplicate"},{"url":"https://example.com/two","title":"Two"}]}
+		]}`))
+	}))
+	resp, err := p.Run(context.Background(), Request{Engine: PerplexityEngine, Prompt: "q"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []Citation{
+		{URL: "https://example.com/one", Title: "One", Position: 1},
+		{URL: "https://example.com/two", Title: "Two", Position: 2},
+	}
+	if resp.Text != "First. Second. Third." || !slices.Equal(resp.Citations, want) {
+		t.Errorf("text = %q, citations = %+v", resp.Text, resp.Citations)
+	}
+}
+
+func TestPerplexityRejectsAnIncompleteAnswer(t *testing.T) {
+	p := newPerplexityAgainst(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"status":"incomplete","incomplete_details":{"reason":"max_output_tokens"},"output":[{"type":"message","content":[{"type":"output_text","text":"A partial answer"}]}]}`))
+	}))
+	resp, err := p.Run(context.Background(), Request{Engine: PerplexityEngine, Prompt: "q"})
+	if err == nil || !strings.Contains(err.Error(), "max_output_tokens") {
+		t.Fatalf("err = %v, want a truncation error", err)
+	}
+	if resp.Text != "" {
+		t.Errorf("partial answer returned: %q", resp.Text)
+	}
+}
+
+func TestPerplexityReportsAgentErrors(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusUnauthorized} {
+		p := newPerplexityAgainst(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(status)
+			w.Write([]byte(`{"status":"failed","error":{"message":"Key rejected: pplx-test"}}`))
+		}))
+		_, err := p.Run(context.Background(), Request{Engine: PerplexityEngine, Prompt: "q"})
+		if err == nil || !strings.Contains(err.Error(), "Key rejected") || strings.Contains(err.Error(), "pplx-test") {
+			t.Errorf("HTTP %d: err = %v, want the API message with the key redacted", status, err)
 		}
-		if c.Position != i+1 {
-			t.Errorf("citation %d has position %d", i, c.Position)
+		if status == http.StatusUnauthorized && !errors.Is(err, ErrAuth) {
+			t.Errorf("HTTP %d: err = %v, want ErrAuth", status, err)
 		}
-	}
-	// search_results carries titles; the bare citations list does not. If the
-	// richer list were being ignored every source would be untitled.
-	titled := 0
-	for _, c := range resp.Citations {
-		if c.Title != "" {
-			titled++
-		}
-	}
-	if titled == 0 {
-		t.Error("no citation has a title: search_results is being ignored")
 	}
 }
 
 func TestPerplexityWrongEngineIsTyped(t *testing.T) {
-	p := newPerplexityAgainst(t, against(t, "perplexity_answer.json"))
+	p := newPerplexityAgainst(t, against(t, "perplexity_agent_answer.json"))
 	_, err := p.Run(context.Background(), Request{Engine: ChatGPTEngine, Prompt: "q"})
 	if !errors.Is(err, ErrUnsupportedEngine) {
 		t.Fatalf("err = %v, want ErrUnsupportedEngine", err)

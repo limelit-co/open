@@ -15,7 +15,7 @@ engine:provider[:model][:online]
 |---|---|---|
 | `engine` | The answer surface being measured. Ids are Limelit Cloud's | `chatgpt`, `claude`, `perplexity`, `gemini`, `ai_overview`, `ai_mode`, `bing_copilot` |
 | `provider` | Who reaches it | `openai`, `anthropic`, `perplexity`, `google`, `openrouter`, `dataforseo`, `searchapi`, `cloro`, `brightdata`, `oxylabs`, `olostep`, `limelit`, `limelitapi` |
-| `model` | Optional pin. Omitted means the provider's default for that engine | `gpt-5.5`, `sonar`, `gemini-2.5-flash` |
+| `model` | Optional model or Perplexity effort pin. Omitted means the provider's default for that engine | `gpt-5.5`, `fast`, `gemini-2.5-flash` |
 | `online` | Web search on, for providers where it is a switch. Scraped surfaces are always online | |
 
 Examples:
@@ -24,7 +24,7 @@ Examples:
 chatgpt:openai:gpt-5.5:online     # ChatGPT's model through OpenAI's API, web search on
 chatgpt:dataforseo:online         # chatgpt.com as a user sees it, through a scraper
 claude:anthropic:online
-perplexity:perplexity:sonar
+perplexity:perplexity:fast
 gemini:google:online
 ai_overview:dataforseo
 ai_mode:dataforseo
@@ -42,6 +42,10 @@ Most people never write one. Settings lists every engine with a button per
 provider that can reach it, and builds the string for you; the raw field is
 kept behind an Advanced disclosure, because pinning a model is the one thing
 the buttons cannot express.
+
+Perplexity Agent API targets accept `fast`, `low`, `medium`, `high`, `xhigh`, or
+`ultra`, with an optional version such as `fast@2026-11-11.0`. Unpinned targets
+and existing `perplexity:perplexity:sonar` targets use `fast`.
 
 ## Access modes
 
@@ -142,7 +146,7 @@ Build order. The first group ships before the second is started.
 |---|---|---|
 | `openai` | `chatgpt` | Responses API with the `web_search` tool. Citations from `url_citation` annotations. Key: <https://platform.openai.com/api-keys> |
 | `anthropic` | `claude` | Messages API with the web search tool. Citations from `web_search_result_location` blocks. Key: <https://console.anthropic.com/settings/keys> |
-| `perplexity` | `perplexity` | Sonar models. Citations from the `citations` array. Key: <https://www.perplexity.ai/account/api/keys> |
+| `perplexity` | `perplexity` | Agent API with web search. Citations from `search_results` items. Key: <https://www.perplexity.ai/account/api/keys> |
 | `google` | `gemini` | Gemini API with Google Search grounding. Citations from `groundingChunks`. Key: <https://aistudio.google.com/apikey> |
 | `openrouter` | `chatgpt`, `claude`, `gemini`, `perplexity` | One key, four engines, so it is what Settings recommends first. Citations only where the upstream model returns them. Key: <https://openrouter.ai/keys> |
 | `limelitapi` | `perplexity` | The Perplexity half of the free allowance (below): Limelit Cloud asks Perplexity's API with Limelit's key. Key: a Limelit Cloud API key, <https://limelit.co/settings/open-key> |
@@ -224,7 +228,7 @@ competitors:
 targets:
   - chatgpt:openai:gpt-5.5:online
   - claude:anthropic:online
-  - perplexity:perplexity:sonar
+  - perplexity:perplexity:fast
   - ai_overview:dataforseo
 
 limits:
