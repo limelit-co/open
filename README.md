@@ -18,6 +18,10 @@
   <a href="https://discord.gg/g2Ef3WSTTC"><img alt="Discord" src="https://img.shields.io/badge/chat-Discord-5865F2.svg?logo=discord&logoColor=white"></a>
 </p>
 
+<p align="center">
+  <a href="https://origintech.live/products/limelit-open"><img src="https://origintech.live/badge.svg" alt="Limelit Open — featured on Origin Tech" width="200" height="44"></a>
+</p>
+
 https://github.com/user-attachments/assets/b5894a6e-bb40-426d-b493-2cedc7e41e90
 
 <p align="center">
