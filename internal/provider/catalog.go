@@ -86,6 +86,13 @@ var catalog = []CatalogEntry{
 		Note:        "The two Google answer surfaces, metered per query on a pay-as-you-go balance.",
 	},
 	{
+		Name: "apify", Label: "Apify", Access: AccessScraped,
+		Engines:     map[string]string{AIOverviewEngine: ""},
+		Credentials: []string{"APIFY_TOKEN"},
+		KeyURL:      "https://console.apify.com/settings/integrations",
+		Note:        "Runs an AI Overview scraper Actor on your own Apify account, so the scraping capacity is yours. US English results only.",
+	},
+	{
 		Name: "dataforseo", Label: "DataForSEO", Access: AccessScraped,
 		Engines: map[string]string{
 			AIOverviewEngine: "", AIModeEngine: "",

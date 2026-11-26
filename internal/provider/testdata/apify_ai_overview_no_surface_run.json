@@ -1,0 +1,14 @@
+{
+  "data": {
+    "id": "O0JvsdOvmg3MccEZ5",
+    "status": "SUCCEEDED",
+    "statusMessage": "Google showed no AI Overview for these queries. Nothing was charged.",
+    "defaultDatasetId": "7ayppjqVqX2MbxCoP",
+    "storageIds": {
+      "datasets": {
+        "default": "7ayppjqVqX2MbxCoP",
+        "errors": "s6r4fbxendFWCepGR"
+      }
+    }
+  }
+}

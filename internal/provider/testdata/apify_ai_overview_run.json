@@ -1,0 +1,14 @@
+{
+  "data": {
+    "id": "IRHiOJjaZQTO6ZJ6J",
+    "status": "SUCCEEDED",
+    "statusMessage": "Done. 1 of 1 queries delivered with an AI Overview; 0 without an AI Overview; 0 failed (not charged).",
+    "defaultDatasetId": "8szWOYdhINiCEMWXD",
+    "storageIds": {
+      "datasets": {
+        "default": "8szWOYdhINiCEMWXD",
+        "errors": "ndHndy9UWnWnuJNFV"
+      }
+    }
+  }
+}
