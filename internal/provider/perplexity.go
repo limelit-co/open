@@ -13,37 +13,26 @@ import (
 	"time"
 )
 
-// Perplexity, through the OpenAI-compatible chat completions endpoint.
-//
-// Perplexity is always grounded: the Sonar models search before answering and
-// there is no switch to turn that off, so the online flag on a target is
-// accepted and ignored rather than being an error. Saying "this provider does
-// not support offline" would suggest offline is a thing you could ask for.
-//
-// It returns the cleanest citations of any provider here: search_results
-// carries a real URL and a real page title for every source, needing no
-// reconstruction. Shapes probed against the live API on 2026-09-11.
+// Perplexity, through the Agent API. Effort levels enable web search, so the
+// online flag on a target is accepted and ignored. Search results supply the
+// source URLs and page titles directly.
 
 const (
-	// PerplexityEndpoint is the chat completions URL.
-	PerplexityEndpoint = "https://api.perplexity.ai/chat/completions"
+	// PerplexityEndpoint is the Agent API URL.
+	PerplexityEndpoint = "https://api.perplexity.ai/v1/agent"
 
-	// PerplexityDefaultModel is the cheapest grounded Sonar model, which is
-	// the right default for a tool that asks the same prompts every day.
-	PerplexityDefaultModel = "sonar"
+	// PerplexityDefaultModel selects the fast effort level.
+	PerplexityDefaultModel = "fast"
 
-	// perplexityTestTokens is the API's own floor for max_tokens.
 	perplexityTestTokens = 16
 
-	// perplexityMaxTokens bounds the answer. A truncated answer loses the
-	// brands named at its end, so a response that stops on length is
-	// rejected rather than stored.
-	perplexityMaxTokens = 1500
+	// A truncated answer can lose the brands named at its end. Reject
+	// incomplete responses before handing an answer to the runner.
+	perplexityMaxOutputTokens = 1500
 )
 
 type perplexityProvider struct {
 	apiKey   string
-	model    string
 	endpoint string
 	client   *http.Client
 }
@@ -55,7 +44,6 @@ func NewPerplexity(apiKey string) (Provider, error) {
 	}
 	return &perplexityProvider{
 		apiKey:   strings.TrimSpace(apiKey),
-		model:    PerplexityDefaultModel,
 		endpoint: PerplexityEndpoint,
 		client:   &http.Client{Timeout: 2 * time.Minute},
 	}, nil
@@ -69,33 +57,51 @@ func (p *perplexityProvider) Engines() map[string]string {
 }
 
 type perplexityRequest struct {
-	Model     string             `json:"model"`
-	Messages  []anthropicMessage `json:"messages"`
-	MaxTokens int                `json:"max_tokens,omitempty"`
+	Effort          string `json:"effort"`
+	Input           string `json:"input"`
+	MaxOutputTokens int    `json:"max_output_tokens"`
+}
+
+type perplexityError struct {
+	Message string `json:"message"`
 }
 
 type perplexityResponse struct {
-	Model   string `json:"model"`
-	Choices []struct {
-		FinishReason string `json:"finish_reason"`
-		Message      struct {
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
-	// Citations is the legacy bare-URL list, kept as a fallback.
-	Citations []string `json:"citations"`
-	// SearchResults is the richer list, with a title per source.
-	SearchResults []struct {
-		URL   string `json:"url"`
-		Title string `json:"title"`
-	} `json:"search_results"`
+	Model             string `json:"model"`
+	Status            string `json:"status"`
+	IncompleteDetails struct {
+		Reason string `json:"reason"`
+	} `json:"incomplete_details"`
+	Output []struct {
+		Type    string `json:"type"`
+		Content []struct {
+			Type string `json:"type"`
+			Text string `json:"text"`
+		} `json:"content"`
+		Results []struct {
+			URL   string `json:"url"`
+			Title string `json:"title"`
+		} `json:"results"`
+	} `json:"output"`
 	Usage struct {
-		PromptTokens     int `json:"prompt_tokens"`
-		CompletionTokens int `json:"completion_tokens"`
+		InputTokens  int `json:"input_tokens"`
+		OutputTokens int `json:"output_tokens"`
 	} `json:"usage"`
-	Error *struct {
-		Message string `json:"message"`
-	} `json:"error"`
+	Error *perplexityError `json:"error"`
+}
+
+func perplexityEffort(model string) (string, error) {
+	if model == "" || model == "sonar" {
+		return PerplexityDefaultModel, nil
+	}
+	name, version, pinned := strings.Cut(model, "@")
+	switch name {
+	case "fast", "low", "medium", "high", "xhigh", "ultra":
+		if !pinned || (version != "" && !strings.Contains(version, "@")) {
+			return model, nil
+		}
+	}
+	return "", fmt.Errorf("perplexity: unsupported effort %q", model)
 }
 
 // Run asks Perplexity one prompt.
@@ -103,93 +109,90 @@ func (p *perplexityProvider) Run(ctx context.Context, req Request) (Response, er
 	if req.Engine != PerplexityEngine {
 		return Response{}, fmt.Errorf("%w: perplexity reaches perplexity, not %s", ErrUnsupportedEngine, req.Engine)
 	}
-	model := req.Model
-	if model == "" {
-		model = p.model
-	}
-
-	raw, err := postJSON(ctx, p.client, p.endpoint, map[string]string{
-		"Authorization": "Bearer " + p.apiKey,
-	}, perplexityRequest{
-		Model:     model,
-		Messages:  []anthropicMessage{{Role: "user", Content: req.Prompt}},
-		MaxTokens: perplexityMaxTokens,
-	}, "perplexity")
+	effort, err := perplexityEffort(req.Model)
 	if err != nil {
 		return Response{}, err
 	}
-
-	var parsed perplexityResponse
-	if err := json.Unmarshal(raw, &parsed); err != nil {
-		return Response{}, fmt.Errorf("perplexity: decode response: %w", err)
+	parsed, err := p.request(ctx, perplexityRequest{Effort: effort, Input: req.Prompt, MaxOutputTokens: perplexityMaxOutputTokens})
+	if err != nil {
+		return Response{}, err
 	}
-	if parsed.Error != nil && parsed.Error.Message != "" {
-		return Response{}, fmt.Errorf("perplexity: %s", parsed.Error.Message)
-	}
-	if len(parsed.Choices) == 0 {
-		return Response{}, fmt.Errorf("perplexity: no choices in the response")
-	}
-	choice := parsed.Choices[0]
-	if choice.FinishReason == "length" {
-		return Response{}, fmt.Errorf("perplexity: answer hit the %d token ceiling and would be missing its ending", perplexityMaxTokens)
-	}
-	if strings.TrimSpace(choice.Message.Content) == "" {
-		return Response{}, fmt.Errorf("perplexity: no answer text in a %q response", choice.FinishReason)
+	if parsed.Status != "completed" {
+		return Response{}, fmt.Errorf("perplexity: answer status %q%s", parsed.Status, truncateBody(parsed.IncompleteDetails.Reason))
 	}
 
-	var (
-		citations []Citation
-		seen      = map[string]bool{}
-	)
-	for _, r := range parsed.SearchResults {
-		if r.URL == "" || seen[r.URL] {
-			continue
+	var text strings.Builder
+	var citations []Citation
+	seen := map[string]bool{}
+	for _, item := range parsed.Output {
+		switch item.Type {
+		case "message":
+			for _, part := range item.Content {
+				if part.Type == "output_text" {
+					text.WriteString(part.Text)
+				}
+			}
+		case "search_results":
+			for _, r := range item.Results {
+				if r.URL == "" || seen[r.URL] {
+					continue
+				}
+				seen[r.URL] = true
+				citations = append(citations, Citation{URL: r.URL, Title: r.Title, Position: len(citations) + 1})
+			}
 		}
-		seen[r.URL] = true
-		citations = append(citations, Citation{URL: r.URL, Title: r.Title, Position: len(citations) + 1})
 	}
-	// Older responses carry only the bare URL list. Reading it after
-	// search_results rather than instead of it means a shape change on
-	// Perplexity's side degrades the titles rather than losing the sources.
-	for _, u := range parsed.Citations {
-		if u == "" || seen[u] {
-			continue
-		}
-		seen[u] = true
-		citations = append(citations, Citation{URL: u, Position: len(citations) + 1})
+	if strings.TrimSpace(text.String()) == "" {
+		return Response{}, fmt.Errorf("perplexity: no answer text in a completed response")
 	}
 
 	return Response{
-		Text:  choice.Message.Content,
-		Model: parsed.Model,
-		// Perplexity does not expose the searches it ran, so fan-out stays
-		// empty here. That is an absence of evidence, not evidence it ran
-		// none: it is always grounded.
+		Text:         text.String(),
+		Model:        parsed.Model,
 		Citations:    citations,
-		InputTokens:  parsed.Usage.PromptTokens,
-		OutputTokens: parsed.Usage.CompletionTokens,
+		InputTokens:  parsed.Usage.InputTokens,
+		OutputTokens: parsed.Usage.OutputTokens,
 		Calls:        1,
 	}, nil
 }
 
-// Test proves the key with the smallest completion the API will accept.
-// Perplexity has no free models endpoint, so this is the cheapest call
-// available and it does cost a fraction of a cent.
-//
-// perplexityTestTokens is 16 because the API refuses anything smaller:
-// "max_tokens must be at least 16". Probed 2026-09-11.
+// Test proves the key with a small Agent API request. A token-limited response
+// is enough to verify the credential.
 func (p *perplexityProvider) Test(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	_, err := postJSON(ctx, p.client, p.endpoint, map[string]string{
-		"Authorization": "Bearer " + p.apiKey,
-	}, perplexityRequest{
-		Model:     p.model,
-		Messages:  []anthropicMessage{{Role: "user", Content: "ping"}},
-		MaxTokens: perplexityTestTokens,
-	}, "perplexity")
+	_, err := p.request(ctx, perplexityRequest{Effort: PerplexityDefaultModel, Input: "ping", MaxOutputTokens: perplexityTestTokens})
 	return err
+}
+
+func (p *perplexityProvider) request(ctx context.Context, body perplexityRequest) (perplexityResponse, error) {
+	raw, err := postJSONWithStatusError(ctx, p.client, p.endpoint, map[string]string{
+		"Authorization": "Bearer " + p.apiKey,
+	}, body, "perplexity", p.statusError)
+	if err != nil {
+		return perplexityResponse{}, err
+	}
+	var parsed perplexityResponse
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return perplexityResponse{}, fmt.Errorf("perplexity: decode response: %w", err)
+	}
+	if parsed.Error != nil {
+		message := strings.ReplaceAll(parsed.Error.Message, p.apiKey, "[redacted]")
+		return perplexityResponse{}, fmt.Errorf("perplexity: agent error%s", truncateBody(message))
+	}
+	return parsed, nil
+}
+
+func (p *perplexityProvider) statusError(status int, payload []byte) error {
+	var failure struct {
+		Error *perplexityError `json:"error"`
+	}
+	if json.Unmarshal(payload, &failure) == nil && failure.Error != nil && failure.Error.Message != "" {
+		message := strings.ReplaceAll(failure.Error.Message, p.apiKey, "[redacted]")
+		return fmt.Errorf("%w%s", httpStatusError("perplexity", status, ""), truncateBody(message))
+	}
+	return httpStatusError("perplexity", status, strings.ReplaceAll(string(payload), p.apiKey, "[redacted]"))
 }
 
 // postJSON sends one JSON request, retrying once on a transient failure, and
@@ -198,6 +201,12 @@ func (p *perplexityProvider) Test(ctx context.Context) error {
 // Shared by the providers whose auth is a single header. The runner owns
 // backoff, concurrency and the daily ceiling, so this stops at one retry.
 func postJSON(ctx context.Context, client *http.Client, url string, headers map[string]string, body any, who string) ([]byte, error) {
+	return postJSONWithStatusError(ctx, client, url, headers, body, who, func(status int, payload []byte) error {
+		return httpStatusError(who, status, string(payload))
+	})
+}
+
+func postJSONWithStatusError(ctx context.Context, client *http.Client, url string, headers map[string]string, body any, who string, statusError func(int, []byte) error) ([]byte, error) {
 	encoded, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
@@ -237,7 +246,7 @@ func postJSON(ctx context.Context, client *http.Client, url string, headers map[
 			return payload, nil
 		}
 
-		err = httpStatusError(who, resp.StatusCode, string(payload))
+		err = statusError(resp.StatusCode, payload)
 		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
 			lastErr = err
 			continue

@@ -391,7 +391,7 @@ A **target** is one way of asking one engine, written
 chatgpt:openai:gpt-5.5:online     ChatGPT's model through OpenAI's API, web search on
 chatgpt:dataforseo:online         chatgpt.com as a user sees it, through a scraper
 claude:anthropic:online
-perplexity:perplexity:sonar
+perplexity:perplexity:fast
 gemini:google:online
 ai_overview:dataforseo
 ai_mode:dataforseo
@@ -447,7 +447,7 @@ competitors:
 targets:
   - chatgpt:openai:gpt-5.5:online
   - claude:anthropic:online
-  - perplexity:perplexity:sonar
+  - perplexity:perplexity:fast
   - ai_overview:dataforseo
 
 limits:

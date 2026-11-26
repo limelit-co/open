@@ -66,10 +66,10 @@ var catalog = []CatalogEntry{
 	},
 	{
 		Name: "perplexity", Label: "Perplexity", Access: AccessAPI,
-		Engines:     map[string]string{PerplexityEngine: "sonar"},
+		Engines:     map[string]string{PerplexityEngine: PerplexityDefaultModel},
 		Credentials: []string{"PERPLEXITY_API_KEY"},
 		KeyURL:      "https://www.perplexity.ai/account/api/keys",
-		Note:        "Sonar models, always grounded in web results.",
+		Note:        "Agent API with web search. Defaults to fast effort.",
 	},
 	{
 		Name: "google", Label: "Google AI Studio", Access: AccessAPI,
