@@ -81,6 +81,20 @@ func Default() *Registry {
 		},
 	})
 
+	// An Actor on the user's own Apify account, so the scraping capacity and
+	// its billing stay with the user rather than with a vendor plan. A third
+	// read on the same surface; three scrapers disagreeing about one surface
+	// is a signal about the surface.
+	reg.Register(Registration{
+		Name:        "apify",
+		Access:      AccessScraped,
+		Engines:     map[string]string{AIOverviewEngine: ""},
+		Credentials: []string{"APIFY_TOKEN"},
+		New: func(src CredentialSource) (Provider, error) {
+			return NewApify(src("APIFY_TOKEN"))
+		},
+	})
+
 	// The only route to Bing Copilot in this build, and a second read on the
 	// two Google AI surfaces. Two scrapers disagreeing about the same surface
 	// is a signal about the surface, not noise.
